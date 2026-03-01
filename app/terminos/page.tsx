@@ -111,7 +111,7 @@ export default function Terminos({ onAccept }: Props) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("https://renderbackendconsocket.onrender.com/api/terminos");
+        const res = await fetch("https://new-backend-lovat.vercel.app/api/terminos");
         if (res.ok) {
           const json: TerminosData = await res.json();
           setDatos(json);
@@ -139,8 +139,8 @@ export default function Terminos({ onAccept }: Props) {
       const token  = localStorage.getItem("marketplace_token");
       const method = datos._id ? "PUT" : "POST";
       const url    = datos._id
-        ? `https://renderbackendconsocket.onrender.com/api/terminos/${datos._id}`
-        : "https://renderbackendconsocket.onrender.com/api/terminos";
+        ? `https://new-backend-lovat.vercel.app/api/terminos/${datos._id}`
+        : "https://new-backend-lovat.vercel.app/api/terminos";
 
       const res = await fetch(url, {
         method,
