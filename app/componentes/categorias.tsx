@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import "../../app/styles/categoria.css";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://new-backend-lovat.vercel.app/api";
 
 interface Product {
   _id: string;
