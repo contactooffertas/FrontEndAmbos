@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import '../styles/admin.css';
 
-const API = 'https://renderbackendconsocket.onrender.com/api';
+const API = 'https://new-backend-lovat.vercel.app/api';
 function getToken() { return typeof window !== 'undefined' ? localStorage.getItem('marketplace_token') : null; }
 function authH(): Record<string, string> {
   const t = getToken();
