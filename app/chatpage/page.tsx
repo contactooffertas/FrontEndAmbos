@@ -28,7 +28,7 @@ import {
 import { io, Socket } from "socket.io-client";
 import "../styles/chatpage.css";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 const WS_URL = "https://renderbackendconsocket.onrender.com";
 
 const SECURITY_SEEN_KEY = "chat_security_seen_v1";
