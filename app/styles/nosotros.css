@@ -1,0 +1,552 @@
+/* ============================================================
+   styles/nosotros.css
+   Ofertas.com.ar — Sección Nosotros
+   Paleta: azul noche · celeste barrial · amarillo oferta
+   Tipografía: Syne (titulares) + Nunito (cuerpo)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@400;600;700&display=swap');
+
+/* ---------- Variables ---------- */
+:root {
+  --nos-azul:       #0d1f3c;
+  --nos-azul-mid:   #1a3560;
+  --nos-celeste:    #2196f3;
+  --nos-celeste-lt: #e3f2fd;
+  --nos-amarillo:   #ffd600;
+  --nos-blanco:     #ffffff;
+  --nos-gris-bg:    #f4f7fb;
+  --nos-gris-text:  #5a6a80;
+  --nos-radio:      12px;
+  --nos-shadow:     0 8px 32px rgba(13, 31, 60, 0.12);
+}
+
+/* ============================================================
+   PAGE WRAPPER
+   ============================================================ */
+.nosotros-page {
+  font-family: 'Nunito', sans-serif;
+  color: var(--nos-azul);
+  background: var(--nos-blanco);
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   BREADCRUMB
+   ============================================================ */
+.nosotros-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 28px;
+  background: var(--nos-gris-bg);
+  border-bottom: 1px solid #dde6f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.nosotros-breadcrumb-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nos-celeste);
+  text-decoration: none;
+  padding: 5px 12px 5px 8px;
+  border-radius: 99px;
+  background: var(--nos-celeste-lt);
+  border: 1.5px solid #bbdefb;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  line-height: 1;
+}
+
+.nosotros-breadcrumb-home:hover {
+  background: var(--nos-celeste);
+  color: var(--nos-blanco);
+  border-color: var(--nos-celeste);
+  transform: translateY(-1px);
+}
+
+.nosotros-breadcrumb-home svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.nosotros-breadcrumb-sep {
+  color: #b0bec5;
+  display: block;
+  flex-shrink: 0;
+}
+
+.nosotros-breadcrumb-current {
+  color: var(--nos-gris-text);
+  font-weight: 700;
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.nosotros-hero {
+  position: relative;
+  background: var(--nos-azul);
+  padding: 90px 24px 80px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.nosotros-hero::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--nos-celeste) 0%, transparent 70%);
+  opacity: 0.07;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.nosotros-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--nos-amarillo);
+  color: var(--nos-azul);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 99px;
+  margin-bottom: 24px;
+  animation: nos-fadeDown 0.6s ease both;
+  line-height: 1;
+}
+
+.nosotros-hero-tag svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.nosotros-hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-weight: 800;
+  color: var(--nos-blanco);
+  line-height: 1.15;
+  margin: 0 auto 20px;
+  max-width: 700px;
+  animation: nos-fadeDown 0.7s 0.1s ease both;
+}
+
+.nosotros-hero-accent {
+  color: var(--nos-amarillo);
+}
+
+.nosotros-hero-sub {
+  max-width: 580px;
+  margin: 0 auto;
+  color: #a8c0de;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  animation: nos-fadeDown 0.7s 0.2s ease both;
+}
+
+/* ============================================================
+   IMAGE BANNER
+   ============================================================ */
+.nosotros-image-banner {
+  width: 100%;
+  max-width: 1100px;
+  margin: -40px auto 0;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.nosotros-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  border-radius: var(--nos-radio);
+  overflow: hidden;
+  box-shadow: var(--nos-shadow);
+  background: var(--nos-azul-mid);
+}
+
+.nosotros-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(13, 31, 60, 0.5) 0%, transparent 60%);
+  z-index: 1;
+}
+
+.nosotros-image-badge {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--nos-blanco);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 99px;
+  line-height: 1;
+}
+
+.nosotros-image-badge svg {
+  display: block;
+  flex-shrink: 0;
+  color: var(--nos-amarillo);
+}
+
+.nosotros-badge-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4cff91;
+  box-shadow: 0 0 6px #4cff91;
+  flex-shrink: 0;
+  animation: nos-pulse 1.6s infinite;
+}
+
+/* ============================================================
+   FEATURES
+   ============================================================ */
+.nosotros-features {
+  padding: 80px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.nosotros-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.nosotros-section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800;
+  margin: 0 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.nosotros-title-icon {
+  color: var(--nos-celeste);
+  display: block;
+  flex-shrink: 0;
+}
+
+.nosotros-section-desc {
+  color: var(--nos-gris-text);
+  font-size: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.nosotros-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.nosotros-feature-card {
+  background: var(--nos-gris-bg);
+  border: 1px solid #dde6f0;
+  border-radius: var(--nos-radio);
+  padding: 32px 24px;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+.nosotros-feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--nos-shadow);
+  border-color: var(--nos-celeste);
+}
+
+.nosotros-feature-card:hover .nosotros-feature-icon svg {
+  color: var(--nos-celeste);
+}
+
+.nosotros-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+  color: var(--nos-azul-mid);
+  transition: color 0.25s;
+}
+
+.nosotros-feature-icon svg {
+  display: block;
+  transition: color 0.25s;
+}
+
+.nosotros-feature-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--nos-azul);
+}
+
+.nosotros-feature-card p {
+  font-size: 0.93rem;
+  color: var(--nos-gris-text);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ============================================================
+   PROMO BANNER
+   ============================================================ */
+.nosotros-promo-banner {
+  max-width: 1100px;
+  margin: 0 auto 80px;
+  padding: 60px 48px;
+  background: linear-gradient(135deg, var(--nos-azul) 0%, var(--nos-azul-mid) 100%);
+  border-radius: calc(var(--nos-radio) * 1.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  overflow: hidden;
+  position: relative;
+}
+
+.nosotros-promo-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='%23ffffff' fill-opacity='.04'/%3E%3C/svg%3E") repeat;
+  pointer-events: none;
+}
+
+.nosotros-promo-content {
+  position: relative;
+  z-index: 1;
+}
+
+.nosotros-promo-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nos-amarillo);
+  margin: 0 0 8px;
+  line-height: 1;
+}
+
+.nosotros-promo-eyebrow svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.nosotros-promo-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  color: var(--nos-blanco);
+  margin: 0 0 14px;
+  line-height: 1.1;
+}
+
+.nosotros-promo-text {
+  color: #a8c0de;
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 420px;
+  margin: 0 0 28px;
+}
+
+.nosotros-promo-text strong {
+  color: var(--nos-blanco);
+}
+
+.nosotros-promo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--nos-amarillo);
+  color: var(--nos-azul);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 14px 32px;
+  border-radius: 99px;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(255, 214, 0, 0.3);
+  line-height: 1;
+}
+
+.nosotros-promo-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.nosotros-promo-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(255, 214, 0, 0.45);
+}
+
+.nosotros-promo-decor {
+  position: relative;
+  z-index: 1;
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(6rem, 15vw, 12rem);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.06);
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   COMUNIDAD
+   ============================================================ */
+.nosotros-community {
+  padding: 0 24px 100px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.nosotros-community-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.nosotros-community-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--nos-celeste-lt);
+  border: 1.5px solid #bbdefb;
+  color: var(--nos-azul-mid);
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 10px 20px;
+  border-radius: 99px;
+  transition: background 0.2s, transform 0.2s, color 0.2s, border-color 0.2s;
+  cursor: default;
+  line-height: 1;
+}
+
+.nosotros-community-chip:hover {
+  background: var(--nos-celeste);
+  border-color: var(--nos-celeste);
+  color: var(--nos-blanco);
+  transform: scale(1.05);
+}
+
+.nosotros-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nosotros-chip-icon svg {
+  display: block;
+}
+
+.nosotros-community-closing {
+  font-size: 1.05rem;
+  color: var(--nos-gris-text);
+  line-height: 1.8;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.nosotros-community-closing strong {
+  color: var(--nos-azul);
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes nos-fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nos-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .nosotros-breadcrumb {
+    padding: 12px 16px;
+  }
+
+  .nosotros-hero {
+    padding: 70px 20px 60px;
+  }
+
+  .nosotros-image-wrapper {
+    height: 240px;
+  }
+
+  .nosotros-promo-banner {
+    flex-direction: column;
+    padding: 40px 28px;
+    text-align: center;
+  }
+
+  .nosotros-promo-eyebrow {
+    justify-content: center;
+  }
+
+  .nosotros-promo-btn {
+    justify-content: center;
+  }
+
+  .nosotros-promo-decor {
+    display: none;
+  }
+
+  .nosotros-promo-text {
+    margin: 0 auto 28px;
+  }
+
+  .nosotros-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nosotros-section-title {
+    flex-wrap: wrap;
+    font-size: 1.5rem;
+  }
+}

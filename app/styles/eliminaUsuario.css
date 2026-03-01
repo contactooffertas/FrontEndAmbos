@@ -1,0 +1,382 @@
+/* app/styles/eliminaUsuario.css */
+/* ────────────────────────────────────────────────────────────
+   Paleta: oscuro + rojo peligro + naranja del marketplace
+   Fuente: hereda del proyecto (navbar ya usa algo genial)
+   ──────────────────────────────────────────────────────────── */
+
+/* ── TRIGGER BUTTON ─────────────────────────────────────────── */
+.elimina-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #3f1212;
+  background: transparent;
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+  width: 100%;
+  justify-content: center;
+}
+
+.elimina-trigger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.elimina-trigger:active {
+  transform: scale(0.98);
+}
+
+/* ── OVERLAY ─────────────────────────────────────────────────── */
+.elimina-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: elimina-fade-in 0.2s ease;
+}
+
+@keyframes elimina-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── MODAL ───────────────────────────────────────────────────── */
+.elimina-modal {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  animation: elimina-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes elimina-slide-up {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Franja decorativa superior */
+.elimina-modal::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7f1d1d, #ef4444, #f97316);
+}
+
+/* ── CLOSE BUTTON ────────────────────────────────────────────── */
+.elimina-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 10;
+}
+
+.elimina-close:hover {
+  background: #222;
+  color: #d1d5db;
+}
+
+/* ── STEP CONTAINER ──────────────────────────────────────────── */
+.elimina-step {
+  padding: 40px 36px 32px;
+}
+
+.elimina-step--center {
+  text-align: center;
+  padding: 48px 36px 40px;
+}
+
+/* ── ICON WRAP ───────────────────────────────────────────────── */
+.elimina-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.elimina-step--center .elimina-icon-wrap {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.elimina-icon-wrap--red {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+
+.elimina-icon-wrap--amber {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+}
+
+.elimina-icon-wrap--green {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #22c55e;
+}
+
+.elimina-icon-wrap--pulse {
+  animation: elimina-pulse 2s ease-in-out infinite;
+}
+
+@keyframes elimina-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+  50%       { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+}
+
+/* ── TITLE & SUBTITLE ────────────────────────────────────────── */
+.elimina-title {
+  color: #f9fafb;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+
+.elimina-subtitle {
+  color: #9ca3af;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin: 0 0 24px;
+}
+
+.elimina-subtitle strong {
+  color: #e5e7eb;
+}
+
+/* ── DATA LIST ───────────────────────────────────────────────── */
+.elimina-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.elimina-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #d1d5db;
+  font-size: 0.84rem;
+}
+
+.elimina-list li svg {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+/* ── TEXTAREA ────────────────────────────────────────────────── */
+.elimina-textarea {
+  width: 100%;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  padding: 14px 16px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.elimina-textarea::placeholder {
+  color: #4b5563;
+}
+
+.elimina-textarea:focus {
+  border-color: #374151;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.08);
+}
+
+.elimina-char {
+  text-align: right;
+  color: #4b5563;
+  font-size: 0.75rem;
+  margin: 6px 0 20px;
+}
+
+/* ── WARNING BOX ─────────────────────────────────────────────── */
+.elimina-warning-box {
+  background: rgba(127, 29, 29, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 28px;
+}
+
+.elimina-warning-box p {
+  color: #fca5a5;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.elimina-warning-box strong {
+  color: #ef4444;
+}
+
+/* ── ACTIONS ─────────────────────────────────────────────────── */
+.elimina-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.elimina-actions--center {
+  justify-content: center;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────── */
+.elimina-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+
+.elimina-btn--ghost {
+  background: transparent;
+  border-color: #2a2a2a;
+  color: #9ca3af;
+}
+
+.elimina-btn--ghost:hover {
+  border-color: #3f3f3f;
+  background: #1a1a1a;
+  color: #e5e7eb;
+}
+
+.elimina-btn--danger {
+  background: #991b1b;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.elimina-btn--danger:hover {
+  background: #b91c1c;
+  border-color: #991b1b;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35);
+}
+
+.elimina-btn--final {
+  background: linear-gradient(135deg, #991b1b, #7f1d1d);
+  padding: 10px 22px;
+  font-size: 0.87rem;
+}
+
+.elimina-btn--final:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+
+/* ── SPINNER ─────────────────────────────────────────────────── */
+.elimina-spinner {
+  color: #f97316;
+  margin-bottom: 20px;
+}
+
+.elimina-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── PROGRESS BAR ────────────────────────────────────────────── */
+.elimina-progress {
+  width: 100%;
+  max-width: 240px;
+  height: 4px;
+  background: #1f1f1f;
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 12px auto 0;
+}
+
+.elimina-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #7f1d1d, #ef4444, #f97316);
+  border-radius: 99px;
+  animation: elimina-progress 2.5s ease-in-out infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes elimina-progress {
+  0%   { width: 10%; background-position: 0% 50%; }
+  50%  { width: 80%; background-position: 100% 50%; }
+  100% { width: 95%; background-position: 0% 50%; }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .elimina-modal {
+    border-radius: 16px;
+  }
+
+  .elimina-step {
+    padding: 36px 24px 28px;
+  }
+
+  .elimina-actions {
+    flex-direction: column-reverse;
+  }
+
+  .elimina-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .elimina-title {
+    font-size: 1.1rem;
+  }
+}

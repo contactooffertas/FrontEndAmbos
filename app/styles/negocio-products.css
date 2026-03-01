@@ -1,0 +1,626 @@
+/* ════════════════════════════════════════
+   negocio-products.css
+════════════════════════════════════════ */
+
+/* ── Full-page loading ───────────────── */
+.negocio-loading-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 45vh;
+  color: #9ca3af;
+}
+
+/* ── Spinner ─────────────────────────── */
+.negocio-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #f1f1f1;
+  border-top-color: #f97316;
+  border-radius: 50%;
+  animation: neg-spin 0.75s linear infinite;
+}
+
+@keyframes neg-spin { to { transform: rotate(360deg); } }
+
+/* ── Hero extra styles ───────────────── */
+.negocio-hero-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+
+.negocio-btn.cancel {
+  background: transparent;
+  border: 1.5px solid #e5e7eb;
+  color: #6b7280;
+}
+.negocio-btn.cancel:hover { background: #f9fafb; color: #374151; }
+
+.negocio-edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+/* ── Products section ────────────────── */
+.negocio-products-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 5rem;
+}
+
+.negocio-products-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.negocio-products-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.negocio-products-subtitle {
+  font-size: 0.83rem;
+  color: #9ca3af;
+  margin: 0.2rem 0 0;
+}
+
+.negocio-limit-warn {
+  color: #f97316;
+  font-weight: 600;
+}
+
+/* ── Header action buttons ───────────── */
+.ng-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ng-btn-manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff;
+  color: #374151;
+  border: 1.5px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.ng-btn-manage:hover {
+  border-color: #f97316;
+  color: #f97316;
+  background: #fff7ed;
+}
+
+.negocio-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f97316;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+.negocio-btn-add:hover { background: #ea6a00; }
+
+/* ── Loading / Empty ─────────────────── */
+.negocio-products-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 5rem 2rem;
+  color: #9ca3af;
+}
+
+.negocio-products-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 4.5rem 2rem;
+  text-align: center;
+  color: #9ca3af;
+  background: #fafafa;
+  border-radius: 18px;
+  border: 2px dashed #e5e7eb;
+}
+.negocio-products-empty h3 { font-size: 1rem; font-weight: 600; color: #374151; margin: 0; }
+.negocio-products-empty p  { margin: 0; font-size: 0.86rem; }
+
+/* ── Product Grid ────────────────────── */
+.negocio-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Product Card ────────────────────── */
+.negocio-product-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+.negocio-product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.11);
+}
+
+.negocio-product-img-wrap {
+  position: relative;
+  height: 188px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+.negocio-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.negocio-product-card:hover .negocio-product-img {
+  transform: scale(1.06);
+}
+
+.negocio-product-category {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(255,255,255,0.93);
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.ng-ribbon {
+  position: absolute;
+  top: 12px;
+  left: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.22rem 0.65rem 0.22rem 0.8rem;
+  border-radius: 0 6px 6px 0;
+  letter-spacing: 0.02em;
+  box-shadow: 2px 2px 6px rgba(239,68,68,0.35);
+}
+.ng-ribbon::before {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -5px;
+  border-left: 4px solid #b91c1c;
+  border-bottom: 5px solid transparent;
+}
+
+.negocio-product-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.negocio-product-card:hover .negocio-product-actions { opacity: 1; }
+
+.negocio-product-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  background: rgba(255,255,255,0.92);
+  color: #374151;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 5px rgba(0,0,0,0.12);
+  transition: all 0.15s;
+}
+.negocio-product-action-btn:hover { background: #fff; color: #111; }
+.negocio-product-action-btn.danger:hover { background: #fef2f2; color: #dc2626; }
+
+.negocio-product-info {
+  padding: 0.9rem 1rem 1rem;
+}
+
+.negocio-product-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.3rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.negocio-product-desc {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 0 0 0.7rem;
+  line-height: 1.5;
+}
+
+.negocio-product-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ng-price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f97316;
+}
+
+.ng-price-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ng-price-final {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #16a34a;
+  line-height: 1.2;
+}
+
+.ng-price-original {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-decoration: line-through;
+  line-height: 1.2;
+}
+
+.ng-discount-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+}
+
+.negocio-product-stock {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.negocio-product-stock.ok  { background: #f0fdf4; color: #16a34a; }
+.negocio-product-stock.low { background: #fef2f2; color: #dc2626; }
+
+
+/* ══════════════════════════════════════════════════════════
+   MODAL EDICIÓN / CREACIÓN DE PRODUCTO
+   Prefijo "pm-" para no colisionar con ningún otro estilo.
+   z-index 9999 garantiza que quede por encima de todo.
+══════════════════════════════════════════════════════════ */
+
+/* Overlay */
+.pm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: pm-fade 0.18s ease;
+}
+
+@keyframes pm-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Caja del modal */
+.pm-box {
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 540px;
+  max-height: 92vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: pm-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pm-up {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Cabecera pegajosa */
+.pm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 1.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 2;
+  border-radius: 22px 22px 0 0;
+}
+
+.pm-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.25px;
+}
+
+.pm-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.pm-close:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Cuerpo con scroll */
+.pm-body {
+  padding: 1.25rem 1.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+/* Grupo de campo */
+.pm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.pm-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Inputs, selects y textareas ── */
+.pm-input,
+.pm-select,
+.pm-textarea {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 11px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+  box-sizing: border-box;
+  font-family: inherit;
+  line-height: 1.5;
+  appearance: auto;
+}
+.pm-input:focus,
+.pm-select:focus,
+.pm-textarea:focus {
+  border-color: #f97316;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+.pm-input::placeholder,
+.pm-textarea::placeholder {
+  color: #94a3b8;
+}
+.pm-textarea {
+  resize: vertical;
+  min-height: 85px;
+}
+
+/* Fila de dos columnas (precio / stock / descuento) */
+.pm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+/* Zona de imagen con drag visual */
+.pm-img-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 1.2rem;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+  text-align: center;
+}
+.pm-img-zone:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+.pm-img-zone img {
+  width: 100%;
+  max-height: 165px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+.pm-img-hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Pie pegajoso */
+.pm-footer {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  padding: 1rem 1.75rem 1.4rem;
+  border-top: 1px solid #f1f5f9;
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-radius: 0 0 22px 22px;
+}
+
+.pm-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.62rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.pm-btn-cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.pm-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.62rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #f97316;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.28);
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.pm-btn-save:hover:not(:disabled) {
+  background: #ea6a00;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.38);
+  transform: translateY(-1px);
+}
+.pm-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* ══════════════════════════════════════════
+   Responsive general de productos
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .negocio-products-section { padding: 1.5rem 1rem 3rem; }
+
+  .negocio-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.9rem;
+  }
+
+  .negocio-product-img-wrap { height: 145px; }
+
+  /* Siempre visibles en mobile */
+  .negocio-product-actions { opacity: 1; }
+
+  .negocio-hero-actions { flex-direction: column; width: 100%; }
+
+  .ng-header-actions { width: 100%; justify-content: flex-end; }
+}
+
+@media (max-width: 600px) {
+  .pm-box {
+    max-height: 96vh;
+    border-radius: 18px;
+  }
+  .pm-header,
+  .pm-body,
+  .pm-footer {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+  .pm-row {
+    grid-template-columns: 1fr;
+  }
+}

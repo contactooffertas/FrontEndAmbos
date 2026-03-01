@@ -1,0 +1,348 @@
+/* styles/navbar.css */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.85rem 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.navbar-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e53e3e;
+  padding: 1.10em;
+  color: #242020;
+  border-radius: 50%;
+  width: 1.75em;
+  height: 1.75em;
+  font-size: 1em;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.35);
+}
+
+.navbar-logo-suffix { color: rgba(0, 0, 0, 0.35); }
+
+.navbar-logo-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 1px;
+  flex-shrink: 0;
+}
+
+.navbar-search {
+  flex: 1;
+  max-width: 480px;
+  position: relative;
+}
+
+.navbar-search input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.6rem;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  background: var(--bg);
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.navbar-search input:focus {
+  border-color: var(--primary);
+  background: #fff;
+}
+
+.navbar-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+
+.navbar-user:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.navbar-user img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.navbar-user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+  min-width: 200px;
+  overflow: hidden;
+  animation: dropdownIn 0.15s ease;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navbar-dropdown a,
+.navbar-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  transition: background 0.15s;
+  text-decoration: none;
+}
+
+.navbar-dropdown a:hover,
+.navbar-dropdown button:hover { background: var(--bg); }
+
+.navbar-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+.navbar-dropdown .logout-btn { color: var(--danger); }
+
+/* ══ CATEGORIES STRIP ══ */
+.navbar-cats {
+  background: var(--secondary);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.navbar-cats::-webkit-scrollbar { display: none; }
+
+.navbar-cats-inner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.navbar-cat-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+}
+
+.navbar-cat-link:hover {
+  color: white;
+  border-bottom-color: var(--primary);
+}
+
+.navbar-cat-link.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ✅ FIX PRINCIPAL: category-name siempre visible en todos los tamaños */
+.navbar-cat-link .category-name,
+.category-name {
+  display: inline !important;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  white-space: nowrap;
+}
+
+/* ══ RESPONSIVE ══ */
+@media (max-width: 768px) {
+  .navbar-inner {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+  .navbar-search { max-width: 200px; }
+  .navbar-user-name { display: none; }
+  /* nombres visibles en tablet también */
+  .navbar-cat-link .category-name { display: inline !important; }
+}
+
+@media (max-width: 600px) {
+  .navbar-search { display: none; }
+  .navbar-actions { gap: 0.35rem; }
+  .hide-mobile { display: flex !important; }
+  .navbar-actions .btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78rem;
+  }
+  /* en mobile muy pequeño ocultamos nombres para ahorrar espacio */
+  .navbar-cat-link .category-name { display: none !important; }
+}
+
+@media (max-width: 380px) {
+  .navbar-logo { font-size: 1.2rem; }
+  .navbar-actions .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.73rem;
+  }
+}
+
+
+/* Botón Instalar PWA */
+.btn-pwa-install {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 8px;
+  border: 1.5px solid #f97316;
+  background: transparent;
+  color: #f97316;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, color 0.18s, transform 0.15s, box-shadow 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-pwa-install::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #f97316;
+  opacity: 0;
+  transition: opacity 0.18s;
+  z-index: 0;
+}
+
+.btn-pwa-install:hover::before {
+  opacity: 1;
+}
+
+.btn-pwa-install:hover {
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-pwa-install:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pwa-icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.pwa-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* Animación cuando está instalando */
+.pwa-icon--spin {
+  animation: pwa-pulse 1s ease-in-out infinite;
+}
+
+@keyframes pwa-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.9); }
+}
+
+/* Ocultar label en mobile, solo mostrar ícono */
+@media (max-width: 640px) {
+  .btn-pwa-install {
+    padding: 6px 9px;
+    border-radius: 8px;
+  }
+  .pwa-label {
+    display: none;
+  }
+}

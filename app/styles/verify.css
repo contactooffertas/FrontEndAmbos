@@ -1,0 +1,89 @@
+.verify-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f5f7fa, #e4ecff);
+}
+
+.verify-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+}
+
+.verify-card h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.verify-subtitle {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 25px;
+}
+
+.verify-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+.verify-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+
+.verify-button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.verify-button:hover {
+  background: #4338ca;
+}
+
+.verify-button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.verify-message {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.resend-section {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 0.85rem;
+}
+
+.resend-button {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.resend-button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}

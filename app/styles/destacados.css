@@ -1,0 +1,928 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   destacados.css
+   Estilos para:
+     1. FeaturedBusinessesSlider  (componente en app/page.tsx)
+     2. Página /destacados        (app/destacados/page.tsx)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. HOME SLIDER ────────────────────────────────────────────────────────── */
+
+.featured-biz-slider {
+  width: 100%;
+}
+
+.featured-biz-slider__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.featured-biz-slider__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Nav buttons del slider */
+.fbs-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(249, 115, 22, 0.35);
+  background: rgba(249, 115, 22, 0.08);
+  color: #f97316;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.fbs-nav-btn:hover {
+  background: rgba(249, 115, 22, 0.18);
+  border-color: rgba(249, 115, 22, 0.6);
+  transform: scale(1.08);
+}
+
+/* Botón "Ver todos" en header */
+.fbs-ver-todos-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.9rem;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.fbs-ver-todos-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+}
+
+/* ─── Track: MISMO grid que .businesses-grid del home.css ─────────────────
+   home.css: repeat(auto-fill, minmax(300px, 1fr)) / gap: 1.25rem
+   Las cards se ven idénticas porque heredan todos los estilos .biz-card    */
+.featured-biz-slider__track {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  will-change: opacity, transform;
+}
+
+/* móvil — igual que home.css: 1 columna bajo 600px */
+@media (max-width: 600px) {
+  .featured-biz-slider__track {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dots */
+.fbs-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.fbs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(249, 115, 22, 0.2);
+  cursor: pointer;
+  transition: all 0.25s;
+  padding: 0;
+}
+
+.fbs-dot.active {
+  background: #f97316;
+  width: 22px;
+  border-radius: 4px;
+}
+
+/* "Ver todos" link al fondo */
+.fbs-ver-todos-bottom {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.fbs-ver-todos-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.4rem;
+  border: 1.5px solid rgba(249, 115, 22, 0.4);
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.06);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.fbs-ver-todos-link:hover {
+  background: rgba(249, 115, 22, 0.14);
+  border-color: rgba(249, 115, 22, 0.65);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.18);
+}
+
+
+/* ─── 2. PÁGINA /DESTACADOS ──────────────────────────────────────────────────── */
+
+/* Hero de la página */
+.dest-hero {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 60%, #1e3a4a 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 3.5rem 1.5rem 2.5rem;
+  text-align: center;
+  color: white;
+}
+
+.dest-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(249,115,22,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(6,182,212,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.dest-hero__inner {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dest-hero__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: rgba(249, 115, 22, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f97316;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.2);
+}
+
+.dest-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.dest-hero__subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.dest-hero__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  background: rgba(249, 115, 22, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  border-radius: 999px;
+  color: var(--primary, #f97316);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.5rem;
+}
+
+/* Contenedor principal — mismo max-width que .section */
+.dest-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 2rem;
+}
+
+/* Barra de búsqueda */
+.dest-search-bar {
+  position: relative;
+  margin-bottom: 1.25rem;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 700;
+}
+
+.dest-search-bar__icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.dest-search-bar__input {
+  width: 100%;
+  padding: 0.8rem 2.8rem 0.8rem 2.75rem;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.dest-search-bar__input::placeholder {
+  color: var(--text-muted);
+}
+
+.dest-search-bar__input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+
+.dest-search-bar__clear {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.dest-search-bar__clear:hover {
+  color: var(--primary);
+}
+
+/* Filtros de categoría */
+.dest-filters {
+  margin-bottom: 1.75rem;
+}
+
+.dest-filters__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.6rem;
+}
+
+.dest-filters__scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dest-filters__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reutiliza la estética de .category-card del home */
+.dest-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: white;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.dest-filter-btn:hover,
+.dest-filter-btn.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+/* Contador en botones de categoría */
+.dest-filter-btn__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--primary);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dest-filter-btn.active .dest-filter-btn__count {
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+}
+
+/* Info de resultados */
+.dest-results-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dest-results-info__filters {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.dest-clear-filters {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.dest-clear-filters:hover {
+  background: var(--primary-light);
+}
+
+/* ─── Grid /destacados — 4 columnas en pantalla ancha ────────────────────── */
+.dest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 1200px) {
+  .dest-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .dest-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Dest Card — extiende la estética de .biz-card del home ─────────────── */
+.dest-card {
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  /* flex column con altura completa para que el CTA siempre quede abajo */
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s;
+}
+
+.dest-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: transparent;
+}
+
+.dest-card__banner {
+  display: block;
+  position: relative;
+  height: 175px;
+  overflow: hidden;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.dest-card__banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.dest-card:hover .dest-card__banner-img {
+  transform: scale(1.04);
+}
+
+.dest-card__banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(8, 12, 24, 0.78) 0%,
+    rgba(8, 12, 24, 0.22) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.dest-card__badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* Igual que .biz-card-featured-badge */
+.dest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+}
+
+.dest-badge--crown {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+}
+
+.dest-badge--verified {
+  background: #10b981;
+  color: #fff;
+}
+
+/* Igual que .biz-card-banner-name */
+.dest-card__banner-info {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+/* Igual que .biz-card-name */
+.dest-card__name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.45);
+  line-height: 1.2;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Igual que .biz-card-city */
+.dest-card__city {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* ─── Body: flex column con flex:1 para que ocupe todo el espacio restante ── */
+.dest-card__body {
+  padding: 0.85rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex: 1; /* ocupa todo el alto disponible */
+}
+
+/* Igual que .biz-card-desc */
+.dest-card__desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  /* altura fija equivalente a 2 líneas: line-height 1.5 × 0.8rem × 2 */
+  min-height: calc(1.5 * 0.8rem * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dest-card__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.dest-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Igual que .biz-card-stat-text */
+.dest-card__rating-text {
+  font-size: 0.74rem;
+  color: #9ca3af;
+}
+
+/* Igual que .biz-card-meta-row */
+.dest-card__meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  /* altura fija para que siempre ocupe el mismo espacio, con o sin seguidores/productos */
+  min-height: 1.2rem;
+}
+
+/* Igual que .biz-card-meta-item */
+.dest-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Badge de categoría */
+.dest-card__category {
+  display: flex;
+}
+
+.dest-card__category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  background: var(--primary-light, rgba(249,115,22,0.08));
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--primary, #f97316);
+}
+
+/* Info de plan — extra, no está en home */
+.dest-card__plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.6rem;
+  background: var(--primary-light);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 8px;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dest-card__plan-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: capitalize;
+}
+
+.dest-card__plan-days {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* ─── CTA — siempre al fondo gracias a margin-top: auto ─────────────────── */
+.dest-card__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  /* tamaño fijo: nunca crece ni encoge */
+  height: 38px;
+  padding: 0 1rem;
+  border-radius: 9px;
+  background: var(--primary);
+  color: #fff;
+  border: 1.5px solid var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* empuja el botón hacia abajo sin importar cuánto contenido haya arriba */
+  margin-top: auto;
+  transition: all 0.18s;
+}
+
+.dest-card__cta:hover {
+  background: #ea580c;
+  border-color: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+}
+
+/* ─── Skeleton — mismo look que .skeleton del home ───────────────────────── */
+.dest-card--skeleton {
+  pointer-events: none;
+}
+
+.dest-skeleton__banner {
+  height: 175px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.4s infinite;
+}
+
+.dest-skeleton__line {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.4s infinite;
+}
+
+/* Reutiliza el @keyframes skeleton ya definido en home.css */
+/* Si no está disponible, se declara acá como fallback */
+@keyframes skeleton {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Paginación ─────────────────────────────────────────────────────────── */
+.dest-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.dest-pag-btn {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 2px solid var(--border);
+  background: white;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  padding: 0 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.dest-pag-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.dest-pag-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+
+.dest-pag-btn--nav {
+  font-size: 1rem;
+}
+
+.dest-pag-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dest-pag-ellipsis {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 0 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.dest-pag-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}
+
+/* ─── Empty State ────────────────────────────────────────────────────────── */
+.dest-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+
+.dest-empty__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  opacity: 0.25;
+  color: var(--text);
+}
+
+.dest-empty h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.5rem;
+}
+
+.dest-empty p {
+  font-size: 0.87rem;
+  margin: 0 0 1.5rem;
+}
+
+.dest-empty__btn {
+  padding: 0.55rem 1.4rem;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+  font-family: inherit;
+}
+
+.dest-empty__btn:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+}
+
+/* ─── CTA Banner — misma base que .banner del home.css ───────────────────── */
+.dest-cta-banner {
+  background: linear-gradient(135deg, var(--primary) 0%, #c2410c 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  overflow: hidden;
+  position: relative;
+  margin: 0 1.5rem 3rem;
+}
+
+.dest-cta-banner::after {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  bottom: -2rem;
+  width: 180px;
+  height: 180px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.dest-cta-banner__icon {
+  color: rgba(255,255,255,0.7);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dest-cta-banner > div:nth-child(2) {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.dest-cta-banner h3 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin: 0 0 0.4rem;
+}
+
+.dest-cta-banner p {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.dest-cta-banner__btn {
+  background: white;
+  color: var(--primary);
+  font-weight: 700;
+  flex-shrink: 0;
+  padding: 0.75rem 1.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.dest-cta-banner__btn:hover {
+  background: var(--primary-light);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .dest-hero {
+    padding: 2.5rem 1rem 2rem;
+  }
+
+  .dest-main {
+    padding: 2rem 1rem 1.5rem;
+  }
+
+  .dest-cta-banner {
+    flex-direction: column;
+    text-align: center;
+    margin: 0 1rem 2rem;
+  }
+
+  .dest-cta-banner::after {
+    display: none;
+  }
+
+  .dest-cta-banner__icon {
+    display: none;
+  }
+
+  .featured-biz-slider__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .featured-biz-slider__controls {
+    align-self: flex-end;
+  }
+
+  .dest-pag-info {
+    width: 100%;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}

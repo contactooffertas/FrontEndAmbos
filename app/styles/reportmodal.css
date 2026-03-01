@@ -1,0 +1,346 @@
+/* app/styles/reportModal.css */
+
+/* Botón trigger - AHORA FUNCIONA */
+
+.report-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.38rem 0.65rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, rgba(255, 255, 255, 0.15));
+  background: transparent;
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+  isolation: isolate;
+  position: relative;
+  z-index: 1;
+}
+
+.report-trigger-btn:hover {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: #f97316 !important;
+  color: #f97316 !important;
+}
+
+/* Modal overlay - SIN TITILEO */
+.report-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 1rem;
+  pointer-events: auto;
+  animation: fadeIn 0.2s ease;
+  /* FIX PARA TITILEO */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Contenedor del modal - ESTABLE */
+.report-modal {
+  background: #1a1e2b;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid #2a2f3d;
+  animation: slideUp 0.25s ease;
+  position: relative;
+  margin: auto;
+  /* FIX PARA TITILEO */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px) translateZ(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) translateZ(0);
+    opacity: 1;
+  }
+}
+
+/* Header del modal */
+.report-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #2a2f3d;
+  position: sticky;
+  top: 0;
+  background: #1a1e2b;
+  z-index: 10;
+  border-radius: 24px 24px 0 0;
+}
+
+.report-modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e2e4ec;
+  margin: 0;
+}
+
+.report-modal-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.report-modal-close:hover {
+  background: #2a2f3d;
+  color: #e2e4ec;
+}
+
+/* Cuerpo del modal */
+.report-modal-body {
+  padding: 1.5rem;
+}
+
+.report-target-info {
+  margin-bottom: 1rem;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.report-target-info strong {
+  color: #e2e4ec;
+}
+
+/* Mensaje de error */
+.report-error-message {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Select de categorías */
+.report-category-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #2a2f3d;
+  border: 1px solid #3a4050;
+  border-radius: 12px;
+  color: #e2e4ec;
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.report-category-select:focus {
+  border-color: #f97316;
+}
+
+.report-category-select option {
+  background: #1a1e2b;
+  color: #e2e4ec;
+  padding: 0.5rem;
+}
+
+/* Textarea */
+.report-reason-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #2a2f3d;
+  border: 1px solid #3a4050;
+  border-radius: 12px;
+  color: #e2e4ec;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 120px;
+  margin-bottom: 0.5rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.report-reason-textarea:focus {
+  border-color: #f97316;
+}
+
+.report-reason-textarea::placeholder {
+  color: #ffff;
+}
+
+/* Contador de caracteres */
+.report-char-count {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+}
+
+/* Footer del modal */
+.report-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.report-modal-footer button {
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+
+.report-modal-footer .btn-cancel {
+  background: #2a2f3d;
+  color: #fff;
+  border: 1px solid #3a4050;
+}
+
+.report-modal-footer .btn-cancel:hover:not(:disabled) {
+  background: #3a4050;
+  color: #e2e4ec;
+}
+
+.report-modal-footer .btn-submit {
+  background: #f97316;
+  color: white;
+}
+
+.report-modal-footer .btn-submit:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+.report-modal-footer .btn-submit:disabled,
+.report-modal-footer .btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   RESPONSIVE MOBILE
+   ============================================ */
+@media (max-width: 768px) {
+  .report-modal {
+    max-width: 100%;
+    height: auto;
+    max-height: 85vh;
+    margin: 1rem;
+    border-radius: 24px;
+  }
+
+  .report-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .report-modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .report-modal-body {
+    padding: 1.25rem;
+  }
+
+  .report-category-select {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+  }
+
+  .report-reason-textarea {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+    min-height: 100px;
+  }
+
+  .report-modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .report-modal-footer button {
+    width: 100%;
+    padding: 0.75rem;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-modal {
+    margin: 0.5rem;
+    border-radius: 20px;
+    max-height: 90vh;
+  }
+
+  .report-modal-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .report-modal-body {
+    padding: 1rem;
+  }
+
+  .report-category-select {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .report-reason-textarea {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+    min-height: 90px;
+  }
+
+  .report-char-count {
+    font-size: 0.7rem;
+    margin-bottom: 1rem;
+  }
+
+  .report-modal-footer button {
+    font-size: 0.85rem;
+    padding: 0.7rem;
+  }
+}
