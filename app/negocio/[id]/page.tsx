@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import "../../styles/negocioId.css";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 interface Business {
   _id: string; name: string; description: string; city: string;
