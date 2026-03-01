@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { X, Send, Lock, AlertTriangle, ShieldAlert } from 'lucide-react';
 
-const API = 'https://vercel-backend-ochre-nine.vercel.app/api';
+const API = 'https://new-backend-lovat.vercel.app/api';
 
 interface Props {
   businessId: string;
