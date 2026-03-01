@@ -13,7 +13,7 @@ import {
   Package
 } from "lucide-react";
 
-const API_URL = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API_URL = "https://new-backend-lovat.vercel.app/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
