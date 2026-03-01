@@ -44,7 +44,7 @@ import ReportModal from "../componentes/reportModal";
 
 import "../styles/profile.css";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 const WS_URL = "https://renderbackendconsocket.onrender.com";
 const SECURITY_SEEN_KEY = "profile_security_seen_v1";
 
