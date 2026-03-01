@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useAuth } from "./authContext";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 interface CartItem {
   _id: string;
