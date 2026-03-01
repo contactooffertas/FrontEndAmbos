@@ -19,7 +19,7 @@ import { useAuth } from "../context/authContext";
 import MainLayout from "../componentes/MainLayout";
 import "../styles/eliminaUsuario.css";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://vercel-backend-ochre-nine.vercel.app/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -252,4 +252,5 @@ export default function EliminarUsuarioPage() {
       </div>
     </MainLayout>
   );
+
 }
