@@ -35,7 +35,7 @@ function VerifyContent() {
     setMessage("");
 
     try {
-      const res = await fetch("https://vercel-backend-ochre-nine.vercel.app/api/auth/verify", {
+      const res = await fetch("https://new-backend-lovat.vercel.app/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
@@ -60,7 +60,7 @@ function VerifyContent() {
 
   const handleResend = async () => {
     try {
-      await fetch("https://vercel-backend-ochre-nine.vercel.app/api/auth/resend", {
+      await fetch("https://new-backend-lovat.vercel.app/api/auth/resend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
