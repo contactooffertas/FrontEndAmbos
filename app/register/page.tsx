@@ -79,7 +79,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("https://vercel-backend-ochre-nine.vercel.app/api/auth/register", {
+      const response = await fetch("https://new-backend-lovat.vercel.app/api/auth/register", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
