@@ -8,7 +8,7 @@ import {
   Flame, Megaphone, FileText, Loader2, CheckCircle2,
 } from "lucide-react";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 interface ReportModalProps {
   // "user" es alias interno del chat — se envía como "business" al backend
