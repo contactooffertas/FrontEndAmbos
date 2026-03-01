@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 const VAPID_PUBLIC ="BLR8fiu0VNED_-qHI0rOQn_UPEtJptD4wiYJXuBQxgBhFFRf_SvU54F95IBaBG86V-cv3wwZ4l_NlLD236io1rw";
 
 function getToken(): string | null {
