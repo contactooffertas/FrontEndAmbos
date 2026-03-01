@@ -23,7 +23,7 @@ import {
 import Link from "next/link";
 import "../../app/styles/destacados.css";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 interface FeaturedBusiness {
   _id: string;
