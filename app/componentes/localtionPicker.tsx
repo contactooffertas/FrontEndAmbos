@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MapPin, Search, Loader2, CheckCircle2, X, Navigation } from "lucide-react";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 // Las sugerencias de Google Autocomplete vienen con placeId pero SIN lat/lng.
