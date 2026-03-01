@@ -35,7 +35,7 @@ function VerifyContent() {
     setMessage("");
 
     try {
-      const res = await fetch("https://renderbackendconsocket.onrender.com/api/auth/verify", {
+      const res = await fetch("https://vercel-backend-ochre-nine.vercel.app/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
@@ -120,4 +120,5 @@ export default function VerifyPage() {
       <VerifyContent />
     </Suspense>
   );
+
 }
