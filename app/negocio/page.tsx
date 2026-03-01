@@ -28,7 +28,7 @@ import LocationPermissionModal from "../componentes/locationPermisoModal";
 import BusinessAppealModal from "../componentes/Businessappealmodal";
 import { useUserLocation } from "../hooks/Useuserlocation";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 const BUSINESS_CATEGORIES = [
   { slug: "tecnologia", name: "Tecnologia", Icon: Cpu },
