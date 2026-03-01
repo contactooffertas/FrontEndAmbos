@@ -5,7 +5,7 @@ import React, {
   createContext, useContext, useState, useEffect, useRef, ReactNode,
 } from "react";
 
-const API = "https://vercel-backend-ochre-nine.vercel.app/api";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 // ── Helpers VAPID ─────────────────────────────────────────────────────────────
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
