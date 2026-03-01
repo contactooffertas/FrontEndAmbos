@@ -31,7 +31,7 @@ export default function LocationPermissionModal({
         try {
           const token = localStorage.getItem("marketplace_token");
           if (token) {
-            await fetch("https://vercel-backend-ochre-nine.vercel.app/api/user/location", {
+            await fetch("https://new-backend-lovat.vercel.app/api/user/location", {
               method: "PUT",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
               body: JSON.stringify(coords),
