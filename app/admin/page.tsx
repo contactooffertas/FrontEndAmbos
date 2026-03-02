@@ -69,7 +69,6 @@ interface ReportRow {
   resolvedAt?: string; createdAt: string;
 }
 
-// ── Announcement interface ───────────────────────────────────────────────────
 interface Announcement {
   _id: string;
   title: string;
@@ -82,7 +81,6 @@ interface Announcement {
   active: boolean;
 }
 
-// ── BusinessAppeal interface ─────────────────────────────────────────────────
 interface BusinessAppeal {
   _id: string;
   name: string;
@@ -113,7 +111,6 @@ function DetailModal({ title, onClose, children }: { title: string; onClose: () 
   );
 }
 
-// ── Helper: días restantes ───────────────────────────────────────────────────
 function daysLeftFrom(dateStr?: string) {
   if (!dateStr) return null;
   const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
@@ -133,7 +130,6 @@ export default function AdminPage() {
   const [search, setSearch]   = useState('');
   const [fetching, setFetching] = useState(false);
 
-  // Suscriptores
   const [subscribers, setSubscribers]           = useState<BusinessRow[]>([]);
   const [subSearch, setSubSearch]               = useState('');
   const [subModal, setSubModal]                 = useState(false);
@@ -143,7 +139,6 @@ export default function AdminPage() {
   const [subFechaFinaliza, setSubFechaFinaliza] = useState('');
   const [subSaving, setSubSaving]               = useState(false);
 
-  // Anuncios
   const [announcements, setAnnouncements]     = useState<Announcement[]>([]);
   const [annTitle, setAnnTitle]               = useState('');
   const [annMessage, setAnnMessage]           = useState('');
@@ -152,14 +147,12 @@ export default function AdminPage() {
   const [annLink, setAnnLink]                 = useState('');
   const [annSaving, setAnnSaving]             = useState(false);
 
-  // Productos bajo revision
   const [reviewProds, setReviewProds] = useState<ReviewProduct[]>([]);
   const [moderateOpen, setModerateOpen] = useState<string | null>(null);
   const [moderateAction, setModerateAction] = useState<'unblock'|'keep_blocked'|'permanent_block'|''>('');
   const [moderateNote, setModerateNote] = useState('');
   const [moderateSaving, setModerateSaving] = useState(false);
 
-  // Reportes
   const [reports, setReports]           = useState<ReportRow[]>([]);
   const [reportFilter, setReportFilter] = useState<'all'|'pending'|'action_taken'|'dismissed'>('pending');
   const [reportTypeFilter, setReportTypeFilter] = useState<'all'|'product'|'business'>('all');
@@ -168,14 +161,12 @@ export default function AdminPage() {
   const [resolveNote, setResolveNote]   = useState('');
   const [resolveSaving, setResolveSaving] = useState(false);
 
-  // Apelaciones de negocios
   const [businessAppeals, setBusinessAppeals]         = useState<BusinessAppeal[]>([]);
   const [appealResolveOpen, setAppealResolveOpen]     = useState<string | null>(null);
   const [appealAction, setAppealAction]               = useState<'approve'|'reject'|''>('');
   const [appealAdminNote, setAppealAdminNote]         = useState('');
   const [appealResolveSaving, setAppealResolveSaving] = useState(false);
 
-  // Modales varios
   const [featBizModal, setFeatBizModal] = useState(false);
   const [featBizId, setFeatBizId]     = useState('');
   const [featBizName, setFeatBizName] = useState('');
@@ -252,7 +243,6 @@ export default function AdminPage() {
     finally { setFetching(false); }
   }, []);
 
-  // ── Cargar suscriptores ──────────────────────────────────────────────────
   const loadSubscribers = useCallback(async () => {
     setFetching(true);
     try {
@@ -262,7 +252,6 @@ export default function AdminPage() {
     finally { setFetching(false); }
   }, [subSearch]);
 
-  // ── Cargar anuncios ──────────────────────────────────────────────────────
   const loadAnnouncements = useCallback(async () => {
     setFetching(true);
     try {
@@ -272,7 +261,6 @@ export default function AdminPage() {
     finally { setFetching(false); }
   }, []);
 
-  // ── Cargar apelaciones de negocios ───────────────────────────────────────
   const loadBusinessAppeals = useCallback(async () => {
     setFetching(true);
     try {
@@ -376,11 +364,7 @@ export default function AdminPage() {
     try {
       await apiFetch(`/businesses/${subBizId}/subscription`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          cuotaSuscriptor: true,
-          fechaPago: subFechaPago,
-          fechaFinaliza: subFechaFinaliza,
-        }),
+        body: JSON.stringify({ cuotaSuscriptor: true, fechaPago: subFechaPago, fechaFinaliza: subFechaFinaliza }),
       });
       setSubscribers(prev => prev.map(b => b._id === subBizId
         ? { ...b, cuotaSuscriptor: true, fechaPago: subFechaPago, fechaFinaliza: subFechaFinaliza }
@@ -416,13 +400,7 @@ export default function AdminPage() {
     try {
       const d = await apiFetch('/announcements', {
         method: 'POST',
-        body: JSON.stringify({
-          title: annTitle.trim(),
-          message: annMessage.trim(),
-          audience: annAudience,
-          durationHours: Number(annDuration),
-          link: annLink.trim() || undefined,
-        }),
+        body: JSON.stringify({ title: annTitle.trim(), message: annMessage.trim(), audience: annAudience, durationHours: Number(annDuration), link: annLink.trim() || undefined }),
       });
       setAnnouncements(prev => [d.announcement, ...prev]);
       setAnnTitle(''); setAnnMessage(''); setAnnLink(''); setAnnDuration('24'); setAnnAudience('all');
@@ -442,42 +420,30 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Apelaciones de negocios ───────────────────────────────────────────────
+  // ── Apelaciones ───────────────────────────────────────────────────────────
   const handleResolveAppeal = async (bizId: string, action: 'approve' | 'reject', adminNote: string) => {
     setAppealResolveSaving(true);
     try {
       const res = await fetch(`https://vercel-backend-ochre-nine.vercel.app/api/admin/businesses/${bizId}/appeal`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('marketplace_token')}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('marketplace_token')}` },
         body: JSON.stringify({ action, adminNote }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Error');
-
       setBusinessAppeals(prev => prev.filter(b => b._id !== bizId));
       toast('success', action === 'approve' ? '✅ Negocio desbloqueado y vendedor notificado' : '❌ Apelación rechazada');
-      setAppealResolveOpen(null);
-      setAppealAction('');
-      setAppealAdminNote('');
-    } catch (e: any) {
-      toast('error', e.message);
-    } finally {
-      setAppealResolveSaving(false);
-    }
+      setAppealResolveOpen(null); setAppealAction(''); setAppealAdminNote('');
+    } catch (e: any) { toast('error', e.message); }
+    finally { setAppealResolveSaving(false); }
   };
 
-  // ── Moderacion de PRODUCTO BAJO REVISION ─────────────────────────────────
+  // ── Moderacion producto ───────────────────────────────────────────────────
   const handleModerateProduct = async (productId: string) => {
     if (!moderateAction) { toast('warning', 'Selecciona una accion'); return; }
     setModerateSaving(true);
     try {
-      await apiFetch(`/products/${productId}/moderate`, {
-        method: 'PATCH',
-        body: JSON.stringify({ action: moderateAction, adminNote: moderateNote }),
-      });
+      await apiFetch(`/products/${productId}/moderate`, { method: 'PATCH', body: JSON.stringify({ action: moderateAction, adminNote: moderateNote }) });
       setReviewProds(prev => prev.filter(p => p._id !== productId));
       const msg = moderateAction === 'unblock' ? 'Producto desbloqueado y visible al publico'
         : moderateAction === 'permanent_block' ? 'Bloqueo permanente aplicado'
@@ -755,6 +721,7 @@ export default function AdminPage() {
             </div>
             <div className="adm-card">
               <h3 className="adm-card-title"><Users size={16} /> Usuarios recientes</h3>
+              {/* Desktop */}
               <div className="adm-table-wrap adm-desktop-only">
                 <table className="adm-table">
                   <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Registrado</th></tr></thead>
@@ -770,6 +737,19 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {/* Mobile */}
+              <div className="adm-mobile-only" style={{ flexDirection: 'column' }}>
+                {stats.recentUsers.map((u: any) => (
+                  <div key={u._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', borderBottom: '1px solid var(--adm-border)' }}>
+                    <div className="adm-avatar-sm">{u.name[0]}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--adm-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                    </div>
+                    <span className={`adm-role-badge adm-role-${u.role}`}>{u.role}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -780,22 +760,67 @@ export default function AdminPage() {
             <div className="adm-search-bar"><Search size={16} /><input placeholder="Buscar por nombre o email..." value={search} onChange={e => setSearch(e.target.value)} /></div>
             <div className="adm-card">
               {fetching ? <div className="adm-loading"><div className="adm-spinner" /></div> : (
-                <div className="adm-table-wrap adm-desktop-only">
-                  <table className="adm-table">
-                    <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
-                    <tbody>
-                      {users.map(u => (
-                        <tr key={u._id} className={u.blocked ? 'adm-row-blocked' : ''}>
-                          <td><div className="adm-user-cell"><div className="adm-avatar-sm">{u.name[0]}</div><span>{u.name}</span></div></td>
-                          <td className="adm-muted">{u.email}</td>
-                          <td><select className={`adm-role-select adm-role-${u.role}`} value={u.role} onChange={e => changeRole(u._id, e.target.value)} disabled={u.role === 'admin'}><option value="user">user</option><option value="seller">seller</option><option value="admin">admin</option></select></td>
-                          <td>{u.blocked ? <span className="adm-status blocked"><Ban size={12} /> Bloqueado</span> : <span className="adm-status active"><CheckCircle size={12} /> Activo</span>}</td>
-                          <td><button className={`adm-btn-sm ${u.blocked ? 'green' : 'red'}`} onClick={() => blockUser(u._id, u.name, !!u.blocked)} disabled={u.role === 'admin'}>{u.blocked ? <><CheckCircle size={13} /> Desbloquear</> : <><Ban size={13} /> Bloquear</>}</button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  {/* Desktop */}
+                  <div className="adm-table-wrap adm-desktop-only">
+                    <table className="adm-table">
+                      <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+                      <tbody>
+                        {users.map(u => (
+                          <tr key={u._id} className={u.blocked ? 'adm-row-blocked' : ''}>
+                            <td><div className="adm-user-cell"><div className="adm-avatar-sm">{u.name[0]}</div><span>{u.name}</span></div></td>
+                            <td className="adm-muted">{u.email}</td>
+                            <td><select className={`adm-role-select adm-role-${u.role}`} value={u.role} onChange={e => changeRole(u._id, e.target.value)} disabled={u.role === 'admin'}><option value="user">user</option><option value="seller">seller</option><option value="admin">admin</option></select></td>
+                            <td>{u.blocked ? <span className="adm-status blocked"><Ban size={12} /> Bloqueado</span> : <span className="adm-status active"><CheckCircle size={12} /> Activo</span>}</td>
+                            <td><button className={`adm-btn-sm ${u.blocked ? 'green' : 'red'}`} onClick={() => blockUser(u._id, u.name, !!u.blocked)} disabled={u.role === 'admin'}>{u.blocked ? <><CheckCircle size={13} /> Desbloquear</> : <><Ban size={13} /> Bloquear</>}</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Mobile */}
+                  <div className="adm-mobile-only" style={{ flexDirection: 'column' }}>
+                    {users.map(u => (
+                      <div key={u._id} style={{ padding: '1rem', borderBottom: '1px solid var(--adm-border)', opacity: u.blocked ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.65rem' }}>
+                          <div className="adm-avatar-sm" style={{ flexShrink: 0 }}>{u.name[0]}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--adm-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                          </div>
+                          {u.blocked
+                            ? <span className="adm-status blocked"><Ban size={11} /> Bloqueado</span>
+                            : <span className="adm-status active"><CheckCircle size={11} /> Activo</span>
+                          }
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <select
+                            className={`adm-role-select adm-role-${u.role}`}
+                            value={u.role}
+                            onChange={e => changeRole(u._id, e.target.value)}
+                            disabled={u.role === 'admin'}
+                            style={{ flex: 1, minWidth: 90 }}
+                          >
+                            <option value="user">user</option>
+                            <option value="seller">seller</option>
+                            <option value="admin">admin</option>
+                          </select>
+                          <button
+                            className={`adm-btn-sm ${u.blocked ? 'green' : 'red'}`}
+                            style={{ flex: 1, justifyContent: 'center' }}
+                            onClick={() => blockUser(u._id, u.name, !!u.blocked)}
+                            disabled={u.role === 'admin'}
+                          >
+                            {u.blocked ? <><CheckCircle size={13} /> Desbloquear</> : <><Ban size={13} /> Bloquear</>}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {users.length === 0 && (
+                      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--adm-muted)' }}>Sin usuarios</div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -807,38 +832,94 @@ export default function AdminPage() {
             <div className="adm-search-bar"><Search size={16} /><input placeholder="Buscar negocio..." value={search} onChange={e => setSearch(e.target.value)} /></div>
             <div className="adm-card">
               {fetching ? <div className="adm-loading"><div className="adm-spinner" /></div> : (
-                <div className="adm-table-wrap adm-desktop-only">
-                  <table className="adm-table">
-                    <thead><tr><th>Negocio</th><th>Dueno</th><th>Ciudad</th><th>Estado</th><th>Strikes</th><th>Destacados</th><th>Acciones</th></tr></thead>
-                    <tbody>
-                      {businesses.map(b => (
-                        <tr key={b._id} className={b.blocked ? 'adm-row-blocked' : ''}>
-                          <td><div className="adm-biz-cell"><img src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=36&background=f97316&color=fff`} alt="" className="adm-biz-logo" /><div><div className="adm-biz-name">{b.name}</div>{b.verified && <span className="adm-verified-chip"><CheckCircle size={10} /> Verificado</span>}</div></div></td>
-                          <td><div className="adm-muted">{b.owner?.name}</div><div className="adm-muted" style={{fontSize:'0.75rem'}}>{b.owner?.email}</div></td>
-                          <td className="adm-muted">{b.city || '—'}</td>
-                          <td>{b.blocked ? <span className="adm-status blocked"><Ban size={12} /> Bloqueado</span> : <span className="adm-status active"><CheckCircle size={12} /> Activo</span>}</td>
-                          <td>
-                            <div style={{display:'flex',alignItems:'center',gap:4}}>
-                              {[1,2,3].map(n => (<div key={n} style={{ width:12, height:12, borderRadius:'50%', background: n <= (b.strikeCount||0) ? '#ef4444' : 'var(--adm-border2)' }} />))}
-                              <span style={{fontSize:'0.72rem',color:'var(--adm-muted2)',marginLeft:3}}>{b.strikeCount||0}/3</span>
+                <>
+                  {/* Desktop */}
+                  <div className="adm-table-wrap adm-desktop-only">
+                    <table className="adm-table">
+                      <thead><tr><th>Negocio</th><th>Dueno</th><th>Ciudad</th><th>Estado</th><th>Strikes</th><th>Destacados</th><th>Acciones</th></tr></thead>
+                      <tbody>
+                        {businesses.map(b => (
+                          <tr key={b._id} className={b.blocked ? 'adm-row-blocked' : ''}>
+                            <td><div className="adm-biz-cell"><img src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=36&background=f97316&color=fff`} alt="" className="adm-biz-logo" /><div><div className="adm-biz-name">{b.name}</div>{b.verified && <span className="adm-verified-chip"><CheckCircle size={10} /> Verificado</span>}</div></div></td>
+                            <td><div className="adm-muted">{b.owner?.name}</div><div className="adm-muted" style={{fontSize:'0.75rem'}}>{b.owner?.email}</div></td>
+                            <td className="adm-muted">{b.city || '—'}</td>
+                            <td>{b.blocked ? <span className="adm-status blocked"><Ban size={12} /> Bloqueado</span> : <span className="adm-status active"><CheckCircle size={12} /> Activo</span>}</td>
+                            <td>
+                              <div style={{display:'flex',alignItems:'center',gap:4}}>
+                                {[1,2,3].map(n => (<div key={n} style={{ width:12, height:12, borderRadius:'50%', background: n <= (b.strikeCount||0) ? '#ef4444' : 'var(--adm-border2)' }} />))}
+                                <span style={{fontSize:'0.72rem',color:'var(--adm-muted2)',marginLeft:3}}>{b.strikeCount||0}/3</span>
+                              </div>
+                            </td>
+                            <td>
+                              {b.featuredInfo ? <span className="adm-featured-chip"><Crown size={11} /> {daysLeft(b.featuredInfo.endDate)}d</span> : null}
+                              {(b.featuredProductsCount ?? 0) > 0 && <span style={{fontSize:'0.72rem',color:'#f97316',fontWeight:600}}><Tag size={10} /> {b.featuredProductsCount}</span>}
+                              {!b.featuredInfo && !b.featuredProductsCount && <span className="adm-muted" style={{fontSize:'0.78rem'}}>—</span>}
+                            </td>
+                            <td><div className="adm-action-group">
+                              <button className={`adm-btn-sm ${b.verified ? 'orange' : 'green'}`} onClick={() => verifyBusiness(b._id, b.verified)}>{b.verified ? <><XCircle size={12}/> Quitar</> : <><CheckCircle size={12}/> Verificar</>}</button>
+                              <button className="adm-btn-sm gold" onClick={() => openBizProdModal(b)}><Tag size={12} /> Dest. productos</button>
+                              <button className="adm-btn-sm" style={{background:'rgba(249,115,22,0.12)',color:'#f97316',border:'1px solid rgba(249,115,22,0.3)'}} onClick={() => openFeatBiz(b)}><Crown size={12} /> Plan negocio</button>
+                              <button className={`adm-btn-sm ${b.blocked ? 'green' : 'red'}`} onClick={() => openBlockBiz(b._id)}>{b.blocked ? <><CheckCircle size={12}/> Desbloquear</> : <><Ban size={12}/> Bloquear</>}</button>
+                            </div></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Mobile */}
+                  <div className="adm-mobile-only" style={{ flexDirection: 'column' }}>
+                    {businesses.map(b => (
+                      <div key={b._id} style={{ padding: '1rem', borderBottom: '1px solid var(--adm-border)', opacity: b.blocked ? 0.7 : 1 }}>
+                        {/* Header del negocio */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                          <img
+                            src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=44&background=f97316&color=fff`}
+                            alt={b.name}
+                            style={{ width: 44, height: 44, borderRadius: 9, objectFit: 'cover', border: '1px solid var(--adm-border2)', flexShrink: 0 }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--adm-text)' }}>{b.name}</span>
+                              {b.verified && <span className="adm-verified-chip"><CheckCircle size={9} /> Ver.</span>}
                             </div>
-                          </td>
-                          <td>
-                            {b.featuredInfo ? <span className="adm-featured-chip"><Crown size={11} /> {daysLeft(b.featuredInfo.endDate)}d</span> : null}
-                            {(b.featuredProductsCount ?? 0) > 0 && <span style={{fontSize:'0.72rem',color:'#f97316',fontWeight:600}}><Tag size={10} /> {b.featuredProductsCount}</span>}
-                            {!b.featuredInfo && !b.featuredProductsCount && <span className="adm-muted" style={{fontSize:'0.78rem'}}>—</span>}
-                          </td>
-                          <td><div className="adm-action-group">
-                            <button className={`adm-btn-sm ${b.verified ? 'orange' : 'green'}`} onClick={() => verifyBusiness(b._id, b.verified)}>{b.verified ? <><XCircle size={12}/> Quitar</> : <><CheckCircle size={12}/> Verificar</>}</button>
-                            <button className="adm-btn-sm gold" onClick={() => openBizProdModal(b)}><Tag size={12} /> Dest. productos</button>
-                            <button className="adm-btn-sm" style={{background:'rgba(249,115,22,0.12)',color:'#f97316',border:'1px solid rgba(249,115,22,0.3)'}} onClick={() => openFeatBiz(b)}><Crown size={12} /> Plan negocio</button>
-                            <button className={`adm-btn-sm ${b.blocked ? 'green' : 'red'}`} onClick={() => openBlockBiz(b._id)}>{b.blocked ? <><CheckCircle size={12}/> Desbloquear</> : <><Ban size={12}/> Bloquear</>}</button>
-                          </div></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted2)', marginTop: 2 }}>{b.owner?.name} · {b.city || 'Sin ciudad'}</div>
+                          </div>
+                          {b.blocked
+                            ? <span className="adm-status blocked" style={{ fontSize: '0.7rem' }}><Ban size={10} /></span>
+                            : <span className="adm-status active" style={{ fontSize: '0.7rem' }}><CheckCircle size={10} /></span>
+                          }
+                        </div>
+                        {/* Info extra */}
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            {[1,2,3].map(n => (<div key={n} style={{ width: 10, height: 10, borderRadius: '50%', background: n <= (b.strikeCount || 0) ? '#ef4444' : 'var(--adm-border2)' }} />))}
+                            <span style={{ fontSize: '0.7rem', color: 'var(--adm-muted2)', marginLeft: 3 }}>{b.strikeCount || 0}/3</span>
+                          </div>
+                          {b.featuredInfo && <span className="adm-featured-chip" style={{ fontSize: '0.7rem' }}><Crown size={9} /> {daysLeft(b.featuredInfo.endDate)}d</span>}
+                          {(b.featuredProductsCount ?? 0) > 0 && <span style={{ fontSize: '0.7rem', color: '#f97316', fontWeight: 700 }}><Tag size={9} /> {b.featuredProductsCount}</span>}
+                        </div>
+                        {/* Acciones */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+                          <button className={`adm-btn-sm ${b.verified ? 'orange' : 'green'}`} style={{ justifyContent: 'center' }} onClick={() => verifyBusiness(b._id, b.verified)}>
+                            {b.verified ? <><XCircle size={11} /> Quitar ver.</> : <><CheckCircle size={11} /> Verificar</>}
+                          </button>
+                          <button className="adm-btn-sm gold" style={{ justifyContent: 'center' }} onClick={() => openBizProdModal(b)}>
+                            <Tag size={11} /> Dest. prod.
+                          </button>
+                          <button className="adm-btn-sm" style={{ justifyContent: 'center', background: 'rgba(249,115,22,0.12)', color: '#f97316', border: '1px solid rgba(249,115,22,0.3)' }} onClick={() => openFeatBiz(b)}>
+                            <Crown size={11} /> Plan neg.
+                          </button>
+                          <button className={`adm-btn-sm ${b.blocked ? 'green' : 'red'}`} style={{ justifyContent: 'center' }} onClick={() => openBlockBiz(b._id)}>
+                            {b.blocked ? <><CheckCircle size={11} /> Desbloquear</> : <><Ban size={11} /> Bloquear</>}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {businesses.length === 0 && (
+                      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--adm-muted)' }}>Sin negocios</div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -847,7 +928,6 @@ export default function AdminPage() {
         {/* ════ SUSCRIPTORES ════ */}
         {tab === 'subscribers' && (
           <div className="adm-content">
-            {/* Resumen */}
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
               {[
                 { label: 'Total suscriptores', value: activeSubscribers, color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)' },
@@ -886,35 +966,15 @@ export default function AdminPage() {
                       gap: '1rem',
                       flexWrap: 'wrap',
                     }}>
-                      <img
-                        src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=52&background=f97316&color=fff`}
-                        alt={b.name}
-                        style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', border: '1px solid var(--adm-border2)', flexShrink: 0 }}
-                      />
+                      <img src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=52&background=f97316&color=fff`} alt={b.name} style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', border: '1px solid var(--adm-border2)', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 180 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
                           <span style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--adm-text)' }}>{b.name}</span>
                           {b.verified && <span className="adm-verified-chip"><CheckCircle size={10} /> Verificado</span>}
-                          {isActive && !isExpiring && (
-                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>
-                              Suscriptor activo
-                            </span>
-                          )}
-                          {isExpiring && (
-                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <AlertTriangle size={9} /> Vence en {dl} dia{dl !== 1 ? 's' : ''}
-                            </span>
-                          )}
-                          {isExpired && (
-                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>
-                              Vencido
-                            </span>
-                          )}
-                          {!b.cuotaSuscriptor && (
-                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'var(--adm-surface2)', color: 'var(--adm-muted)', border: '1px solid var(--adm-border)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>
-                              Sin suscripcion
-                            </span>
-                          )}
+                          {isActive && !isExpiring && <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>Suscriptor activo</span>}
+                          {isExpiring && <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}><AlertTriangle size={9} /> Vence en {dl} dia{dl !== 1 ? 's' : ''}</span>}
+                          {isExpired && <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>Vencido</span>}
+                          {!b.cuotaSuscriptor && <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'var(--adm-surface2)', color: 'var(--adm-muted)', border: '1px solid var(--adm-border)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>Sin suscripcion</span>}
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>{b.owner?.name} · {b.city || 'Sin ciudad'}</span>
@@ -927,25 +987,15 @@ export default function AdminPage() {
                             {b.fechaFinaliza && (
                               <span style={{ fontSize: '0.75rem', color: isExpiring ? '#f59e0b' : isExpired ? '#f87171' : 'var(--adm-muted2)', display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <Clock size={11} /> Vence: <strong style={{ color: isExpiring ? '#f59e0b' : isExpired ? '#f87171' : 'var(--adm-text)' }}>{new Date(b.fechaFinaliza).toLocaleDateString('es-AR')}</strong>
-                                {dl !== null && dl >= 0 && (
-                                  <span style={{ marginLeft: 4, fontSize: '0.7rem', fontWeight: 700, color: isExpiring ? '#f59e0b' : '#4ade80' }}>
-                                    ({dl === 0 ? 'hoy' : `${dl}d`})
-                                  </span>
-                                )}
+                                {dl !== null && dl >= 0 && <span style={{ marginLeft: 4, fontSize: '0.7rem', fontWeight: 700, color: isExpiring ? '#f59e0b' : '#4ade80' }}>({dl === 0 ? 'hoy' : `${dl}d`})</span>}
                               </span>
                             )}
                           </div>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        <button className="adm-btn-sm green" onClick={() => openSubModal(b)} title="Gestionar suscripcion">
-                          <BadgeDollarSign size={12} /> {b.cuotaSuscriptor ? 'Editar' : 'Dar suscripcion'}
-                        </button>
-                        {b.cuotaSuscriptor && (
-                          <button className="adm-btn-sm red" onClick={() => removeSubscription(b._id, b.name)}>
-                            <X size={12} /> Quitar
-                          </button>
-                        )}
+                        <button className="adm-btn-sm green" onClick={() => openSubModal(b)}><BadgeDollarSign size={12} /> {b.cuotaSuscriptor ? 'Editar' : 'Dar suscripcion'}</button>
+                        {b.cuotaSuscriptor && <button className="adm-btn-sm red" onClick={() => removeSubscription(b._id, b.name)}><X size={12} /> Quitar</button>}
                       </div>
                     </div>
                   );
@@ -953,9 +1003,7 @@ export default function AdminPage() {
                 {filteredSubscribers.length === 0 && (
                   <div className="adm-empty">
                     <BadgeDollarSign size={48} strokeWidth={1} style={{ opacity: 0.4 }} />
-                    <p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>
-                      {subSearch ? 'Sin resultados' : 'No hay negocios cargados'}
-                    </p>
+                    <p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>{subSearch ? 'Sin resultados' : 'No hay negocios cargados'}</p>
                   </div>
                 )}
               </div>
@@ -968,182 +1016,78 @@ export default function AdminPage() {
           <div className="adm-content">
             <div style={{ marginBottom: '0.75rem' }}>
               <p className="adm-muted" style={{ fontSize: '0.82rem' }}>
-                {businessAppeals.length === 0
-                  ? 'No hay apelaciones pendientes.'
-                  : `${businessAppeals.length} apelación${businessAppeals.length !== 1 ? 'es' : ''} pendiente${businessAppeals.length !== 1 ? 's' : ''} de revisión.`}
+                {businessAppeals.length === 0 ? 'No hay apelaciones pendientes.' : `${businessAppeals.length} apelación${businessAppeals.length !== 1 ? 'es' : ''} pendiente${businessAppeals.length !== 1 ? 's' : ''} de revisión.`}
               </p>
             </div>
 
-            {fetching ? (
-              <div className="adm-loading"><div className="adm-spinner" /></div>
-            ) : businessAppeals.length === 0 ? (
+            {fetching ? <div className="adm-loading"><div className="adm-spinner" /></div> : businessAppeals.length === 0 ? (
               <div className="adm-empty">
                 <ShieldCheck size={48} strokeWidth={1} style={{ opacity: 0.4 }} />
-                <p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>
-                  Sin apelaciones pendientes — todo en orden
-                </p>
+                <p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>Sin apelaciones pendientes — todo en orden</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {businessAppeals.map(b => {
                   const isOpen = appealResolveOpen === b._id;
                   return (
-                    <div key={b._id} style={{
-                      background: 'var(--adm-surface)',
-                      border: '1px solid rgba(239,68,68,0.3)',
-                      borderLeft: '3px solid #ef4444',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                    }}>
-                      {/* Info del negocio */}
+                    <div key={b._id} style={{ background: 'var(--adm-surface)', border: '1px solid rgba(239,68,68,0.3)', borderLeft: '3px solid #ef4444', borderRadius: 14, overflow: 'hidden' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1rem 1.25rem' }}>
-                        <img
-                          src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=60&background=f97316&color=fff`}
-                          alt={b.name}
-                          style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', border: '1px solid var(--adm-border2)', flexShrink: 0 }}
-                        />
+                        <img src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=60&background=f97316&color=fff`} alt={b.name} style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', border: '1px solid var(--adm-border2)', flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
                             <span style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--adm-text)' }}>{b.name}</span>
-                            <span style={{
-                              fontSize: '0.68rem', fontWeight: 700,
-                              background: 'rgba(239,68,68,0.12)', color: '#f87171',
-                              border: '1px solid rgba(239,68,68,0.25)',
-                              borderRadius: 20, padding: '0.1rem 0.5rem',
-                              display: 'flex', alignItems: 'center', gap: 3,
-                            }}>
-                              <Lock size={9} /> Bloqueado
-                            </span>
-                            <span style={{
-                              fontSize: '0.68rem', fontWeight: 700,
-                              background: 'rgba(245,158,11,0.12)', color: '#f59e0b',
-                              border: '1px solid rgba(245,158,11,0.25)',
-                              borderRadius: 20, padding: '0.1rem 0.5rem',
-                              display: 'flex', alignItems: 'center', gap: 3,
-                            }}>
-                              <Clock size={9} /> Apelación pendiente
-                            </span>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}><Lock size={9} /> Bloqueado</span>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}><Clock size={9} /> Apelación pendiente</span>
                           </div>
                           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>
-                              Dueño: <strong style={{ color: 'var(--adm-text)' }}>{b.owner?.name}</strong>
-                            </span>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>Dueño: <strong style={{ color: 'var(--adm-text)' }}>{b.owner?.name}</strong></span>
                             <span style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>{b.owner?.email}</span>
                             {b.city && <span style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>{b.city}</span>}
                           </div>
                           {b.blockedReason && (
-                            <div style={{
-                              background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)',
-                              borderRadius: 8, padding: '0.4rem 0.7rem', marginBottom: '0.4rem',
-                            }}>
+                            <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: 8, padding: '0.4rem 0.7rem', marginBottom: '0.4rem' }}>
                               <span style={{ fontSize: '0.72rem', color: '#f87171', fontWeight: 700 }}>Motivo del bloqueo: </span>
                               <span style={{ fontSize: '0.72rem', color: 'rgba(252,165,165,0.8)' }}>{b.blockedReason}</span>
                             </div>
                           )}
                           {b.appealNote && (
-                            <div style={{
-                              background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)',
-                              borderRadius: 8, padding: '0.4rem 0.7rem',
-                            }}>
-                              <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <MessageSquare size={11} /> Mensaje del dueño:
-                              </span>
-                              <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'rgba(253,186,116,0.85)', fontStyle: 'italic', lineHeight: 1.5 }}>
-                                "{b.appealNote}"
-                              </p>
+                            <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, padding: '0.4rem 0.7rem' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={11} /> Mensaje del dueño:</span>
+                              <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'rgba(253,186,116,0.85)', fontStyle: 'italic', lineHeight: 1.5 }}>"{b.appealNote}"</p>
                             </div>
                           )}
-                          {b.appealSubmittedAt && (
-                            <span style={{ fontSize: '0.68rem', color: 'var(--adm-muted)', fontFamily: 'monospace', marginTop: '0.3rem', display: 'block' }}>
-                              Enviada: {new Date(b.appealSubmittedAt).toLocaleString('es-AR')}
-                            </span>
-                          )}
+                          {b.appealSubmittedAt && <span style={{ fontSize: '0.68rem', color: 'var(--adm-muted)', fontFamily: 'monospace', marginTop: '0.3rem', display: 'block' }}>Enviada: {new Date(b.appealSubmittedAt).toLocaleString('es-AR')}</span>}
                         </div>
                       </div>
 
-                      {/* Panel de decisión */}
                       {isOpen ? (
-                        <div style={{
-                          borderTop: '1px solid var(--adm-border)',
-                          background: 'var(--adm-surface2)',
-                          padding: '1rem 1.25rem',
-                          display: 'flex', flexDirection: 'column', gap: '0.75rem',
-                        }}>
-                          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--adm-text)' }}>
-                            ¿Qué hacés con esta apelación?
-                          </div>
+                        <div style={{ borderTop: '1px solid var(--adm-border)', background: 'var(--adm-surface2)', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--adm-text)' }}>¿Qué hacés con esta apelación?</div>
                           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                             {([
-                              {
-                                value: 'approve' as const,
-                                label: 'Aprobar y desbloquear',
-                                desc: 'El negocio vuelve a estar activo y el dueño es notificado',
-                                color: '#22c55e', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.3)',
-                              },
-                              {
-                                value: 'reject' as const,
-                                label: 'Rechazar apelación',
-                                desc: 'El negocio sigue bloqueado. Podés dejar una nota explicativa',
-                                color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)',
-                              },
+                              { value: 'approve' as const, label: 'Aprobar y desbloquear', desc: 'El negocio vuelve a estar activo y el dueño es notificado', color: '#22c55e', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.3)' },
+                              { value: 'reject' as const, label: 'Rechazar apelación', desc: 'El negocio sigue bloqueado. Podés dejar una nota explicativa', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)' },
                             ]).map(opt => (
-                              <button
-                                key={opt.value}
-                                onClick={() => setAppealAction(opt.value)}
-                                style={{
-                                  flex: 1, minWidth: 180,
-                                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                                  padding: '0.7rem 1rem', borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                                  border: `1.5px solid ${appealAction === opt.value ? opt.color : opt.border}`,
-                                  background: appealAction === opt.value ? opt.bg : 'transparent',
-                                  transition: 'all 0.15s',
-                                }}
-                              >
-                                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: appealAction === opt.value ? opt.color : 'var(--adm-muted2)', marginBottom: 3 }}>
-                                  {appealAction === opt.value && '✓ '}{opt.label}
-                                </span>
+                              <button key={opt.value} onClick={() => setAppealAction(opt.value)} style={{ flex: 1, minWidth: 180, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '0.7rem 1rem', borderRadius: 10, cursor: 'pointer', textAlign: 'left', border: `1.5px solid ${appealAction === opt.value ? opt.color : opt.border}`, background: appealAction === opt.value ? opt.bg : 'transparent', transition: 'all 0.15s' }}>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: appealAction === opt.value ? opt.color : 'var(--adm-muted2)', marginBottom: 3 }}>{appealAction === opt.value && '✓ '}{opt.label}</span>
                                 <span style={{ fontSize: '0.7rem', color: 'var(--adm-muted)', lineHeight: 1.4 }}>{opt.desc}</span>
                               </button>
                             ))}
                           </div>
-
                           <div>
-                            <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--adm-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.35rem' }}>
-                              Nota para el vendedor (opcional)
-                            </label>
-                            <input
-                              type="text"
-                              className="adm-input"
-                              placeholder={appealAction === 'approve' ? 'Ej: Revisamos el contenido y cumple con las políticas' : 'Ej: El contenido aún viola las normas de la sección 3.2'}
-                              value={appealAdminNote}
-                              onChange={e => setAppealAdminNote(e.target.value)}
-                            />
+                            <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--adm-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.35rem' }}>Nota para el vendedor (opcional)</label>
+                            <input type="text" className="adm-input" placeholder={appealAction === 'approve' ? 'Ej: Revisamos el contenido y cumple con las políticas' : 'Ej: El contenido aún viola las normas de la sección 3.2'} value={appealAdminNote} onChange={e => setAppealAdminNote(e.target.value)} />
                           </div>
-
                           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                            <button
-                              className="adm-btn-cancel"
-                              onClick={() => { setAppealResolveOpen(null); setAppealAction(''); setAppealAdminNote(''); }}
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              className={`adm-btn-confirm ${appealAction === 'approve' ? 'green' : 'red'}`}
-                              onClick={() => handleResolveAppeal(b._id, appealAction as 'approve' | 'reject', appealAdminNote)}
-                              disabled={!appealAction || appealResolveSaving}
-                            >
-                              <ShieldAlert size={14} />
-                              {appealResolveSaving ? 'Guardando...' : appealAction === 'approve' ? 'Desbloquear negocio' : 'Rechazar apelación'}
+                            <button className="adm-btn-cancel" onClick={() => { setAppealResolveOpen(null); setAppealAction(''); setAppealAdminNote(''); }}>Cancelar</button>
+                            <button className={`adm-btn-confirm ${appealAction === 'approve' ? 'green' : 'red'}`} onClick={() => handleResolveAppeal(b._id, appealAction as 'approve' | 'reject', appealAdminNote)} disabled={!appealAction || appealResolveSaving}>
+                              <ShieldAlert size={14} />{appealResolveSaving ? 'Guardando...' : appealAction === 'approve' ? 'Desbloquear negocio' : 'Rechazar apelación'}
                             </button>
                           </div>
                         </div>
                       ) : (
                         <div style={{ borderTop: '1px solid var(--adm-border)', padding: '0.6rem 1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                          <button
-                            className="adm-btn-sm"
-                            style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}
-                            onClick={() => { setAppealResolveOpen(b._id); setAppealAction(''); setAppealAdminNote(''); }}
-                          >
+                          <button className="adm-btn-sm" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }} onClick={() => { setAppealResolveOpen(b._id); setAppealAction(''); setAppealAdminNote(''); }}>
                             <Eye size={12} /> Revisar apelación
                           </button>
                         </div>
@@ -1159,126 +1103,80 @@ export default function AdminPage() {
         {/* ════ ANUNCIOS ════ */}
         {tab === 'announcements' && (
           <div className="adm-content">
-            {/* Formulario crear anuncio */}
             <div className="adm-card" style={{ marginBottom: '1.5rem', borderLeft: '3px solid #f97316' }}>
               <h3 className="adm-card-title" style={{ marginBottom: '1rem' }}><Bell size={16} /> Nuevo anuncio</h3>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div className="adm-field" style={{ margin: 0 }}>
-                  <label className="adm-label">Titulo</label>
-                  <input type="text" className="adm-input" placeholder="Ej: Mantenimiento programado" value={annTitle} onChange={e => setAnnTitle(e.target.value)} />
-                </div>
-                <div className="adm-field" style={{ margin: 0 }}>
-                  <label className="adm-label">Audiencia</label>
-                  <select className="adm-input" style={{ cursor: 'pointer' }} value={annAudience} onChange={e => setAnnAudience(e.target.value as any)}>
-                    <option value="all">Todos los usuarios</option>
-                    <option value="seller">Solo vendedores</option>
-                    <option value="buyer">Solo compradores</option>
-                  </select>
-                </div>
-                <div className="adm-field" style={{ margin: 0 }}>
-                  <label className="adm-label">Duracion (horas)</label>
-                  <input type="number" min="1" max="720" className="adm-input" value={annDuration} onChange={e => setAnnDuration(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="adm-field" style={{ margin: '0 0 0.75rem' }}>
-                <label className="adm-label">Mensaje</label>
-                <textarea
-                  className="adm-input"
-                  placeholder="Escribi el mensaje del anuncio..."
-                  value={annMessage}
-                  onChange={e => setAnnMessage(e.target.value)}
-                  rows={3}
-                  style={{ resize: 'vertical', minHeight: 80 }}
-                />
-              </div>
-
-              <div className="adm-field" style={{ margin: '0 0 1rem' }}>
-                <label className="adm-label">Link (opcional)</label>
-                <input type="url" className="adm-input" placeholder="https://..." value={annLink} onChange={e => setAnnLink(e.target.value)} />
-              </div>
-
-              {annTitle && annMessage && (
-                <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '0.75rem' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--adm-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.35rem' }}>Vista previa</div>
-                  <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#f97316', marginBottom: '0.2rem' }}>{annTitle}</div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--adm-muted2)', lineHeight: 1.5 }}>{annMessage}</div>
-                  <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.68rem', background: 'rgba(249,115,22,0.12)', color: '#f97316', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem', fontWeight: 700 }}>
-                      {audienceLabel(annAudience)}
-                    </span>
-                    <span style={{ fontSize: '0.68rem', background: 'var(--adm-surface2)', color: 'var(--adm-muted2)', border: '1px solid var(--adm-border)', borderRadius: 20, padding: '0.1rem 0.5rem', fontWeight: 700 }}>
-                      {annDuration}h de duracion
-                    </span>
-                    {annLink && (
-                      <span style={{ fontSize: '0.68rem', background: 'rgba(6,182,212,0.1)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem', fontWeight: 700 }}>
-                        Con link
-                      </span>
-                    )}
+              <div style={{ padding: '0 1.25rem 1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <div className="adm-field" style={{ margin: 0 }}>
+                    <label className="adm-label">Titulo</label>
+                    <input type="text" className="adm-input" placeholder="Ej: Mantenimiento programado" value={annTitle} onChange={e => setAnnTitle(e.target.value)} />
+                  </div>
+                  <div className="adm-field" style={{ margin: 0 }}>
+                    <label className="adm-label">Audiencia</label>
+                    <select className="adm-input" style={{ cursor: 'pointer' }} value={annAudience} onChange={e => setAnnAudience(e.target.value as any)}>
+                      <option value="all">Todos los usuarios</option>
+                      <option value="seller">Solo vendedores</option>
+                      <option value="buyer">Solo compradores</option>
+                    </select>
+                  </div>
+                  <div className="adm-field" style={{ margin: 0 }}>
+                    <label className="adm-label">Duracion (horas)</label>
+                    <input type="number" min="1" max="720" className="adm-input" value={annDuration} onChange={e => setAnnDuration(e.target.value)} />
                   </div>
                 </div>
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  className="adm-btn-confirm"
-                  style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
-                  onClick={submitAnnouncement}
-                  disabled={annSaving || !annTitle.trim() || !annMessage.trim()}
-                >
-                  <Send size={14} />
-                  {annSaving ? 'Enviando...' : 'Publicar anuncio'}
-                </button>
+                <div className="adm-field" style={{ margin: '0 0 0.75rem' }}>
+                  <label className="adm-label">Mensaje</label>
+                  <textarea className="adm-input" placeholder="Escribi el mensaje del anuncio..." value={annMessage} onChange={e => setAnnMessage(e.target.value)} rows={3} style={{ resize: 'vertical', minHeight: 80 }} />
+                </div>
+                <div className="adm-field" style={{ margin: '0 0 1rem' }}>
+                  <label className="adm-label">Link (opcional)</label>
+                  <input type="url" className="adm-input" placeholder="https://..." value={annLink} onChange={e => setAnnLink(e.target.value)} />
+                </div>
+                {annTitle && annMessage && (
+                  <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '0.75rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--adm-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.35rem' }}>Vista previa</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#f97316', marginBottom: '0.2rem' }}>{annTitle}</div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--adm-muted2)', lineHeight: 1.5 }}>{annMessage}</div>
+                    <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.68rem', background: 'rgba(249,115,22,0.12)', color: '#f97316', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem', fontWeight: 700 }}>{audienceLabel(annAudience)}</span>
+                      <span style={{ fontSize: '0.68rem', background: 'var(--adm-surface2)', color: 'var(--adm-muted2)', border: '1px solid var(--adm-border)', borderRadius: 20, padding: '0.1rem 0.5rem', fontWeight: 700 }}>{annDuration}h de duracion</span>
+                      {annLink && <span style={{ fontSize: '0.68rem', background: 'rgba(6,182,212,0.1)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem', fontWeight: 700 }}>Con link</span>}
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button className="adm-btn-confirm" style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: 6 }} onClick={submitAnnouncement} disabled={annSaving || !annTitle.trim() || !annMessage.trim()}>
+                    <Send size={14} />{annSaving ? 'Enviando...' : 'Publicar anuncio'}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Lista de anuncios activos */}
             <h3 className="adm-card-title" style={{ marginBottom: '0.75rem' }}><Bell size={15} /> Anuncios activos</h3>
             {fetching ? <div className="adm-loading"><div className="adm-spinner" /></div> : announcements.length === 0 ? (
-              <div className="adm-empty">
-                <Bell size={44} strokeWidth={1} style={{ opacity: 0.4 }} />
-                <p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>No hay anuncios activos</p>
-              </div>
+              <div className="adm-empty"><Bell size={44} strokeWidth={1} style={{ opacity: 0.4 }} /><p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>No hay anuncios activos</p></div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {announcements.map(ann => {
                   const expHours = Math.max(0, Math.ceil((new Date(ann.expiresAt).getTime() - Date.now()) / 3600000));
                   const isExpired = new Date(ann.expiresAt) < new Date();
                   return (
-                    <div key={ann._id} style={{
-                      background: 'var(--adm-surface)',
-                      border: `1px solid ${isExpired ? 'rgba(239,68,68,0.25)' : 'var(--adm-border)'}`,
-                      borderLeft: `3px solid ${isExpired ? '#ef4444' : audienceColor(ann.audience)}`,
-                      borderRadius: 12,
-                      padding: '1rem 1.25rem',
-                      opacity: isExpired ? 0.7 : 1,
-                    }}>
+                    <div key={ann._id} style={{ background: 'var(--adm-surface)', border: `1px solid ${isExpired ? 'rgba(239,68,68,0.25)' : 'var(--adm-border)'}`, borderLeft: `3px solid ${isExpired ? '#ef4444' : audienceColor(ann.audience)}`, borderRadius: 12, padding: '1rem 1.25rem', opacity: isExpired ? 0.7 : 1 }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
                             <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--adm-text)' }}>{ann.title}</span>
-                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: `rgba(${ann.audience === 'all' ? '249,115,22' : ann.audience === 'seller' ? '139,92,246' : '6,182,212'},0.12)`, color: audienceColor(ann.audience), border: `1px solid ${audienceColor(ann.audience)}40`, borderRadius: 20, padding: '0.1rem 0.5rem' }}>
-                              {audienceLabel(ann.audience)}
-                            </span>
-                            {isExpired
-                              ? <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>Expirado</span>
-                              : <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(34,197,94,0.1)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                  <Clock size={9} /> {expHours}h restantes
-                                </span>
-                            }
+                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: `rgba(${ann.audience === 'all' ? '249,115,22' : ann.audience === 'seller' ? '139,92,246' : '6,182,212'},0.12)`, color: audienceColor(ann.audience), border: `1px solid ${audienceColor(ann.audience)}40`, borderRadius: 20, padding: '0.1rem 0.5rem' }}>{audienceLabel(ann.audience)}</span>
+                            {isExpired ? <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem' }}>Expirado</span>
+                              : <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(34,197,94,0.1)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}><Clock size={9} /> {expHours}h restantes</span>}
                           </div>
                           <p style={{ fontSize: '0.82rem', color: 'var(--adm-muted2)', lineHeight: 1.5, margin: '0 0 0.35rem' }}>{ann.message}</p>
-                          {ann.link && (
-                            <a href={ann.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#06b6d4', fontWeight: 600 }}>{ann.link}</a>
-                          )}
+                          {ann.link && <a href={ann.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#06b6d4', fontWeight: 600 }}>{ann.link}</a>}
                           <div style={{ fontSize: '0.68rem', color: 'var(--adm-muted)', marginTop: '0.35rem', fontFamily: 'monospace' }}>
                             Creado: {new Date(ann.createdAt).toLocaleString('es-AR')} · Expira: {new Date(ann.expiresAt).toLocaleString('es-AR')}
                           </div>
                         </div>
-                        <button className="adm-remove-feat" onClick={() => deleteAnnouncement(ann._id)}>
-                          <Trash2 size={14} />
-                        </button>
+                        <button className="adm-remove-feat" onClick={() => deleteAnnouncement(ann._id)}><Trash2 size={14} /></button>
                       </div>
                     </div>
                   );
@@ -1364,13 +1262,8 @@ export default function AdminPage() {
                 {reviewProds.length === 0 ? 'No hay productos pendientes de revision.' : `${reviewProds.length} producto${reviewProds.length !== 1 ? 's' : ''} enviado${reviewProds.length !== 1 ? 's' : ''} a revision por sus vendedores.`}
               </p>
             </div>
-            {fetching ? (
-              <div className="adm-loading"><div className="adm-spinner" /></div>
-            ) : reviewProds.length === 0 ? (
-              <div className="adm-empty">
-                <Package size={48} strokeWidth={1} style={{ opacity: 0.4 }} />
-                <p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>Todo en orden — ningun producto pendiente de revision</p>
-              </div>
+            {fetching ? <div className="adm-loading"><div className="adm-spinner" /></div> : reviewProds.length === 0 ? (
+              <div className="adm-empty"><Package size={48} strokeWidth={1} style={{ opacity: 0.4 }} /><p style={{ marginTop: '0.75rem', color: 'var(--adm-muted)' }}>Todo en orden — ningun producto pendiente de revision</p></div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {reviewProds.map(p => {
@@ -1382,9 +1275,7 @@ export default function AdminPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
                             <span style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--adm-text)' }}>{p.name}</span>
-                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <Clock size={9} /> Pendiente de revision
-                            </span>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '0.1rem 0.5rem', display: 'flex', alignItems: 'center', gap: 3 }}><Clock size={9} /> Pendiente de revision</span>
                           </div>
                           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
                             <span style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>Negocio: <strong style={{ color: 'var(--adm-text)' }}>{p.businessId?.name || '—'}</strong></span>
@@ -1415,9 +1306,9 @@ export default function AdminPage() {
                           <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--adm-text)' }}>Tomar decision sobre este producto</div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                             {([
-                              { value: 'unblock',         label: 'Aprobar y desbloquear',  desc: 'El producto vuelve a ser visible al publico',          color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)' },
-                              { value: 'keep_blocked',    label: 'Rechazar revision',      desc: 'El producto sigue bloqueado temporalmente',             color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
-                              { value: 'permanent_block', label: 'Bloqueo permanente',     desc: 'El vendedor no podra solicitar revision nuevamente',    color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.3)' },
+                              { value: 'unblock', label: 'Aprobar y desbloquear', desc: 'El producto vuelve a ser visible al publico', color: '#22c55e', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.3)' },
+                              { value: 'keep_blocked', label: 'Rechazar revision', desc: 'El producto sigue bloqueado temporalmente', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
+                              { value: 'permanent_block', label: 'Bloqueo permanente', desc: 'El vendedor no podra solicitar revision nuevamente', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)' },
                             ] as const).map(opt => (
                               <button key={opt.value} onClick={() => setModerateAction(opt.value)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '0.65rem 1rem', borderRadius: 10, cursor: 'pointer', border: `1.5px solid ${moderateAction === opt.value ? opt.color : opt.border}`, background: moderateAction === opt.value ? opt.bg : 'transparent', minWidth: 160, flex: 1, textAlign: 'left', transition: 'all 0.15s' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: moderateAction === opt.value ? opt.color : 'var(--adm-muted2)', marginBottom: 2 }}>{moderateAction === opt.value && '✓ '}{opt.label}</span>
@@ -1573,48 +1464,27 @@ export default function AdminPage() {
             <div className="adm-modal-body">
               <p style={{ fontSize: '0.82rem', color: 'var(--adm-muted2)', marginBottom: '1rem', lineHeight: 1.5 }}>
                 Al confirmar, se activara la suscripcion del negocio y se enviara una notificacion al vendedor con las fechas configuradas.
-                Cuando queden 3 dias para el vencimiento, el sistema enviara automaticamente un aviso al chat del vendedor.
               </p>
-
               <div className="adm-field">
                 <label className="adm-label">Fecha de pago</label>
-                <input
-                  type="date"
-                  className="adm-input"
-                  value={subFechaPago}
-                  onChange={e => setSubFechaPago(e.target.value)}
-                />
+                <input type="date" className="adm-input" value={subFechaPago} onChange={e => setSubFechaPago(e.target.value)} />
               </div>
-
               <div className="adm-field">
                 <label className="adm-label">Fecha de vencimiento</label>
-                <input
-                  type="date"
-                  className="adm-input"
-                  value={subFechaFinaliza}
-                  onChange={e => setSubFechaFinaliza(e.target.value)}
-                />
+                <input type="date" className="adm-input" value={subFechaFinaliza} onChange={e => setSubFechaFinaliza(e.target.value)} />
               </div>
-
               {subFechaPago && subFechaFinaliza && (
                 <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '0.75rem' }}>
                   <div style={{ fontSize: '0.78rem', color: '#4ade80', fontWeight: 700, marginBottom: '0.3rem' }}>Resumen de suscripcion</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--adm-muted2)' }}>
-                    Duracion: <strong style={{ color: 'var(--adm-text)' }}>
-                      {Math.ceil((new Date(subFechaFinaliza).getTime() - new Date(subFechaPago).getTime()) / 86400000)} dias
-                    </strong>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--adm-muted)', marginTop: '0.2rem' }}>
-                    Se notificara al vendedor 3 dias antes del vencimiento.
+                    Duracion: <strong style={{ color: 'var(--adm-text)' }}>{Math.ceil((new Date(subFechaFinaliza).getTime() - new Date(subFechaPago).getTime()) / 86400000)} dias</strong>
                   </div>
                 </div>
               )}
-
               <div className="adm-modal-footer">
                 <button className="adm-btn-cancel" onClick={() => setSubModal(false)}>Cancelar</button>
                 <button className="adm-btn-confirm green" onClick={submitSubscription} disabled={subSaving || !subFechaPago || !subFechaFinaliza}>
-                  <BadgeDollarSign size={15} />
-                  {subSaving ? 'Guardando...' : 'Activar suscripcion'}
+                  <BadgeDollarSign size={15} />{subSaving ? 'Guardando...' : 'Activar suscripcion'}
                 </button>
               </div>
             </div>
@@ -1622,7 +1492,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modales previos sin cambio: detalle usuario */}
+      {/* Modal: detalle usuario */}
       {userDetail && (
         <DetailModal title={`Usuario: ${userDetail.name}`} onClose={() => setUserDetail(null)}>
           <div className="adm-detail-row"><span className="adm-detail-label">Email</span><span className="adm-detail-val adm-muted">{userDetail.email}</span></div>
