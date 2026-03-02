@@ -75,9 +75,29 @@ const defaultSecciones: Seccion[] = [
       "Respetamos tu info básica (nombre, zona, contacto), pero no la vendemos ni compartimos sin tu OK. Usala con cuidado. No subas fotos o datos sensibles. Podemos usar tus avisos anónimamente para mejorar el sitio.",
   },
   {
-    titulo: "Limitación de responsabilidad",
+    titulo: "Limitación de responsabilidad — Responsabilidad máxima: $0",
     contenido:
-      "Offertas.com.ar no garantiza que el sitio funcione perfecto todo el tiempo (puede haber caídas técnicas). No somos responsables por pérdidas, daños o perjuicios (directos o indirectos) que surjan de usar la plataforma. Usás todo bajo tu propio riesgo. Si algo sale mal, nosotros quedamos exentos de toda culpa y reclamo.",
+      "Offertas.com.ar es exclusivamente un intermediario tecnológico que facilita el contacto entre usuarios. En ningún caso Offertas.com.ar, sus fundadores, empleados, representantes o socios serán responsables por daños directos, indirectos, incidentales, especiales, consecuentes o punitivos de ningún tipo — incluyendo pero no limitado a: pérdida de dinero, bienes, datos, ganancias esperadas, daño moral o cualquier otro perjuicio — que surjan del uso o imposibilidad de uso de la plataforma, o de transacciones entre usuarios. La responsabilidad máxima de Offertas.com.ar frente a cualquier usuario, en cualquier circunstancia y por cualquier concepto, es de CERO PESOS ($0 ARS). Esta limitación aplica incluso si Offertas.com.ar fue advertido de la posibilidad de dichos daños.",
+  },
+  {
+    titulo: "Operaciones fuera de la plataforma — Responsabilidad nula",
+    contenido:
+      "Offertas.com.ar no tiene ningún tipo de responsabilidad civil, comercial ni penal sobre transacciones, pagos, acuerdos, entregas o cualquier tipo de operación que se realice fuera de los canales oficiales de la plataforma (por ejemplo: pagos por transferencia bancaria, Mercado Pago, efectivo, WhatsApp u otras aplicaciones externas). Si un usuario acuerda o paga fuera de Offertas.com.ar y sufre un perjuicio, la responsabilidad recae exclusiva y totalmente sobre las partes involucradas en dicha operación. El hecho de que el contacto inicial haya ocurrido dentro de la plataforma no genera ninguna responsabilidad sobre Offertas.com.ar respecto del resultado de esa transacción.",
+  },
+  {
+    titulo: "Responsabilidad exclusiva del usuario por sus actos",
+    contenido:
+      "Cada usuario es el único y exclusivo responsable de todo lo que publica, ofrece, vende, compra, acuerda o comunica dentro y fuera de la plataforma. Offertas.com.ar no verifica la identidad, solvencia, honestidad ni legalidad de los usuarios ni de los productos y servicios publicados. Al aceptar estos términos, el usuario reconoce que actúa bajo su propio riesgo y libera a Offertas.com.ar de toda responsabilidad derivada de sus acciones o de las acciones de terceros.",
+  },
+  {
+    titulo: "Indemnidad — El usuario nos deja a salvo",
+    contenido:
+      "Al usar Offertas.com.ar, el usuario acepta indemnizar, defender y mantener indemne a Offertas.com.ar y a sus representantes frente a cualquier reclamo, demanda, pérdida, gasto (incluyendo honorarios legales) o daño que surja de: (a) su uso de la plataforma; (b) su incumplimiento de estos términos; (c) cualquier operación o conducta suya dentro o fuera de la plataforma; (d) cualquier infracción a derechos de terceros. Esto significa que si alguien nos demanda por algo que vos hiciste, vos asumís los costos.",
+  },
+  {
+    titulo: "Aceptación expresa de estos términos como condición de uso",
+    contenido:
+      "El uso de la plataforma, el registro de una cuenta o la publicación de cualquier contenido implica la aceptación plena, voluntaria e informada de todos estos términos y condiciones. Esta aceptación tiene el mismo valor legal que una firma manuscrita. Si no estás de acuerdo con alguno de estos términos, debés dejar de usar la plataforma de inmediato. La aceptación queda registrada con fecha, hora y datos del dispositivo al momento del registro.",
   },
   {
     titulo: "Actualizaciones flexibles",
@@ -111,7 +131,7 @@ export default function Terminos({ onAccept }: Props) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("https://new-backend-lovat.vercel.app/api/terminos");
+        const res = await fetch("http://localhost:5000/api/terminos");
         if (res.ok) {
           const json: TerminosData = await res.json();
           setDatos(json);
@@ -139,8 +159,8 @@ export default function Terminos({ onAccept }: Props) {
       const token  = localStorage.getItem("marketplace_token");
       const method = datos._id ? "PUT" : "POST";
       const url    = datos._id
-        ? `https://new-backend-lovat.vercel.app/api/terminos/${datos._id}`
-        : "https://new-backend-lovat.vercel.app/api/terminos";
+        ? `http://localhost:5000/api/terminos/${datos._id}`
+        : "http://localhost:5000/api/terminos";
 
       const res = await fetch(url, {
         method,
@@ -365,8 +385,9 @@ export default function Terminos({ onAccept }: Props) {
               <span className="tyc-checkbox-text">
                 Leí y acepto los <strong>Términos y Condiciones</strong> de
                 Offertas.com.ar. Entiendo que la plataforma no intermedia
-                transacciones y que su responsabilidad máxima es de{" "}
-                <strong>ARS 0</strong>.
+                transacciones, que no es responsable por operaciones realizadas
+                fuera de la misma, y que su responsabilidad máxima frente a
+                cualquier reclamo es de <strong>$0 (cero pesos)</strong>.
               </span>
             </label>
 
