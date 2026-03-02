@@ -424,7 +424,7 @@ export default function AdminPage() {
   const handleResolveAppeal = async (bizId: string, action: 'approve' | 'reject', adminNote: string) => {
     setAppealResolveSaving(true);
     try {
-      const res = await fetch(`https://vercel-backend-ochre-nine.vercel.app/api/admin/businesses/${bizId}/appeal`, {
+      const res = await fetch(`https://new-backend-lovat.vercel.app/api/admin/businesses/${bizId}/appeal`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('marketplace_token')}` },
         body: JSON.stringify({ action, adminNote }),
