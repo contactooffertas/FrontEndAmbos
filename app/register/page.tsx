@@ -126,10 +126,10 @@ export default function RegisterPage() {
       {/* ── Left ── */}
       <div className="auth-left">
         <div className="auth-left-content">
-          <div className="auth-left-logo">Offerton</div>
+          <div className="auth-left-logo">Offertas</div>
           <h2>Sumate a la comunidad</h2>
           <p>
-            Miles de compradores y vendedores confían en Offerton para sus
+            Miles de compradores y vendedores confían en Offertas para sus
             transacciones del día a día.
           </p>
           <ul className="auth-left-features">
@@ -281,7 +281,7 @@ export default function RegisterPage() {
                 >
                   Términos y Condiciones
                 </Link>
-                {" "}de Offerton.com.ar. Entiendo que la plataforma no intermedia
+                {" "}de Offertas.com.ar. Entiendo que la plataforma no intermedia
                 transacciones y que su responsabilidad máxima es de{" "}
                 <strong style={{ color: "#2563eb" }}>ARS 0</strong>.
               </span>
@@ -333,3 +333,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+
