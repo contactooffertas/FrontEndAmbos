@@ -95,6 +95,7 @@
   overflow: hidden;
   backdrop-filter: blur(10px);
   transition: transform 0.3s;
+  position: relative;
 }
 .hero-card:hover { transform: translateY(-4px); }
 .hero-card:first-child { grid-column: 1 / -1; }
@@ -112,7 +113,7 @@
   padding: 0.65rem 0.75rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .hero-card-name {
@@ -134,15 +135,44 @@
   font-weight: 500;
 }
 
+/* ── Hero card footer: columna siempre, precio arriba, badge + botón abajo ── */
 .hero-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.hero-card-footer-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.4rem;
-  margin-top: 0.1rem;
 }
 
-.hero-card-price { font-size: 0.92rem; font-weight: 700; color: var(--primary); }
+.hero-card-price {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.hero-card-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  padding: 2px 7px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.hero-card-promo-badge span {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
 
 .hero-card-visit {
   display: inline-flex;
@@ -159,6 +189,7 @@
   transition: background 0.18s, border-color 0.18s, color 0.18s;
   white-space: nowrap;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .hero-card-visit:hover {
   background: rgba(249,115,22,0.32);
@@ -192,7 +223,6 @@
   gap: 0.45rem;
 }
 
-/* Ícono Lucide inline en el título de sección */
 .section-title-icon {
   display: inline-flex;
   align-items: center;
@@ -488,7 +518,6 @@
   color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
-  /* altura fija equivalente a 2 líneas */
   min-height: calc(1.5 * 0.8rem * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -511,7 +540,6 @@
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  /* altura mínima para que no colapse si no hay seguidores/productos */
   min-height: 1.2rem;
 }
 
@@ -545,20 +573,18 @@
   font-family: inherit;
 }
 
-/* ── Visitar tienda: tamaño fijo, letras blancas, siempre al fondo ── */
 .biz-card-visit-btn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
-  /* altura fija para que no varíe según el contenido de arriba */
   height: 38px;
   padding: 0 1rem;
   border-radius: 9px;
   border: 1.5px solid var(--primary);
   background: var(--primary);
-  color: #fff;            /* letras blancas */
+  color: #fff;
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
@@ -669,7 +695,6 @@
   border-radius: 4px;
 }
 
-/* "Ver todos" link al fondo */
 .fbs-ver-todos-bottom {
   display: flex;
   justify-content: center;
@@ -834,7 +859,30 @@
   .hero-card:first-child img { height: 140px; }
   .hero { padding: 2rem 1rem 2.5rem; }
   .hero-inner { gap: 1.5rem; }
-  .hero-card-visit { font-size: 0.68rem; padding: 0.18rem 0.5rem; }
+
+  /* Footer de la hero card en mobile: columna compacta */
+  .hero-card-footer {
+    gap: 0.28rem;
+  }
+
+  .hero-card-footer-row {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .hero-card-visit {
+    font-size: 0.65rem;
+    padding: 0.18rem 0.45rem;
+    border-radius: 6px;
+  }
+
+  .hero-card-price {
+    font-size: 0.85rem;
+  }
+
+  .hero-card-promo-badge span {
+    font-size: 0.55rem;
+  }
 
   .businesses-grid { grid-template-columns: 1fr; }
   .biz-card-banner { height: 200px; }
@@ -851,4 +899,22 @@
 
 @media (max-width: 400px) {
   .biz-card-banner { height: 170px; }
+
+  .hero-card {
+    width: 62vw;
+    max-width: 185px;
+  }
+  .hero-card:first-child {
+    width: 75vw;
+    max-width: 240px;
+  }
+
+  .hero-card-visit {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .hero-card-price {
+    font-size: 0.8rem;
+  }
 }
