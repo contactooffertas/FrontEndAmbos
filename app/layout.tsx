@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
 import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
-import BadgeSync from '@/app/componentes/BadgeSync';
+import BadgeSyncVendor from '@/app/componentes/BadgeSyncVendor';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Offertas - Las mejores ofertas',
+  title: 'Offerton - Las mejores ofertas',
   description: 'Encuentra las mejores ofertas cerca tuyo',
   viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
-  authors: [{ name: 'Offertas' }],
+  authors: [{ name: 'Offerton' }],
   keywords: ['ofertas', 'marketplace', 'compras online'],
   openGraph: {
-    title: 'Offertas - Las mejores ofertas',
+    title: 'Offerton - Las mejores ofertas',
     description: 'Encuentra las mejores ofertas cerca tuyo',
-    url: 'https://offertas.com.ar',
-    siteName: 'Offertas',
+    url: 'https://offerton.com',
+    siteName: 'Offerton',
     locale: 'es_AR',
     type: 'website',
   },
@@ -33,8 +33,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
 
         {/* Favicon */}
-        <link rel="icon" href="/assets/offertas.jpg" type="image/jpeg" />
-        <link rel="shortcut icon" href="/assets/offertas.jpg" type="image/jpeg" />
+        <link rel="icon" href="/assets/offerton.png" type="image/jpeg" />
+        <link rel="shortcut icon" href="/assets/offerton.png" type="image/jpeg" />
 
         {/* PWA - Manifest */}
         <link rel="manifest" href="/manifest.json" />
@@ -43,8 +43,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Offertas" />
-        <link rel="apple-touch-icon" href="/assets/offertas.jpg" />
+        <meta name="apple-mobile-web-app-title" content="Offerton" />
+        <link rel="apple-touch-icon" href="/assets/offerton-192.png" />
 
         {/* Android Chrome */}
         <meta name="mobile-web-app-capable" content="yes" />
@@ -61,8 +61,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Componente para sincronizar cambios del manifest */}
         <PWAManifestUpdater />
         
-        {/* Componente para sincronizar badges entre navbar e icono PWA */}
-        <BadgeSync />
+        {/* Componente para sincronizar badges de vendedor con icono PWA */}
+        <BadgeSyncVendor />
         
         <Providers>
           {children}
