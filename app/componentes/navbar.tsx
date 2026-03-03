@@ -1,7 +1,6 @@
 "use client";
 // app/componentes/Navbar.tsx
 
-
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -559,4 +558,5 @@ export default function Navbar() {
     </>
   );
 }
+
 
