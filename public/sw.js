@@ -1,7 +1,6 @@
 // public/sw.js
 // Service Worker — maneja push notifications, navegación y actualización de badge
 
-
 const MANIFEST_URL = "/manifest.json";
 let cachedManifest = null;
 
@@ -180,4 +179,3 @@ self.addEventListener("message", (event) => {
     );
   }
 });
-
