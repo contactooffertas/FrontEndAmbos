@@ -3,7 +3,6 @@
 
 const MANIFEST_URL = "/manifest.json";
 let cachedManifest = null;
-
 // ── Instalar y activar ───────────────────────────────────────────────────────
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -179,3 +178,4 @@ self.addEventListener("message", (event) => {
     );
   }
 });
+
