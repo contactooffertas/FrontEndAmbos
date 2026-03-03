@@ -122,7 +122,7 @@ export default function BadgeSyncBuyer() {
     }
 
     // Solo para compradores (NO vendedores)
-    if (user.role === 'buyer' || user.role !== 'seller') {
+    if (user.role === 'user' || user.role !== 'seller') {
       console.log('👁️ Monitoreando órdenes en tránsito para comprador...');
 
       // Listener para evento del Navbar
@@ -163,7 +163,7 @@ export default function BadgeSyncBuyer() {
   // Escuchar cambios en la ventana/tab
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && (user?.role === 'buyer' || user?.role !== 'seller')) {
+      if (!document.hidden && (user?.role === 'user' || user?.role !== 'seller')) {
         const currentBadge = getCurrentBadgeCount();
         syncBadgeToApp(currentBadge);
       }
