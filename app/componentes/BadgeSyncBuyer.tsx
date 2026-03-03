@@ -1,89 +1,79 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../context/authContext';
 
 /**
- * Actualizar badge en el icono PWA del celular/escritorio
- * Para compradores: muestra órdenes en tránsito
+ * Componente interno que sí usa useAuth
+ * Se renderiza solo en cliente
  */
-async function setAppBadge(count: number) {
-  if (typeof window === 'undefined') return false;
-  if (!('setAppBadge' in navigator)) {
-    console.warn('⚠️ Badge API no soportada');
-    return false;
-  }
-
-  try {
-    if (count > 0) {
-      await (navigator as any).setAppBadge(count);
-      console.log(`✅ Badge comprador actualizado en PWA: ${count}`);
-      return true;
-    } else {
-      await (navigator as any).clearAppBadge();
-      console.log('✅ Badge comprador limpiado');
-      return true;
-    }
-  } catch (error) {
-    console.error('❌ Error actualizando badge:', error);
-    return false;
-  }
-}
-
-/**
- * Guardar badge en sessionStorage
- */
-function saveBadgeSession(count: number) {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem('buyer_badge_count', String(count));
-    console.log(`💾 Badge comprador guardado: ${count}`);
-  } catch (error) {
-    console.warn('Error guardando badge:', error);
-  }
-}
-
-/**
- * Notificar al Service Worker
- */
-async function notifyServiceWorkerBadge(count: number) {
-  if (typeof window === 'undefined') return;
-  if (!('serviceWorker' in navigator)) return;
-
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    if (registration.active) {
-      registration.active.postMessage({
-        type: 'UPDATE_BUYER_BADGE',
-        badgeCount: count,
-        timestamp: Date.now(),
-      });
-      console.log(`📢 SW notificado - Badge comprador: ${count}`);
-    }
-  } catch (error) {
-    console.warn('Error notificando SW:', error);
-  }
-}
-
-export default function BadgeSyncBuyer() {
+function BadgeSyncBuyerContent() {
+  const { useAuth } = require('../context/authContext');
   const { user } = useAuth();
   const previousBadgeRef = useRef<number>(-1);
   const badgeCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isClient, setIsClient] = useState(false);
 
   /**
-   * Obtener contador actual de órdenes en tránsito
+   * Actualizar badge en el icono PWA
+   */
+  const setAppBadge = async (count: number) => {
+    if (typeof window === 'undefined') return false;
+    if (!('setAppBadge' in navigator)) return false;
+
+    try {
+      if (count > 0) {
+        await (navigator as any).setAppBadge(count);
+        console.log(`✅ Badge comprador actualizado: ${count}`);
+      } else {
+        await (navigator as any).clearAppBadge();
+        console.log('✅ Badge comprador limpiado');
+      }
+      return true;
+    } catch (error) {
+      console.error('Error actualizando badge:', error);
+      return false;
+    }
+  };
+
+  /**
+   * Guardar badge en sessionStorage
+   */
+  const saveBadgeSession = (count: number) => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.setItem('buyer_badge_count', String(count));
+    } catch (e) {}
+  };
+
+  /**
+   * Notificar al Service Worker
+   */
+  const notifyServiceWorkerBadge = async (count: number) => {
+    if (typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator)) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      if (registration.active) {
+        registration.active.postMessage({
+          type: 'UPDATE_BUYER_BADGE',
+          badgeCount: count,
+          timestamp: Date.now(),
+        });
+      }
+    } catch (e) {}
+  };
+
+  /**
+   * Obtener contador actual
    */
   const getCurrentBadgeCount = (): number => {
     if (typeof window === 'undefined') return 0;
-    
-    // Opción 1: Variable global del Navbar
+
     const shippedFromWindow = (window as any).__SHIPPED_ORDERS;
     if (shippedFromWindow !== undefined && shippedFromWindow > 0) {
       return shippedFromWindow;
     }
 
-    // Opción 2: sessionStorage
     const storedBadge = sessionStorage.getItem('buyer_badge_count');
     if (storedBadge) {
       const count = parseInt(storedBadge, 10);
@@ -97,57 +87,37 @@ export default function BadgeSyncBuyer() {
    * Sincronizar badge
    */
   const syncBadgeToApp = async (count: number) => {
-    // Evitar actualizaciones innecesarias
     if (count === previousBadgeRef.current) {
       return;
     }
 
     console.log(`🔄 Sincronizando badge comprador: ${previousBadgeRef.current} → ${count}`);
 
-    // Actualizar badge en el icono PWA
     await setAppBadge(count);
-
-    // Guardar en sesión
     saveBadgeSession(count);
-
-    // Notificar al Service Worker
     await notifyServiceWorkerBadge(count);
 
-    // Actualizar referencia
     previousBadgeRef.current = count;
   };
 
-  /**
-   * Ejecutar solo en cliente
-   */
+  // Monitorear cambios
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  /**
-   * Monitorear cambios para COMPRADORES
-   */
-  useEffect(() => {
-    if (!isClient || !user) {
+    if (!user) {
       setAppBadge(0);
       previousBadgeRef.current = -1;
       return;
     }
 
-    // Solo para compradores (role !== 'seller')
     if (user.role !== 'seller') {
-      console.log('👁️ Monitoreando órdenes en tránsito para comprador...');
+      console.log('👁️ Monitoreando órdenes en tránsito (comprador)...');
 
-      // Listener para evento del Navbar
       const handleBadgeUpdated = () => {
         const currentBadge = getCurrentBadgeCount();
         syncBadgeToApp(currentBadge);
       };
 
-      // Escuchar evento
       window.addEventListener('shipped_orders_updated', handleBadgeUpdated);
 
-      // También verificar periódicamente (cada 5 segundos)
       badgeCheckIntervalRef.current = setInterval(() => {
         const currentBadge = getCurrentBadgeCount();
         if (currentBadge !== previousBadgeRef.current) {
@@ -155,7 +125,6 @@ export default function BadgeSyncBuyer() {
         }
       }, 5000);
 
-      // Verificar inmediatamente al montar
       const initialBadge = getCurrentBadgeCount();
       if (initialBadge > 0) {
         syncBadgeToApp(initialBadge);
@@ -168,15 +137,12 @@ export default function BadgeSyncBuyer() {
         }
       };
     } else {
-      // Es vendedor
       setAppBadge(0);
     }
-  }, [user, isClient]);
+  }, [user]);
 
-  // Escuchar cambios en la ventana/tab
+  // Escuchar cambios de ventana
   useEffect(() => {
-    if (!isClient) return;
-
     const handleVisibilityChange = () => {
       if (!document.hidden && user?.role !== 'seller') {
         const currentBadge = getCurrentBadgeCount();
@@ -184,11 +150,32 @@ export default function BadgeSyncBuyer() {
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [user, isClient]);
+    if (typeof window !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [user]);
 
   return null;
+}
+
+/**
+ * Componente principal - renderiza dinámicamente
+ * Esto evita que useAuth se ejecute en el servidor
+ */
+export default function BadgeSyncBuyer() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // No renderizar nada hasta que esté en cliente
+  if (!isMounted) {
+    return null;
+  }
+
+  return <BadgeSyncBuyerContent />;
 }
