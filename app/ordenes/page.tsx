@@ -390,11 +390,11 @@ export default function OrdenesPage() {
                       <span className="orden-total-label">Total</span>
                       <span className="orden-total-val">${order.total.toLocaleString("es-AR")}</span>
                     </div>
-                    <h3>
-  Esperá la confirmación del comprador. Una vez que reciba el pedido y confirme la entrega, vas a poder calificar la operación y dejar tu valoración.
-</h3>
+              <h3 style={{ color: "#ffffff" }}>
+            Esperá la confirmación del comprador. 
+            Una vez que reciba el pedido y confirme la entrega, vas a poder calificar la operación y dejar tu valoración.
+             </h3>
                   </div>
-
                   {/* Acciones según estado */}
                   <div className="orden-actions">
                         {order.status === "pending" && (
@@ -470,6 +470,7 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
+
 
 
 
