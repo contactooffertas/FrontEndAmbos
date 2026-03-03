@@ -432,7 +432,7 @@ export default function OrdenesPage() {
                         >
                           ⚠️ Antes de despachar el pedido, asegurate de arreglar
                           el gasto de envío y todos los detalles logísticos con
-                          el proveedor o comprador.
+                          el comprador, ya tiene tu numero de whatsapp si lo cargaste correctamente o contactalo por mail que esta debajo de su nombre.
                         </p>
                       </>
                     )}
@@ -467,5 +467,6 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
+
 
 
