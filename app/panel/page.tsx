@@ -813,35 +813,56 @@ function PanelContent() {
 
                       {/* WhatsApp */}
                       {p.businessPhone && p.status !== "returned" && (
-                        <a
-                          href={`https://wa.me/${p.businessPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                            `Hola! Te escribo sobre mi pedido #${p._id.slice(-8).toUpperCase()} realizado en Offerton.\n\n` +
-                              p.items
-                                .map((i) => `- ${i.quantity}x ${i.name}`)
-                                .join("\n") +
-                              `\n\nTotal: $${p.total.toLocaleString()}`,
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            marginTop: "0.75rem",
-                            background: "rgba(37,211,102,0.12)",
-                            color: "#4ade80",
-                            border: "1px solid rgba(37,211,102,0.3)",
-                            borderRadius: 10,
-                            padding: "0.45rem 1rem",
-                            fontSize: "0.82rem",
-                            fontWeight: 700,
-                            textDecoration: "none",
-                          }}
-                        >
-                          <MessageCircle size={13} /> Contactar negocio
-                        </a>
-                      )}
+                        <>
+                          <p
+                            style={{
+                              marginTop: "0.75rem",
+                              backgroundColor: "rgba(59,130,246,0.12)",
+                              color: "#1e40af",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              fontSize: "0.8rem",
+                              fontWeight: "600",
+                              lineHeight: "1.4",
+                              border: "1px solid rgba(59,130,246,0.25)",
+                            }}
+                          >
+                            📦 Antes de definir la entrega, coordiná por
+                            WhatsApp los detalles del envío, incluyendo costos,
+                            forma de despacho y cualquier gasto adicional.
+                          </p>
 
+                          <a
+                            href={`https://wa.me/${p.businessPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                              `Hola! Te escribo sobre mi pedido #${p._id
+                                .slice(-8)
+                                .toUpperCase()} realizado en Offerton.\n\n` +
+                                p.items
+                                  .map((i) => `- ${i.quantity}x ${i.name}`)
+                                  .join("\n") +
+                                `\n\nTotal: $${p.total.toLocaleString()}`,
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              marginTop: "0.5rem",
+                              background: "rgba(37,211,102,0.12)",
+                              color: "#16a34a",
+                              border: "1px solid rgba(37,211,102,0.3)",
+                              borderRadius: 10,
+                              padding: "0.45rem 1rem",
+                              fontSize: "0.82rem",
+                              fontWeight: 700,
+                              textDecoration: "none",
+                            }}
+                          >
+                            <MessageCircle size={13} /> Contactar negocio
+                          </a>
+                        </>
+                      )}
                   
 {p.businessId && p.status !== "returned" && (
   <ReportModal
@@ -1031,3 +1052,4 @@ export default function PanelPage() {
     </Suspense>
   );
 }
+
