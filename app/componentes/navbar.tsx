@@ -35,7 +35,7 @@ const NAV_CATEGORIES = [
   { id: "10", name: "Mascotas",        iconName: "PawPrint",    slug: "mascotas"      },
 ];
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API = "https://new-backend-lovat.vercel.app/api";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -369,3 +369,4 @@ export default function Navbar() {
     </header>
   );
 }
+
