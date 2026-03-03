@@ -21,9 +21,9 @@ self.addEventListener("push", (event) => {
   }
 
   const options = {
-    body:  data.body  || "",
-    icon:  data.icon  || "/icon.png",
-    badge: data.badge || "/badge.png",
+    body:    data.body  || "",
+    icon:    data.icon  || "/icon.png",
+    badge:   data.badge || "/badge.png",
     vibrate: [100, 50, 100],
     data: {
       url: data.url || "/",
@@ -35,7 +35,26 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    Promise.all([
+      // 1️⃣ Mostrar notificación nativa del sistema (ya lo tenías)
+      self.registration.showNotification(data.title, options),
+
+      // 2️⃣ Notificar a todas las pestañas/ventanas abiertas de la app
+      //    para que el Navbar muestre el toast en tiempo real
+      clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((clientList) => {
+          clientList.forEach((client) => {
+            client.postMessage({
+              type:  "PUSH_RECEIVED",
+              title: data.title || "Nueva notificación",
+              body:  data.body  || "",
+              url:   data.url   || "/",
+              icon:  data.icon  || "/icon.png",
+            });
+          });
+        }),
+    ])
   );
 });
 
@@ -51,7 +70,7 @@ self.addEventListener("notificationclick", (event) => {
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
-        // Si ya hay una pestaña abierta de la app, enfocarla y navegar
+        // Si ya hay una pestaña o ventana PWA abierta, enfocarla y navegar
         for (const client of clientList) {
           if ("focus" in client) {
             client.focus();
@@ -59,7 +78,7 @@ self.addEventListener("notificationclick", (event) => {
             return;
           }
         }
-        // Si no hay pestaña abierta, abrir una nueva
+        // Si no hay ventana abierta (app cerrada), abrir una nueva
         return clients.openWindow(targetUrl);
       })
   );
