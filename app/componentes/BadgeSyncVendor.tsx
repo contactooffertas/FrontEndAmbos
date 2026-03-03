@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/authContext';
 
 /**
@@ -8,6 +8,7 @@ import { useAuth } from '../context/authContext';
  * Soportado en: Chrome 81+, Edge, Samsung Internet
  */
 async function setAppBadge(count: number) {
+  if (typeof window === 'undefined') return false;
   if (!('setAppBadge' in navigator)) {
     console.warn('⚠️ Badge API no soportada');
     return false;
@@ -33,6 +34,7 @@ async function setAppBadge(count: number) {
  * Guardar badge en sessionStorage para la sesión actual
  */
 function saveBadgeSession(count: number) {
+  if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem('current_badge_count', String(count));
     console.log(`💾 Badge guardado en sesión: ${count}`);
@@ -45,6 +47,7 @@ function saveBadgeSession(count: number) {
  * Notificar al Service Worker sobre cambio de badge
  */
 async function notifyServiceWorkerBadge(count: number) {
+  if (typeof window === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
 
   try {
@@ -66,12 +69,15 @@ export default function BadgeSyncVendor() {
   const { user } = useAuth();
   const previousBadgeRef = useRef<number>(-1);
   const badgeCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   /**
    * Obtener contador actual de órdenes pendientes
    * Busca el valor que el Navbar actualiza
    */
   const getCurrentBadgeCount = (): number => {
+    if (typeof window === 'undefined') return 0;
+    
     // Opción 1: Buscar en variable global que el Navbar establece
     const pendingFromWindow = (window as any).__PENDING_ORDERS;
     if (pendingFromWindow !== undefined) {
@@ -112,10 +118,17 @@ export default function BadgeSyncVendor() {
   };
 
   /**
+   * Ejecutar solo en cliente
+   */
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  /**
    * Monitorear cambios de badge desde el Navbar
    */
   useEffect(() => {
-    if (!user) {
+    if (!isClient || !user) {
       setAppBadge(0);
       previousBadgeRef.current = -1;
       return;
@@ -155,13 +168,15 @@ export default function BadgeSyncVendor() {
         }
       };
     } else {
-      // Para compradores
+      // Para no-vendedores
       setAppBadge(0);
     }
-  }, [user]);
+  }, [user, isClient]);
 
   // Escuchar cambios en la ventana/tab
   useEffect(() => {
+    if (!isClient) return;
+
     const handleVisibilityChange = () => {
       if (!document.hidden && user?.role === 'seller') {
         // Tab vuelve a estar activa, verificar badge
@@ -174,7 +189,7 @@ export default function BadgeSyncVendor() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user]);
+  }, [user, isClient]);
 
   return null;
 }
