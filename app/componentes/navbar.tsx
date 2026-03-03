@@ -46,9 +46,13 @@ export default function Navbar() {
 
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
   const [searchQuery,   setSearchQuery]   = useState("");
-  const [pendingOrders, setPendingOrders] = useState(0);
+  const [pendingOrders, setPendingOrders] = useState(0);  // seller: pending
+  const [shippedOrders, setShippedOrders] = useState(0);  // buyer: shipped (en camino)
   const [installing,    setInstalling]    = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const dropdownRef        = useRef<HTMLDivElement>(null);
+  const prevShippedIds     = useRef<Set<string>>(new Set());
+  const shippedInitialized = useRef(false);
 
   // ── Cerrar dropdown al hacer click fuera ──
   useEffect(() => {
@@ -66,13 +70,13 @@ export default function Navbar() {
     setDropdownOpen(false);
   }, [pathname]);
 
-  // ── Polling órdenes pendientes (solo sellers) ──
+  // ── Polling SELLER: órdenes pendientes ──
   useEffect(() => {
     if (!user || user.role !== "seller") return;
-    const token = localStorage.getItem("marketplace_token");
 
     const check = async () => {
       try {
+        const token = localStorage.getItem("marketplace_token");
         const res = await fetch(`${API}/orders/seller`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -87,6 +91,64 @@ export default function Navbar() {
     const interval = setInterval(check, 15000);
     return () => clearInterval(interval);
   }, [user]);
+
+  // ── Polling BUYER: órdenes en camino (shipped) ──
+  useEffect(() => {
+    if (!user || user.role === "seller") return;
+
+    const check = async () => {
+      try {
+        const token = localStorage.getItem("marketplace_token");
+        const res = await fetch(`${API}/orders/my`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data: any[] = await res.json();
+
+        const shipped = data.filter((o) => o.status === "shipped");
+        const shippedIds = new Set(shipped.map((o) => o._id as string));
+
+        // Primera carga: guardar estado inicial sin notificar
+        if (!shippedInitialized.current) {
+          prevShippedIds.current   = shippedIds;
+          shippedInitialized.current = true;
+          setShippedOrders(shipped.length);
+          return;
+        }
+
+        // Detectar nuevos "shipped" que antes no estaban
+        const newShipped = shipped.filter(
+          (o) => !prevShippedIds.current.has(o._id)
+        );
+
+        if (newShipped.length > 0) {
+          // Notificación del browser
+          if (Notification.permission === "granted") {
+            new Notification("🚚 Tu pedido está en camino", {
+              body: newShipped.length === 1
+                ? `Tu pedido #${newShipped[0]._id.slice(-8).toUpperCase()} fue despachado`
+                : `${newShipped.length} pedidos fueron despachados`,
+            });
+          }
+        }
+
+        prevShippedIds.current = shippedIds;
+        setShippedOrders(shipped.length);
+      } catch {}
+    };
+
+    // Pedir permiso de notificaciones
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    check();
+    const interval = setInterval(check, 15000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Badge total para el avatar según rol
+  const avatarBadge = user?.role === "seller" ? pendingOrders : shippedOrders;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +198,7 @@ export default function Navbar() {
         {/* Acciones */}
         <div className="navbar-actions">
 
-          {/* ── Botón Instalar PWA ── solo si el user está logueado y la app es instalable */}
+          {/* ── Botón Instalar PWA ── */}
           {user && isInstallable && !isInstalled && (
             <button
               className="btn-pwa-install"
@@ -161,43 +223,45 @@ export default function Navbar() {
               ref={dropdownRef}
               onClick={() => setDropdownOpen((v) => !v)}
             >
-              {/* Carrito */}
-              <Link
-                href="/panel?tab=cart"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  marginRight: "0.5rem",
-                  color: "var(--text-muted)",
-                  textDecoration: "none",
-                }}
-              >
-                <ShoppingCart size={20} />
-                {cartCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: -7, right: -8,
-                    background: "#f97316",
-                    color: "#fff",
-                    borderRadius: "999px",
-                    fontSize: "0.65rem",
-                    fontWeight: 700,
-                    minWidth: 18,
-                    height: 18,
+              {/* Carrito — solo buyers */}
+              {user.role !== "seller" && (
+                <Link
+                  href="/panel?tab=cart"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "relative",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    padding: "0 4px",
-                    lineHeight: 1,
-                  }}>
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
-                )}
-              </Link>
+                    marginRight: "0.5rem",
+                    color: "var(--text-muted)",
+                    textDecoration: "none",
+                  }}
+                >
+                  <ShoppingCart size={20} />
+                  {cartCount > 0 && (
+                    <span style={{
+                      position: "absolute",
+                      top: -7, right: -8,
+                      background: "#f97316",
+                      color: "#fff",
+                      borderRadius: "999px",
+                      fontSize: "0.65rem",
+                      fontWeight: 700,
+                      minWidth: 18,
+                      height: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0 4px",
+                      lineHeight: 1,
+                    }}>
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </Link>
+              )}
 
-              {/* Avatar + badge de órdenes pendientes */}
+              {/* Avatar + badge */}
               <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
                 <img
                   src={
@@ -206,7 +270,7 @@ export default function Navbar() {
                   }
                   alt={user.name}
                 />
-                {user.role === "seller" && pendingOrders > 0 && (
+                {avatarBadge > 0 && (
                   <span style={{
                     position: "absolute",
                     top: -5,
@@ -226,7 +290,7 @@ export default function Navbar() {
                     zIndex: 1,
                     pointerEvents: "none",
                   }}>
-                    {pendingOrders > 9 ? "9+" : pendingOrders}
+                    {avatarBadge > 9 ? "9+" : avatarBadge}
                   </span>
                 )}
               </div>
@@ -271,9 +335,26 @@ export default function Navbar() {
                       </Link>
                     </>
                   ) : (
-                    <Link href="/panel" onClick={() => setDropdownOpen(false)}>
+                    <Link
+                      href="/panel"
+                      onClick={() => setDropdownOpen(false)}
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
                       <ShoppingCart size={16} /> Mi Panel
-                      {cartCount > 0 && (
+                      {shippedOrders > 0 ? (
+                        // Badge "en camino" tiene prioridad visual
+                        <span style={{
+                          background: "#8b5cf6",
+                          color: "#fff",
+                          borderRadius: 20,
+                          fontSize: "0.68rem",
+                          fontWeight: 700,
+                          padding: "1px 7px",
+                          marginLeft: "auto",
+                        }}>
+                          🚚 {shippedOrders}
+                        </span>
+                      ) : cartCount > 0 ? (
                         <span style={{
                           background: "#f97316",
                           color: "#fff",
@@ -285,7 +366,7 @@ export default function Navbar() {
                         }}>
                           {cartCount}
                         </span>
-                      )}
+                      ) : null}
                     </Link>
                   )}
 
@@ -364,9 +445,36 @@ export default function Navbar() {
             </Link>
           )}
 
+          {/* Mis compras — solo buyers con pedidos en camino */}
+          {user && user.role !== "seller" && shippedOrders > 0 && (
+            <Link
+              href="/panel?tab=purchases"
+              className={`navbar-cat-link ${pathname === "/panel" ? "active" : ""}`}
+            >
+              <span style={{ flexShrink: 0, display: "flex" }}>
+                <Package size={14} />
+              </span>
+              <span className="category-name">En camino</span>
+              <span style={{
+                background: "#8b5cf6",
+                color: "#fff",
+                borderRadius: "50%",
+                width: 16,
+                height: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.65rem",
+                fontWeight: 800,
+                flexShrink: 0,
+              }}>
+                {shippedOrders > 9 ? "9+" : shippedOrders}
+              </span>
+            </Link>
+          )}
+
         </div>
       </nav>
     </header>
   );
 }
-
