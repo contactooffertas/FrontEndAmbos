@@ -311,11 +311,31 @@ export default function OrdenesPage() {
             <p>Cargando órdenes...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="ordenes-empty">
-            <Package size={52} strokeWidth={1} />
-            <h3>{filterTab === "all" ? "Sin pedidos aún" : "Sin pedidos en esta categoría"}</h3>
-            <p>{filterTab === "all" ? "Cuando alguien compre tus productos, aparecerán acá." : "Probá con otro filtro."}</p>
-          </div>
+<div className="ordenes-empty">
+  <Package size={52} strokeWidth={1} />
+  <h3>
+    {filterTab === "all"
+      ? "Sin pedidos aún"
+      : "Sin pedidos en esta categoría"}
+  </h3>
+  <p>
+    {filterTab === "all"
+      ? "Cuando alguien compre tus productos, aparecerán acá."
+      : "Probá con otro filtro."}
+  </p>
+
+  <div style={{ marginTop: "1rem", textAlign: "left" }}>
+    <p style={{ fontWeight: 700, marginBottom: "0.5rem" }}>
+      Información importante sobre el envío:
+    </p>
+    <ul style={{ paddingLeft: "1.2rem", fontSize: "0.9rem", lineHeight: "1.6" }}>
+      <li>El envío se arregla directamente entre el vendedor (vos) y el comprador.</li>
+      <li>El comprador debe contactarte primero para coordinar costos y detalles.</li>
+      <li>Es fundamental que hayas cargado correctamente tu número de celular.</li>
+      <li>Los costos y demás condiciones de entrega se definen por WhatsApp.</li>
+    </ul>
+  </div>
+</div>
         ) : (
           <div className="ordenes-list">
             {filtered.map(order => {
@@ -447,4 +467,5 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
+
 
