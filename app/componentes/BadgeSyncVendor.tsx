@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, Suspense } from 'react';
 
 // Importar dinámicamente el hook para evitar ejecución en servidor
 import dynamic from 'next/dynamic';
-
 /**
  * Componente interno que sí usa useAuth
  * Envuelto en dynamic para evitar ejecución en servidor
