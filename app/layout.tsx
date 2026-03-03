@@ -5,6 +5,7 @@ import BadgeSyncVendor from '@/app/componentes/BadgeSyncVendor';
 import BadgeSyncBuyer from '@/app/componentes/BadgeSyncBuyer';
 import './globals.css';
 
+
 export const metadata: Metadata = {
   title: 'Offerton - Las mejores ofertas',
   description: 'Encuentra las mejores ofertas cerca tuyo',
