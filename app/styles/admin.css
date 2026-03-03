@@ -50,14 +50,9 @@
   height: 100vh;
   overflow: hidden;
 }
-
-/* Este bloque se usa tanto en desktop (para alinear logo + footer)
-   como en mobile donde se convierte en la topbar */
+/* en desktop los hijos (logo y footer) se comportan como hijos directos del sidebar */
 .adm-sidebar-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
+  display: contents; 
 }
 
 .adm-logo {
@@ -911,13 +906,13 @@
   }
 
   /* Fila superior: logo + footer (user + logout) */
-  .adm-sidebar-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    border-bottom: 1px solid var(--adm-border);
-  }
+.adm-sidebar-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border-bottom: 1px solid var(--adm-border);
+}
 
   .adm-logo {
     border-bottom: none;
@@ -1110,3 +1105,4 @@
   .adm-resolve-actions { grid-template-columns: 1fr; }
   .adm-keyword-chip    { font-size: 0.65rem; padding: 0.15rem 0.4rem; }
 }
+
