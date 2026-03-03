@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
-import BadgeSync from '@/app/componentes/BadgeSync';
 import './globals.css';
-
 
 export const metadata: Metadata = {
   title: 'Offerton - Las mejores ofertas',
@@ -61,9 +59,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* Componente para sincronizar cambios del manifest */}
         <PWAManifestUpdater />
-        
-        {/* Componente para sincronizar badges entre navbar e icono PWA */}
-        <BadgeSync />
         
         <Providers>
           {children}
