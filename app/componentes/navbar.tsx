@@ -197,14 +197,40 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Avatar + nombre */}
-              <img
-                src={
-                  user.avatar ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=f97316&color=fff`
-                }
-                alt={user.name}
-              />
+              {/* Avatar + badge de órdenes pendientes */}
+              <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <img
+                  src={
+                    user.avatar ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=f97316&color=fff`
+                  }
+                  alt={user.name}
+                />
+                {user.role === "seller" && pendingOrders > 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: -5,
+                    right: -5,
+                    background: "#ef4444",
+                    color: "#fff",
+                    borderRadius: "999px",
+                    fontSize: "0.6rem",
+                    fontWeight: 800,
+                    minWidth: 16,
+                    height: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0 3px",
+                    lineHeight: 1,
+                    zIndex: 1,
+                    pointerEvents: "none",
+                  }}>
+                    {pendingOrders > 9 ? "9+" : pendingOrders}
+                  </span>
+                )}
+              </div>
+
               <span className="navbar-user-name">{user.name.split(" ")[0]}</span>
               <ChevronDown size={14} />
 
@@ -231,7 +257,7 @@ export default function Navbar() {
                         <Package size={16} /> Órdenes
                         {pendingOrders > 0 && (
                           <span style={{
-                            background: "#f97316",
+                            background: "#ef4444",
                             color: "#fff",
                             borderRadius: 20,
                             fontSize: "0.68rem",
@@ -320,7 +346,7 @@ export default function Navbar() {
               <span className="category-name">Órdenes</span>
               {pendingOrders > 0 && (
                 <span style={{
-                  background: "#f97316",
+                  background: "#ef4444",
                   color: "#fff",
                   borderRadius: "50%",
                   width: 16,
@@ -332,7 +358,7 @@ export default function Navbar() {
                   fontWeight: 800,
                   flexShrink: 0,
                 }}>
-                  {pendingOrders}
+                  {pendingOrders > 9 ? "9+" : pendingOrders}
                 </span>
               )}
             </Link>
