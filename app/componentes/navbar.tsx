@@ -47,6 +47,21 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   return buffer;
 }
 
+// ── Actualizar badge en el icono de la PWA ──────────────────────────────────
+async function updateBadge(count: number) {
+  if ("setAppBadge" in navigator) {
+    try {
+      if (count > 0) {
+        await (navigator as any).setAppBadge(count);
+      } else {
+        await (navigator as any).clearAppBadge();
+      }
+    } catch (e) {
+      console.warn("Badge API no disponible:", e);
+    }
+  }
+}
+
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { cartCount }    = useCart();
@@ -154,7 +169,10 @@ export default function Navbar() {
         });
         if (!res.ok) return;
         const data = await res.json();
-        setPendingOrders(data.filter((o: any) => o.status === "pending").length);
+        const pending = data.filter((o: any) => o.status === "pending").length;
+        setPendingOrders(pending);
+        // 🔴 Actualizar badge del icono PWA con órdenes pendientes
+        updateBadge(pending);
       } catch {}
     };
     check();
@@ -179,6 +197,8 @@ export default function Navbar() {
           prevShippedIds.current     = shippedIds;
           shippedInitialized.current = true;
           setShippedOrders(shipped.length);
+          // 🔴 Actualizar badge del icono PWA con órdenes en tránsito
+          updateBadge(shipped.length);
           return;
         }
         const newShipped = shipped.filter(o => !prevShippedIds.current.has(o._id));
@@ -191,6 +211,8 @@ export default function Navbar() {
         }
         prevShippedIds.current = shippedIds;
         setShippedOrders(shipped.length);
+        // 🔴 Actualizar badge del icono PWA con órdenes en tránsito
+        updateBadge(shipped.length);
       } catch {}
     };
     if (Notification.permission === "default") Notification.requestPermission();
