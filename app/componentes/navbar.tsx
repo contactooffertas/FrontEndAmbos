@@ -173,6 +173,9 @@ export default function Navbar() {
         setPendingOrders(pending);
         // 🔴 Actualizar badge del icono PWA con órdenes pendientes
         updateBadge(pending);
+        // 📢 Notificar a BadgeSync component
+        (window as any).__PENDING_ORDERS = pending;
+        window.dispatchEvent(new Event('badge_updated'));
       } catch {}
     };
     check();
@@ -199,6 +202,9 @@ export default function Navbar() {
           setShippedOrders(shipped.length);
           // 🔴 Actualizar badge del icono PWA con órdenes en tránsito
           updateBadge(shipped.length);
+          // 📢 Notificar a BadgeSync component
+          (window as any).__SHIPPED_ORDERS = shipped.length;
+          window.dispatchEvent(new Event('badge_updated'));
           return;
         }
         const newShipped = shipped.filter(o => !prevShippedIds.current.has(o._id));
@@ -213,6 +219,9 @@ export default function Navbar() {
         setShippedOrders(shipped.length);
         // 🔴 Actualizar badge del icono PWA con órdenes en tránsito
         updateBadge(shipped.length);
+        // 📢 Notificar a BadgeSync component
+        (window as any).__SHIPPED_ORDERS = shipped.length;
+        window.dispatchEvent(new Event('badge_updated'));
       } catch {}
     };
     if (Notification.permission === "default") Notification.requestPermission();
