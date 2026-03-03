@@ -4,6 +4,7 @@ import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
 import BadgeSync from '@/app/componentes/BadgeSync';
 import './globals.css';
 
+
 export const metadata: Metadata = {
   title: 'Offerton - Las mejores ofertas',
   description: 'Encuentra las mejores ofertas cerca tuyo',
