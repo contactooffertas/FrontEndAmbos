@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/authContext';
 
 /**
@@ -8,6 +8,7 @@ import { useAuth } from '../context/authContext';
  * Para compradores: muestra órdenes en tránsito
  */
 async function setAppBadge(count: number) {
+  if (typeof window === 'undefined') return false;
   if (!('setAppBadge' in navigator)) {
     console.warn('⚠️ Badge API no soportada');
     return false;
@@ -33,6 +34,7 @@ async function setAppBadge(count: number) {
  * Guardar badge en sessionStorage
  */
 function saveBadgeSession(count: number) {
+  if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem('buyer_badge_count', String(count));
     console.log(`💾 Badge comprador guardado: ${count}`);
@@ -45,6 +47,7 @@ function saveBadgeSession(count: number) {
  * Notificar al Service Worker
  */
 async function notifyServiceWorkerBadge(count: number) {
+  if (typeof window === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
 
   try {
@@ -66,11 +69,14 @@ export default function BadgeSyncBuyer() {
   const { user } = useAuth();
   const previousBadgeRef = useRef<number>(-1);
   const badgeCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   /**
    * Obtener contador actual de órdenes en tránsito
    */
   const getCurrentBadgeCount = (): number => {
+    if (typeof window === 'undefined') return 0;
+    
     // Opción 1: Variable global del Navbar
     const shippedFromWindow = (window as any).__SHIPPED_ORDERS;
     if (shippedFromWindow !== undefined && shippedFromWindow > 0) {
@@ -112,17 +118,24 @@ export default function BadgeSyncBuyer() {
   };
 
   /**
+   * Ejecutar solo en cliente
+   */
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  /**
    * Monitorear cambios para COMPRADORES
    */
   useEffect(() => {
-    if (!user) {
+    if (!isClient || !user) {
       setAppBadge(0);
       previousBadgeRef.current = -1;
       return;
     }
 
-    // Solo para compradores (NO vendedores)
-    if (user.role === 'user' || user.role !== 'seller') {
+    // Solo para compradores (role !== 'seller')
+    if (user.role !== 'seller') {
       console.log('👁️ Monitoreando órdenes en tránsito para comprador...');
 
       // Listener para evento del Navbar
@@ -155,15 +168,17 @@ export default function BadgeSyncBuyer() {
         }
       };
     } else {
-      // No es comprador
+      // Es vendedor
       setAppBadge(0);
     }
-  }, [user]);
+  }, [user, isClient]);
 
   // Escuchar cambios en la ventana/tab
   useEffect(() => {
+    if (!isClient) return;
+
     const handleVisibilityChange = () => {
-      if (!document.hidden && (user?.role === 'user' || user?.role !== 'seller')) {
+      if (!document.hidden && user?.role !== 'seller') {
         const currentBadge = getCurrentBadgeCount();
         syncBadgeToApp(currentBadge);
       }
@@ -173,7 +188,7 @@ export default function BadgeSyncBuyer() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user]);
+  }, [user, isClient]);
 
   return null;
 }
