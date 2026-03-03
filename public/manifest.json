@@ -1,6 +1,6 @@
 {
-  "name": "Offertas - Las Mejores Ofertas",
-  "short_name": "Offertas",
+  "name": "Offerton - Las Mejores Ofertas",
+  "short_name": "Offerton",
   "description": "Encuentra las mejores ofertas cerca tuyo en tiempo real",
   "start_url": "/",
   "scope": "/",
@@ -38,7 +38,7 @@
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Pantalla principal de Offertas"
+      "label": "Pantalla principal de Offerton"
     },
     {
       "src": "/assets/screenshot-2.png",
