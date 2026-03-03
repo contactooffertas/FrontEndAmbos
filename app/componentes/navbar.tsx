@@ -61,11 +61,17 @@ export default function Navbar() {
   const [installing,     setInstalling]     = useState(false);
   const [pushNotifs,     setPushNotifs]     = useState<PushNotif[]>([]);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
+  const [isIOSDevice,    setIsIOSDevice]    = useState(false);
 
   const dropdownRef        = useRef<HTMLDivElement>(null);
   const notifRef           = useRef<HTMLDivElement>(null);
   const prevShippedIds     = useRef<Set<string>>(new Set());
   const shippedInitialized = useRef(false);
+
+  // ── Detectar iOS ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
+  }, []);
 
   // ── Escuchar mensajes del SW ──────────────────────────────────────────────
   useEffect(() => {
@@ -201,9 +207,17 @@ export default function Navbar() {
     if (searchQuery.trim())
       router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
   };
-  const handleLogout = () => { logout(); setDropdownOpen(false); router.push("/"); };
-  const handleInstall = async () => { setInstalling(true); await install(); setInstalling(false); };
-  const dismissNotif  = (id: string) => setPushNotifs(prev => prev.filter(n => n.id !== id));
+  const handleLogout  = () => { logout(); setDropdownOpen(false); router.push("/"); };
+  const handleInstall = async () => {
+    if (isIOSDevice) {
+      alert('Para instalar: tocá el botón Compartir (□↑) y luego "Agregar a pantalla de inicio"');
+      return;
+    }
+    setInstalling(true);
+    await install();
+    setInstalling(false);
+  };
+  const dismissNotif = (id: string) => setPushNotifs(prev => prev.filter(n => n.id !== id));
 
   const currentSlug = pathname.startsWith("/categoria/")
     ? (pathname.split("/categoria/")[1]?.split("?")[0] ?? "")
@@ -275,38 +289,33 @@ export default function Navbar() {
 
           <div className="navbar-actions">
 
-            // En el Navbar, reemplazá el botón PWA por esto:
-{isInstallable && !isInstalled && (
-  <button
-    onClick={() => {
-      if (isIOSDevice) {
-        alert('Para instalar: tocá el botón Compartir (□↑) y luego "Agregar a pantalla de inicio"');
-        return;
-      }
-      handleInstall();
-    }}
-    disabled={installing && !isIOSDevice}
-    title={isIOSDevice ? "Cómo instalar en iPhone" : "Instalar app"}
-    style={{
-      display: "flex", alignItems: "center", gap: 5,
-      background: "rgba(249,115,22,0.09)",
-      border: "1px solid rgba(249,115,22,0.28)",
-      borderRadius: 8, padding: "0.38rem 0.72rem",
-      color: "#fdba74", fontSize: "0.78rem", fontWeight: 600,
-      cursor: "pointer", opacity: 1,
-      transition: "background 0.2s, border-color 0.2s",
-      whiteSpace: "nowrap",
-    }}
-  >
-    {installing && !isIOSDevice
-      ? <Smartphone size={13} style={{ animation: "navbarSpin 1s linear infinite" }} />
-      : <Download size={13} />
-    }
-    <span className="pwa-label">
-      {installing && !isIOSDevice ? "Instalando..." : "Instalar"}
-    </span>
-  </button>
-)}
+            {/* ── Botón instalar PWA ── */}
+            {isInstallable && !isInstalled && (
+              <button
+                onClick={handleInstall}
+                disabled={installing}
+                title={isIOSDevice ? "Cómo instalar en iPhone" : "Instalar app"}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "rgba(249,115,22,0.09)",
+                  border: "1px solid rgba(249,115,22,0.28)",
+                  borderRadius: 8, padding: "0.38rem 0.72rem",
+                  color: "#fdba74", fontSize: "0.78rem", fontWeight: 600,
+                  cursor: "pointer", opacity: installing ? 0.6 : 1,
+                  transition: "background 0.2s, border-color 0.2s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {installing
+                  ? <Smartphone size={13} style={{ animation: "navbarSpin 1s linear infinite" }} />
+                  : <Download size={13} />
+                }
+                <span className="pwa-label">
+                  {installing ? "Instalando..." : "Instalar"}
+                </span>
+              </button>
+            )}
+
             {/* ── Campana notificaciones push ── */}
             {user && unreadNotifs > 0 && (
               <div ref={notifRef} style={{ position: "relative" }}>
@@ -446,7 +455,7 @@ export default function Navbar() {
                           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "none", border: "none", color: "#fdba74", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", padding: "0.55rem 1rem", textAlign: "left" }}
                         >
                           <Download size={15} color="#fdba74" />
-                          {installing ? "Instalando..." : "Instalar app"}
+                          {installing ? "Instalando..." : isIOSDevice ? "Cómo instalar" : "Instalar app"}
                         </button>
                       </>
                     )}
@@ -505,9 +514,8 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Instalar en barra de cats — visible en mobile */}
             {isInstallable && !isInstalled && (
-              <button onClick={handleInstall} className="navbar-cat-link" style={{ background: "none", border: "none", cursor: "pointer" }} title="Instalar app">
+              <button onClick={handleInstall} className="navbar-cat-link" style={{ background: "none", border: "none", cursor: "pointer" }} title={isIOSDevice ? "Cómo instalar" : "Instalar app"}>
                 <span style={{ flexShrink: 0, display: "flex" }}><Download size={14} color="#fdba74" /></span>
                 <span className="category-name" style={{ color: "#fdba74" }}>Instalar</span>
               </button>
@@ -519,5 +527,3 @@ export default function Navbar() {
     </>
   );
 }
-
-
