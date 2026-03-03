@@ -170,18 +170,51 @@ export default function Navbar() {
         if (!res.ok) return;
         const data = await res.json();
         const pending = data.filter((o: any) => o.status === "pending").length;
-        setPendingOrders(pending);
-        // 🔴 Actualizar badge del icono PWA con órdenes pendientes
-        updateBadge(pending);
-        // 📢 Notificar a BadgeSync component
-        (window as any).__PENDING_ORDERS = pending;
-        window.dispatchEvent(new Event('badge_updated'));
-      } catch {}
+        
+        // Solo actualizar si cambió
+        if (pending !== pendingOrders) {
+          console.log(`📊 Órdenes pendientes actualizadas: ${pending}`);
+          setPendingOrders(pending);
+          
+          // 🔴 Actualizar badge del icono PWA
+          updateBadge(pending);
+          
+          // 📢 Guardar en variable global para BadgeSyncVendor
+          (window as any).__PENDING_ORDERS = pending;
+          
+          // 🔔 Guardar en sessionStorage
+          try {
+            sessionStorage.setItem('current_badge_count', String(pending));
+          } catch (e) {}
+          
+          // 🎯 Disparar evento para que BadgeSyncVendor lo detecte
+          window.dispatchEvent(new CustomEvent('badge_updated', { 
+            detail: { count: pending, type: 'pending_orders' }
+          }));
+          
+          // Notificar al Service Worker
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.active?.postMessage({
+                type: 'UPDATE_BADGE_COUNT',
+                badgeCount: pending,
+                timestamp: Date.now(),
+              });
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error en polling seller:', error);
+      }
     };
+    
+    // Primera ejecución inmediata
     check();
+    
+    // Luego cada 15 segundos
     const iv = setInterval(check, 15000);
     return () => clearInterval(iv);
-  }, [user]);
+  }, [user, pendingOrders]);
 
   // ── Polling BUYER ─────────────────────────────────────────────────────────
   useEffect(() => {
