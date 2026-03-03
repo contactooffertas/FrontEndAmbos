@@ -14,8 +14,6 @@ import {
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 
-
-
 const NAV_CATEGORIES = [
   { id: "1",  name: "Electrónica",     iconName: "Monitor",     slug: "electronica"   },
   { id: "2",  name: "Ropa y Moda",     iconName: "Shirt",       slug: "ropa-moda"     },
@@ -593,4 +591,3 @@ export default function Navbar() {
     </>
   );
 }
-
