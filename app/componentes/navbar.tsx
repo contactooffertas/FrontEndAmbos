@@ -9,16 +9,8 @@ import { useCart } from "../context/cartContext";
 import CategoryIcon from "./cateroryicon";
 import "../styles/navbar.css";
 import {
-  Home,
-  Search,
-  User,
-  Package,
-  Store,
-  LogOut,
-  ChevronDown,
-  ShoppingCart,
-  Download,
-  Smartphone,
+  Home, Search, User, Package, Store, LogOut, ChevronDown,
+  ShoppingCart, Download, Smartphone, Bell, X,
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 
@@ -37,6 +29,23 @@ const NAV_CATEGORIES = [
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+interface PushNotif {
+  id: string;
+  title: string;
+  body: string;
+  url?: string;
+  receivedAt: number;
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64  = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw     = window.atob(base64);
+  const arr     = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { cartCount }    = useCart();
@@ -44,36 +53,92 @@ export default function Navbar() {
   const router           = useRouter();
   const { isInstallable, isInstalled, install } = usePWAInstall();
 
-  const [dropdownOpen,  setDropdownOpen]  = useState(false);
-  const [searchQuery,   setSearchQuery]   = useState("");
-  const [pendingOrders, setPendingOrders] = useState(0);  // seller: pending
-  const [shippedOrders, setShippedOrders] = useState(0);  // buyer: shipped (en camino)
-  const [installing,    setInstalling]    = useState(false);
+  const [dropdownOpen,   setDropdownOpen]   = useState(false);
+  const [searchQuery,    setSearchQuery]    = useState("");
+  const [pendingOrders,  setPendingOrders]  = useState(0);
+  const [shippedOrders,  setShippedOrders]  = useState(0);
+  const [installing,     setInstalling]     = useState(false);
+  const [pushNotifs,     setPushNotifs]     = useState<PushNotif[]>([]);
+  const [notifPanelOpen, setNotifPanelOpen] = useState(false);
 
   const dropdownRef        = useRef<HTMLDivElement>(null);
+  const notifRef           = useRef<HTMLDivElement>(null);
   const prevShippedIds     = useRef<Set<string>>(new Set());
   const shippedInitialized = useRef(false);
 
-  // ── Cerrar dropdown al hacer click fuera ──
+  // ── Escuchar mensajes del SW ──────────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "NAVIGATE" && event.data.url) {
+        router.push(event.data.url);
+      }
+      if (event.data?.type === "PUSH_RECEIVED") {
+        const notif: PushNotif = {
+          id: `${Date.now()}-${Math.random()}`,
+          title: event.data.title || "Nueva notificacion",
+          body:  event.data.body  || "",
+          url:   event.data.url,
+          receivedAt: Date.now(),
+        };
+        setPushNotifs(prev => [notif, ...prev].slice(0, 20));
+      }
+    };
+    navigator.serviceWorker?.addEventListener("message", handler);
+    return () => navigator.serviceWorker?.removeEventListener("message", handler);
+  }, [router]);
+
+  // ── Registrar SW y suscribirse a push ────────────────────────────────────
+  useEffect(() => {
+    if (!user || typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    const setup = async () => {
+      try {
+        const reg = await navigator.serviceWorker.register("/sw.js");
+        await navigator.serviceWorker.ready;
+        if (Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) return;
+        const vapidRes = await fetch(`${API}/push/vapid-public-key`).catch(() => null);
+        if (!vapidRes?.ok) return;
+        const { publicKey } = await vapidRes.json();
+        if (!publicKey) return;
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+        const token = localStorage.getItem("marketplace_token");
+        await fetch(`${API}/push/subscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify(sub),
+        });
+      } catch (e) {
+        console.warn("Push setup:", e);
+      }
+    };
+    setup();
+  }, [user]);
+
+  // ── Cerrar al click afuera ────────────────────────────────────────────────
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
         setDropdownOpen(false);
-      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node))
+        setNotifPanelOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Cerrar dropdown al navegar ──
-  useEffect(() => {
-    setDropdownOpen(false);
-  }, [pathname]);
+  useEffect(() => { setDropdownOpen(false); }, [pathname]);
 
-  // ── Polling SELLER: órdenes pendientes ──
+  // ── Polling SELLER ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user || user.role !== "seller") return;
-
     const check = async () => {
       try {
         const token = localStorage.getItem("marketplace_token");
@@ -82,20 +147,17 @@ export default function Navbar() {
         });
         if (!res.ok) return;
         const data = await res.json();
-        const pending = data.filter((o: any) => o.status === "pending").length;
-        setPendingOrders(pending);
+        setPendingOrders(data.filter((o: any) => o.status === "pending").length);
       } catch {}
     };
-
     check();
-    const interval = setInterval(check, 15000);
-    return () => clearInterval(interval);
+    const iv = setInterval(check, 15000);
+    return () => clearInterval(iv);
   }, [user]);
 
-  // ── Polling BUYER: órdenes en camino (shipped) ──
+  // ── Polling BUYER ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user || user.role === "seller") return;
-
     const check = async () => {
       try {
         const token = localStorage.getItem("marketplace_token");
@@ -104,377 +166,349 @@ export default function Navbar() {
         });
         if (!res.ok) return;
         const data: any[] = await res.json();
-
-        const shipped = data.filter((o) => o.status === "shipped");
-        const shippedIds = new Set(shipped.map((o) => o._id as string));
-
-        // Primera carga: guardar estado inicial sin notificar
+        const shipped    = data.filter(o => o.status === "shipped");
+        const shippedIds = new Set(shipped.map(o => o._id as string));
         if (!shippedInitialized.current) {
-          prevShippedIds.current   = shippedIds;
+          prevShippedIds.current     = shippedIds;
           shippedInitialized.current = true;
           setShippedOrders(shipped.length);
           return;
         }
-
-        // Detectar nuevos "shipped" que antes no estaban
-        const newShipped = shipped.filter(
-          (o) => !prevShippedIds.current.has(o._id)
-        );
-
-        if (newShipped.length > 0) {
-          // Notificación del browser
-          if (Notification.permission === "granted") {
-            new Notification("🚚 Tu pedido está en camino", {
-              body: newShipped.length === 1
-                ? `Tu pedido #${newShipped[0]._id.slice(-8).toUpperCase()} fue despachado`
-                : `${newShipped.length} pedidos fueron despachados`,
-            });
-          }
+        const newShipped = shipped.filter(o => !prevShippedIds.current.has(o._id));
+        if (newShipped.length > 0 && Notification.permission === "granted") {
+          new Notification("Tu pedido esta en camino", {
+            body: newShipped.length === 1
+              ? `Pedido #${newShipped[0]._id.slice(-8).toUpperCase()} fue despachado`
+              : `${newShipped.length} pedidos fueron despachados`,
+          });
         }
-
         prevShippedIds.current = shippedIds;
         setShippedOrders(shipped.length);
       } catch {}
     };
-
-    // Pedir permiso de notificaciones
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-
+    if (Notification.permission === "default") Notification.requestPermission();
     check();
-    const interval = setInterval(check, 15000);
-    return () => clearInterval(interval);
+    const iv = setInterval(check, 15000);
+    return () => clearInterval(iv);
   }, [user]);
 
-  // Badge total para el avatar según rol
-  const avatarBadge = user?.role === "seller" ? pendingOrders : shippedOrders;
+  const avatarBadge  = user?.role === "seller" ? pendingOrders : shippedOrders;
+  const unreadNotifs = pushNotifs.length;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (searchQuery.trim())
       router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
   };
-
-  const handleLogout = () => {
-    logout();
-    setDropdownOpen(false);
-    router.push("/");
-  };
-
-  const handleInstall = async () => {
-    setInstalling(true);
-    await install();
-    setInstalling(false);
-  };
+  const handleLogout = () => { logout(); setDropdownOpen(false); router.push("/"); };
+  const handleInstall = async () => { setInstalling(true); await install(); setInstalling(false); };
+  const dismissNotif  = (id: string) => setPushNotifs(prev => prev.filter(n => n.id !== id));
 
   const currentSlug = pathname.startsWith("/categoria/")
     ? (pathname.split("/categoria/")[1]?.split("?")[0] ?? "")
     : "";
 
   return (
-    <header className="navbar">
-      <div className="navbar-inner">
+    <>
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(110%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
+        }
+        @keyframes navbarSpin { to { transform: rotate(360deg); } }
+        .pwa-label { display: none; }
+        @media (min-width: 540px) { .pwa-label { display: inline; } }
+        .notif-row:hover { background: rgba(255,255,255,0.04) !important; }
+      `}</style>
 
-        {/* Logo */}
-        <Link href="/" className="navbar-logo">
-          <span className="navbar-logo-badge">Off</span>
-          <span className="">ertas</span>
-          <span className="navbar-logo-dot" />
-        </Link>
-
-        {/* Buscador */}
-        <form className="navbar-search" onSubmit={handleSearch}>
-          <Search size={16} className="navbar-search-icon" />
-          <input
-            type="text"
-            placeholder="Buscar productos, negocios..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </form>
-
-        {/* Acciones */}
-        <div className="navbar-actions">
-
-          {/* ── Botón Instalar PWA ── */}
-          {user && isInstallable && !isInstalled && (
-            <button
-              className="btn-pwa-install"
-              onClick={handleInstall}
-              disabled={installing}
-              title="Instalar app"
-            >
-              {installing ? (
-                <Smartphone size={15} className="pwa-icon pwa-icon--spin" />
-              ) : (
-                <Download size={15} className="pwa-icon" />
-              )}
-              <span className="pwa-label">
-                {installing ? "Instalando..." : "Instalar app"}
-              </span>
-            </button>
-          )}
-
-          {user ? (
-            <div
-              className="navbar-user"
-              ref={dropdownRef}
-              onClick={() => setDropdownOpen((v) => !v)}
-            >
-              {/* Carrito — solo buyers */}
-              {user.role !== "seller" && (
-                <Link
-                  href="/panel?tab=cart"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    marginRight: "0.5rem",
-                    color: "var(--text-muted)",
-                    textDecoration: "none",
-                  }}
-                >
-                  <ShoppingCart size={20} />
-                  {cartCount > 0 && (
-                    <span style={{
-                      position: "absolute",
-                      top: -7, right: -8,
-                      background: "#f97316",
-                      color: "#fff",
-                      borderRadius: "999px",
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      minWidth: 18,
-                      height: 18,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "0 4px",
-                      lineHeight: 1,
-                    }}>
-                      {cartCount > 99 ? "99+" : cartCount}
-                    </span>
-                  )}
-                </Link>
-              )}
-
-              {/* Avatar + badge */}
-              <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
-                <img
-                  src={
-                    user.avatar ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=f97316&color=fff`
-                  }
-                  alt={user.name}
-                />
-                {avatarBadge > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: -5,
-                    right: -5,
-                    background: "#ef4444",
-                    color: "#fff",
-                    borderRadius: "999px",
-                    fontSize: "0.6rem",
-                    fontWeight: 800,
-                    minWidth: 16,
-                    height: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "0 3px",
-                    lineHeight: 1,
-                    zIndex: 1,
-                    pointerEvents: "none",
-                  }}>
-                    {avatarBadge > 9 ? "9+" : avatarBadge}
-                  </span>
-                )}
-              </div>
-
-              <span className="navbar-user-name">{user.name.split(" ")[0]}</span>
-              <ChevronDown size={14} />
-
-              {/* Dropdown */}
-              {dropdownOpen && (
-                <div className="navbar-dropdown">
-                  <Link href="/profile" onClick={() => setDropdownOpen(false)}>
-                    <User size={16} /> Mi Perfil
-                  </Link>
-
-                  {user.role === "seller" ? (
-                    <>
-                      <Link href="/mis-productos" onClick={() => setDropdownOpen(false)}>
-                        <Package size={16} /> Mis Productos
-                      </Link>
-                      <Link href="/negocio" onClick={() => setDropdownOpen(false)}>
-                        <Store size={16} /> Mi Negocio
-                      </Link>
-                      <Link
-                        href="/ordenes"
-                        onClick={() => setDropdownOpen(false)}
-                        style={{ display: "flex", alignItems: "center", gap: 8 }}
-                      >
-                        <Package size={16} /> Órdenes
-                        {pendingOrders > 0 && (
-                          <span style={{
-                            background: "#ef4444",
-                            color: "#fff",
-                            borderRadius: 20,
-                            fontSize: "0.68rem",
-                            fontWeight: 700,
-                            padding: "1px 7px",
-                            marginLeft: "auto",
-                          }}>
-                            {pendingOrders}
-                          </span>
-                        )}
-                      </Link>
-                    </>
-                  ) : (
-                    <Link
-                      href="/panel"
-                      onClick={() => setDropdownOpen(false)}
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
-                      <ShoppingCart size={16} /> Mi Panel
-                      {shippedOrders > 0 ? (
-                        // Badge "en camino" tiene prioridad visual
-                        <span style={{
-                          background: "#8b5cf6",
-                          color: "#fff",
-                          borderRadius: 20,
-                          fontSize: "0.68rem",
-                          fontWeight: 700,
-                          padding: "1px 7px",
-                          marginLeft: "auto",
-                        }}>
-                          🚚 {shippedOrders}
-                        </span>
-                      ) : cartCount > 0 ? (
-                        <span style={{
-                          background: "#f97316",
-                          color: "#fff",
-                          borderRadius: 20,
-                          fontSize: "0.68rem",
-                          fontWeight: 700,
-                          padding: "1px 7px",
-                          marginLeft: "auto",
-                        }}>
-                          {cartCount}
-                        </span>
-                      ) : null}
-                    </Link>
-                  )}
-
-                  <div className="navbar-dropdown-divider" />
-                  <button className="logout-btn" onClick={handleLogout}>
-                    <LogOut size={16} /> Cerrar sesión
-                  </button>
-                </div>
-              )}
+      {/* ── Toast push flotante ── */}
+      <div style={{
+        position: "fixed", top: "4.75rem", right: "1rem",
+        zIndex: 99999, display: "flex", flexDirection: "column",
+        gap: "0.5rem", maxWidth: 320, width: "calc(100vw - 2rem)",
+        pointerEvents: "none",
+      }}>
+        {pushNotifs.slice(0, 1).map(n => (
+          <div key={n.id + "_t"} style={{
+            background: "rgba(15,15,15,0.97)",
+            border: "1px solid rgba(249,115,22,0.35)",
+            borderLeft: "3px solid #f97316",
+            borderRadius: 12, padding: "0.8rem 1rem",
+            display: "flex", alignItems: "flex-start", gap: 10,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
+            pointerEvents: "all",
+            animation: "slideInRight 0.3s ease",
+          }}>
+            <Bell size={15} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.82rem", color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
+              {n.body && <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>{n.body}</p>}
             </div>
-          ) : (
-            <>
-              <Link href="/login"    className="btn btn-ghost hide-mobile">Iniciar sesión</Link>
-              <Link href="/register" className="btn btn-primary">Registrarse</Link>
-            </>
-          )}
-        </div>
+            <button onClick={() => dismissNotif(n.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 2, flexShrink: 0 }}>
+              <X size={13} />
+            </button>
+          </div>
+        ))}
       </div>
 
-      {/* Barra de categorías */}
-      <nav className="navbar-cats">
-        <div className="navbar-cats-inner">
+      <header className="navbar">
+        <div className="navbar-inner">
 
-          {/* Inicio */}
-          <Link
-            href="/"
-            className={`navbar-cat-link ${pathname === "/" ? "active" : ""}`}
-          >
-            <span style={{ flexShrink: 0, display: "flex" }}>
-              <Home size={14} />
-            </span>
-            <span className="category-name">Inicio</span>
+          {/* Logo */}
+          <Link href="/" className="navbar-logo">
+            <span className="navbar-logo-badge">Off</span>
+            <span>ertas</span>
+            <span className="navbar-logo-dot" />
           </Link>
 
-          {/* Categorías */}
-          {NAV_CATEGORIES.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/categoria/${cat.slug}`}
-              className={`navbar-cat-link ${currentSlug === cat.slug ? "active" : ""}`}
-            >
-              <span style={{ flexShrink: 0, display: "flex" }}>
-                <CategoryIcon name={cat.iconName} size={14} />
-              </span>
-              <span className="category-name">{cat.name}</span>
-            </Link>
-          ))}
+          {/* Buscador */}
+          <form className="navbar-search" onSubmit={handleSearch}>
+            <Search size={16} className="navbar-search-icon" />
+            <input
+              type="text"
+              placeholder="Buscar productos, negocios..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </form>
 
-          {/* Órdenes — solo sellers */}
-          {user?.role === "seller" && (
-            <Link
-              href="/ordenes"
-              className={`navbar-cat-link ${pathname === "/ordenes" ? "active" : ""}`}
-            >
-              <span style={{ flexShrink: 0, display: "flex" }}>
-                <Package size={14} />
-              </span>
-              <span className="category-name">Órdenes</span>
-              {pendingOrders > 0 && (
-                <span style={{
-                  background: "#ef4444",
-                  color: "#fff",
-                  borderRadius: "50%",
-                  width: 16,
-                  height: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.65rem",
-                  fontWeight: 800,
-                  flexShrink: 0,
-                }}>
-                  {pendingOrders > 9 ? "9+" : pendingOrders}
-                </span>
-              )}
-            </Link>
-          )}
+          <div className="navbar-actions">
 
-          {/* Mis compras — solo buyers con pedidos en camino */}
-          {user && user.role !== "seller" && shippedOrders > 0 && (
-            <Link
-              href="/panel?tab=purchases"
-              className={`navbar-cat-link ${pathname === "/panel" ? "active" : ""}`}
-            >
-              <span style={{ flexShrink: 0, display: "flex" }}>
-                <Package size={14} />
-              </span>
-              <span className="category-name">En camino</span>
-              <span style={{
-                background: "#8b5cf6",
-                color: "#fff",
-                borderRadius: "50%",
-                width: 16,
-                height: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.65rem",
-                fontWeight: 800,
-                flexShrink: 0,
-              }}>
-                {shippedOrders > 9 ? "9+" : shippedOrders}
-              </span>
-            </Link>
-          )}
+            {/* ── Boton instalar PWA ── */}
+            {isInstallable && !isInstalled && (
+              <button
+                onClick={handleInstall}
+                disabled={installing}
+                title={installing ? "Instalando..." : "Instalar app"}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "rgba(249,115,22,0.09)",
+                  border: "1px solid rgba(249,115,22,0.28)",
+                  borderRadius: 8, padding: "0.38rem 0.72rem",
+                  color: "#fdba74", fontSize: "0.78rem", fontWeight: 600,
+                  cursor: installing ? "not-allowed" : "pointer",
+                  opacity: installing ? 0.6 : 1,
+                  transition: "background 0.2s, border-color 0.2s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {installing
+                  ? <Smartphone size={13} style={{ animation: "navbarSpin 1s linear infinite" }} />
+                  : <Download size={13} />
+                }
+                <span className="pwa-label">{installing ? "Instalando..." : "Instalar"}</span>
+              </button>
+            )}
 
+            {/* ── Campana notificaciones push ── */}
+            {user && unreadNotifs > 0 && (
+              <div ref={notifRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setNotifPanelOpen(v => !v)}
+                  style={{
+                    position: "relative",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: notifPanelOpen ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.08)",
+                    border: "1px solid rgba(249,115,22,0.28)",
+                    borderRadius: 8, width: 34, height: 34,
+                    color: "#fdba74", cursor: "pointer",
+                    transition: "background 0.2s", flexShrink: 0,
+                  }}
+                >
+                  <Bell size={15} />
+                  <span style={{
+                    position: "absolute", top: -5, right: -5,
+                    background: "#ef4444", color: "#fff", borderRadius: "999px",
+                    fontSize: "0.58rem", fontWeight: 800, minWidth: 15, height: 15,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: "0 2px", lineHeight: 1,
+                  }}>
+                    {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                  </span>
+                </button>
+
+                {notifPanelOpen && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 8px)", right: 0,
+                    width: 300, maxHeight: 380, overflowY: "auto",
+                    background: "#111", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.65)", zIndex: 9999,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>Notificaciones</span>
+                      <button onClick={() => setPushNotifs([])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}>
+                        Limpiar todo
+                      </button>
+                    </div>
+                    {pushNotifs.map(n => (
+                      <div
+                        key={n.id}
+                        className="notif-row"
+                        onClick={() => { if (n.url) router.push(n.url); setNotifPanelOpen(false); }}
+                        style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "0.7rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.05)", cursor: n.url ? "pointer" : "default", transition: "background 0.15s" }}
+                      >
+                        <Bell size={13} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
+                          {n.body && <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{n.body}</p>}
+                          <p style={{ margin: "0.25rem 0 0", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>
+                            {new Date(n.receivedAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <button onClick={e => { e.stopPropagation(); dismissNotif(n.id); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", flexShrink: 0, padding: 2 }}>
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {user ? (
+              <div className="navbar-user" ref={dropdownRef} onClick={() => setDropdownOpen(v => !v)}>
+
+                {user.role !== "seller" && (
+                  <Link href="/panel?tab=cart" onClick={e => e.stopPropagation()} style={{ position: "relative", display: "flex", alignItems: "center", marginRight: "0.5rem", color: "var(--text-muted)", textDecoration: "none" }}>
+                    <ShoppingCart size={20} />
+                    {cartCount > 0 && (
+                      <span style={{ position: "absolute", top: -7, right: -8, background: "#f97316", color: "#fff", borderRadius: "999px", fontSize: "0.65rem", fontWeight: 700, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", lineHeight: 1 }}>
+                        {cartCount > 99 ? "99+" : cartCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
+
+                <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                  <img
+                    src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=f97316&color=fff`}
+                    alt={user.name}
+                  />
+                  {avatarBadge > 0 && (
+                    <span style={{ position: "absolute", top: -5, right: -5, background: "#ef4444", color: "#fff", borderRadius: "999px", fontSize: "0.6rem", fontWeight: 800, minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px", lineHeight: 1, zIndex: 1, pointerEvents: "none" }}>
+                      {avatarBadge > 9 ? "9+" : avatarBadge}
+                    </span>
+                  )}
+                </div>
+
+                <span className="navbar-user-name">{user.name.split(" ")[0]}</span>
+                <ChevronDown size={14} />
+
+                {dropdownOpen && (
+                  <div className="navbar-dropdown">
+                    <Link href="/profile" onClick={() => setDropdownOpen(false)}>
+                      <User size={16} /> Mi Perfil
+                    </Link>
+                    {user.role === "seller" ? (
+                      <>
+                        <Link href="/mis-productos" onClick={() => setDropdownOpen(false)}>
+                          <Package size={16} /> Mis Productos
+                        </Link>
+                        <Link href="/negocio" onClick={() => setDropdownOpen(false)}>
+                          <Store size={16} /> Mi Negocio
+                        </Link>
+                        <Link href="/ordenes" onClick={() => setDropdownOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <Package size={16} /> Ordenes
+                          {pendingOrders > 0 && (
+                            <span style={{ background: "#ef4444", color: "#fff", borderRadius: 20, fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", marginLeft: "auto" }}>
+                              {pendingOrders}
+                            </span>
+                          )}
+                        </Link>
+                      </>
+                    ) : (
+                      <Link href="/panel" onClick={() => setDropdownOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <ShoppingCart size={16} /> Mi Panel
+                        {shippedOrders > 0 ? (
+                          <span style={{ background: "#8b5cf6", color: "#fff", borderRadius: 20, fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", marginLeft: "auto" }}>
+                            🚚 {shippedOrders}
+                          </span>
+                        ) : cartCount > 0 ? (
+                          <span style={{ background: "#f97316", color: "#fff", borderRadius: 20, fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", marginLeft: "auto" }}>
+                            {cartCount}
+                          </span>
+                        ) : null}
+                      </Link>
+                    )}
+
+                    {isInstallable && !isInstalled && (
+                      <>
+                        <div className="navbar-dropdown-divider" />
+                        <button
+                          onClick={e => { e.stopPropagation(); handleInstall(); setDropdownOpen(false); }}
+                          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "none", border: "none", color: "#fdba74", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", padding: "0.55rem 1rem", textAlign: "left" }}
+                        >
+                          <Download size={15} color="#fdba74" />
+                          {installing ? "Instalando..." : "Instalar app"}
+                        </button>
+                      </>
+                    )}
+
+                    <div className="navbar-dropdown-divider" />
+                    <button className="logout-btn" onClick={handleLogout}>
+                      <LogOut size={16} /> Cerrar sesion
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/login"    className="btn btn-ghost hide-mobile">Iniciar sesion</Link>
+                <Link href="/register" className="btn btn-primary">Registrarse</Link>
+              </>
+            )}
+          </div>
         </div>
-      </nav>
-    </header>
+
+        {/* Barra de categorias */}
+        <nav className="navbar-cats">
+          <div className="navbar-cats-inner">
+
+            <Link href="/" className={`navbar-cat-link ${pathname === "/" ? "active" : ""}`}>
+              <span style={{ flexShrink: 0, display: "flex" }}><Home size={14} /></span>
+              <span className="category-name">Inicio</span>
+            </Link>
+
+            {NAV_CATEGORIES.map(cat => (
+              <Link key={cat.id} href={`/categoria/${cat.slug}`} className={`navbar-cat-link ${currentSlug === cat.slug ? "active" : ""}`}>
+                <span style={{ flexShrink: 0, display: "flex" }}><CategoryIcon name={cat.iconName} size={14} /></span>
+                <span className="category-name">{cat.name}</span>
+              </Link>
+            ))}
+
+            {user?.role === "seller" && (
+              <Link href="/ordenes" className={`navbar-cat-link ${pathname === "/ordenes" ? "active" : ""}`}>
+                <span style={{ flexShrink: 0, display: "flex" }}><Package size={14} /></span>
+                <span className="category-name">Ordenes</span>
+                {pendingOrders > 0 && (
+                  <span style={{ background: "#ef4444", color: "#fff", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, flexShrink: 0 }}>
+                    {pendingOrders > 9 ? "9+" : pendingOrders}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {user && user.role !== "seller" && shippedOrders > 0 && (
+              <Link href="/panel?tab=purchases" className={`navbar-cat-link ${pathname === "/panel" ? "active" : ""}`}>
+                <span style={{ flexShrink: 0, display: "flex" }}><Package size={14} /></span>
+                <span className="category-name">En camino</span>
+                <span style={{ background: "#8b5cf6", color: "#fff", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 800, flexShrink: 0 }}>
+                  {shippedOrders > 9 ? "9+" : shippedOrders}
+                </span>
+              </Link>
+            )}
+
+            {/* Instalar en barra de cats — visible en mobile */}
+            {isInstallable && !isInstalled && (
+              <button onClick={handleInstall} className="navbar-cat-link" style={{ background: "none", border: "none", cursor: "pointer" }} title="Instalar app">
+                <span style={{ flexShrink: 0, display: "flex" }}><Download size={14} color="#fdba74" /></span>
+                <span className="category-name" style={{ color: "#fdba74" }}>Instalar</span>
+              </button>
+            )}
+
+          </div>
+        </nav>
+      </header>
+    </>
   );
 }
