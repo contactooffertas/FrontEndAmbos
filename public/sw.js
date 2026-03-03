@@ -13,7 +13,6 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
 });
 
-
 // ── Obtener manifest.json para leer el logo dinámico ─────────────────────────
 async function getManifestIcon() {
   try {
@@ -180,4 +179,3 @@ self.addEventListener("message", (event) => {
     );
   }
 });
-
