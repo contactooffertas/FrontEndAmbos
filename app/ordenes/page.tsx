@@ -374,20 +374,47 @@ export default function OrdenesPage() {
 
                   {/* Acciones según estado */}
                   <div className="orden-actions">
-                    {order.status === "pending" && (
-                      <button
-                        className="btn-despachar"
-                        onClick={() => handleShip(order._id)}
-                        disabled={dispatching === order._id}
-                      >
-                        <Truck size={15} />
-                        {dispatching === order._id ? "Despachando..." : "Despachar pedido"}
-                      </button>
-                    )}
-                    {order.status === "shipped" && (
-                      <p className="orden-shipped-msg">
-                        <Truck size={15} /> Enviado — esperando confirmación del comprador
-                      </p>
+                        {order.status === "pending" && (
+                      <>
+                        <button
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            backgroundColor: "#0d6efd",
+                            color: "#fff",
+                            border: "none",
+                            padding: "8px 14px",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            opacity: dispatching === order._id ? 0.7 : 1,
+                          }}
+                          onClick={() => handleShip(order._id)}
+                          disabled={dispatching === order._id}
+                        >
+                          <Truck size={15} />
+                          {dispatching === order._id
+                            ? "Despachando..."
+                            : "Despachar pedido"}
+                        </button>
+                        <p
+                          style={{
+                            marginTop: "8px",
+                            backgroundColor: "#fff3cd",
+                            color: "#856404",
+                            padding: "8px 10px",
+                            borderRadius: "6px",
+                            fontSize: "13px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          ⚠️ Antes de despachar el pedido, asegurate de arreglar
+                          el gasto de envío y todos los detalles logísticos con
+                          el proveedor o comprador.
+                        </p>
+                      </>
                     )}
                     {order.status === "delivered" && (
                       <p className="orden-delivered-msg">
@@ -420,3 +447,4 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
+
