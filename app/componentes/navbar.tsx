@@ -275,32 +275,38 @@ export default function Navbar() {
 
           <div className="navbar-actions">
 
-            {/* ── Boton instalar PWA ── */}
-            {isInstallable && !isInstalled && (
-              <button
-                onClick={handleInstall}
-                disabled={installing}
-                title={installing ? "Instalando..." : "Instalar app"}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  background: "rgba(249,115,22,0.09)",
-                  border: "1px solid rgba(249,115,22,0.28)",
-                  borderRadius: 8, padding: "0.38rem 0.72rem",
-                  color: "#fdba74", fontSize: "0.78rem", fontWeight: 600,
-                  cursor: installing ? "not-allowed" : "pointer",
-                  opacity: installing ? 0.6 : 1,
-                  transition: "background 0.2s, border-color 0.2s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {installing
-                  ? <Smartphone size={13} style={{ animation: "navbarSpin 1s linear infinite" }} />
-                  : <Download size={13} />
-                }
-                <span className="pwa-label">{installing ? "Instalando..." : "Instalar"}</span>
-              </button>
-            )}
-
+            // En el Navbar, reemplazá el botón PWA por esto:
+{isInstallable && !isInstalled && (
+  <button
+    onClick={() => {
+      if (isIOSDevice) {
+        alert('Para instalar: tocá el botón Compartir (□↑) y luego "Agregar a pantalla de inicio"');
+        return;
+      }
+      handleInstall();
+    }}
+    disabled={installing && !isIOSDevice}
+    title={isIOSDevice ? "Cómo instalar en iPhone" : "Instalar app"}
+    style={{
+      display: "flex", alignItems: "center", gap: 5,
+      background: "rgba(249,115,22,0.09)",
+      border: "1px solid rgba(249,115,22,0.28)",
+      borderRadius: 8, padding: "0.38rem 0.72rem",
+      color: "#fdba74", fontSize: "0.78rem", fontWeight: 600,
+      cursor: "pointer", opacity: 1,
+      transition: "background 0.2s, border-color 0.2s",
+      whiteSpace: "nowrap",
+    }}
+  >
+    {installing && !isIOSDevice
+      ? <Smartphone size={13} style={{ animation: "navbarSpin 1s linear infinite" }} />
+      : <Download size={13} />
+    }
+    <span className="pwa-label">
+      {installing && !isIOSDevice ? "Instalando..." : "Instalar"}
+    </span>
+  </button>
+)}
             {/* ── Campana notificaciones push ── */}
             {user && unreadNotifs > 0 && (
               <div ref={notifRef} style={{ position: "relative" }}>
@@ -513,4 +519,5 @@ export default function Navbar() {
     </>
   );
 }
+
 
