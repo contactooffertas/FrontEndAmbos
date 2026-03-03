@@ -1,6 +1,7 @@
 // app/componentes/BadgeSync.tsx
 // Sincroniza el badge del navbar con el icono PWA del escritorio
 
+
 'use client';
 
 import { useEffect } from 'react';
