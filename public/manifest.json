@@ -1,24 +1,112 @@
 {
-  "name": "Offertas",
+  "name": "Offertas - Las Mejores Ofertas",
   "short_name": "Offertas",
-  "description": "Encuentra las mejores ofertas cerca tuyo",
+  "description": "Encuentra las mejores ofertas cerca tuyo en tiempo real",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f0f0f",
   "theme_color": "#f97316",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "es-AR",
+
   "icons": [
     {
-      "src": "/assets/offerton.jpg",
+      "src": "/assets/offerton-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/offerton.jpg",
+      "src": "/assets/offerton-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/offerton-192-mono.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "monochrome"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/assets/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pantalla principal de Offertas"
+    },
+    {
+      "src": "/assets/screenshot-2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Búsqueda de productos"
+    }
+  ],
+
+  "categories": [
+    "shopping",
+    "marketplace"
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Ver Ofertas",
+      "short_name": "Ofertas",
+      "description": "Accede rápidamente a las mejores ofertas",
+      "url": "/?utm_source=shortcut",
+      "icons": [
+        {
+          "src": "/assets/shortcut-ofertas-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mi Panel",
+      "short_name": "Panel",
+      "description": "Accede a tu panel de comprador o vendedor",
+      "url": "/panel?utm_source=shortcut",
+      "icons": [
+        {
+          "src": "/assets/shortcut-panel-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            "image/*",
+            "video/*"
+          ]
+        }
+      ]
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+offertas",
+      "url": "/search?q=%s"
     }
   ]
 }
