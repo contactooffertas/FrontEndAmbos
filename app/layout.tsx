@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
 import BadgeSyncVendor from '@/app/componentes/BadgeSyncVendor';
+import BadgeSyncBuyer from '@/app/componentes/BadgeSyncBuyer';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -63,6 +64,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         
         {/* Componente para sincronizar badges de vendedor con icono PWA */}
         <BadgeSyncVendor />
+        
+        {/* Componente para sincronizar badges de comprador con icono PWA */}
+        <BadgeSyncBuyer />
         
         <Providers>
           {children}
