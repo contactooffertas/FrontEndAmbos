@@ -535,6 +535,7 @@ export default function Navbar() {
               </Link>
             )}
 
+            
             {user && user.role !== "seller" && shippedOrders > 0 && (
               <Link href="/panel?tab=purchases" className={`navbar-cat-link ${pathname === "/panel" ? "active" : ""}`}>
                 <span style={{ flexShrink: 0, display: "flex" }}><Package size={14} /></span>
@@ -558,5 +559,3 @@ export default function Navbar() {
     </>
   );
 }
-
-
