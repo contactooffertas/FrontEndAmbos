@@ -388,12 +388,13 @@ export default function NegocioPublicoPage() {
               </span>
 
               {/* Badge de ubicación verificada con Google */}
-              {hasVerifiedLocation && (
-                <span className="nid-meta-item" style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem" }}>
-                  <Navigation size={11} /> Ubicación verificada
-                </span>
-              )}
-
+           {hasVerifiedLocation && (
+      href={`https://www.google.com/maps?q=${business.location!.coordinates[1]},${business.location!.coordinates[0]}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="nid-meta-item"
+        style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem", textDecoration: "none", cursor: "pointer" }}>
+    <Navigation size={11} /> Ubicación verificada</a>)}
               <span className="nid-meta-item nid-meta-item--bold">
                 <Users size={13} />
                 {social.followersCount} {social.followersCount === 1 ? "seguidor" : "seguidores"}
