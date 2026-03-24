@@ -237,8 +237,19 @@ export default function Navbar() {
 
   // ── Solo mostrar los botones de instalar y notificaciones si hay user ─────
   const showInstallBtn = !!user && isInstallable && !isInstalled;
-  // Campana siempre visible para users logueados, tenga o no notificaciones
   const showBell = !!user;
+
+  // ── Debug: loguear estado PWA en consola para diagnóstico ─────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    console.log("[PWA]", {
+      isInstallable,
+      isInstalled,
+      isIOSDevice,
+      standalone: window.matchMedia("(display-mode: standalone)").matches,
+      userAgent: navigator.userAgent.slice(0, 80),
+    });
+  }, [isInstallable, isInstalled, isIOSDevice]);
 
   return (
     <>
@@ -372,10 +383,20 @@ export default function Navbar() {
 
                 {notifPanelOpen && (
                   <div style={{
-                    position: "absolute", top: "calc(100% + 8px)", right: 0,
-                    width: 300, maxHeight: 380, overflowY: "auto",
-                    background: "#111", border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.65)", zIndex: 9999,
+                    position: "fixed",
+                    top: "4.5rem",
+                    left: "0.5rem",
+                    right: "0.5rem",
+                    width: "auto",
+                    maxWidth: 340,
+                    marginLeft: "auto",
+                    maxHeight: "70vh",
+                    overflowY: "auto",
+                    background: "#111",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 14,
+                    boxShadow: "0 12px 40px rgba(0,0,0,0.65)",
+                    zIndex: 99999,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                       <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>Notificaciones</span>
