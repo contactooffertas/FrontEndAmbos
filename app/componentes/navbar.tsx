@@ -347,27 +347,31 @@ export default function Navbar() {
             {/* Campana — siempre visible para users logueados */}
             {showBell && (
               <div ref={notifRef} style={{ position: "relative" }}>
-                <button
-                  onClick={() => setNotifPanelOpen(v => !v)}
-                  style={{
-                    position: "relative",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: notifPanelOpen
-                      ? "rgba(249,115,22,0.15)"
-                      : unreadNotifs > 0
-                        ? "rgba(249,115,22,0.08)"
-                        : "rgba(255,255,255,0.05)",
-                    border: unreadNotifs > 0
-                      ? "1px solid rgba(249,115,22,0.28)"
-                      : "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 8, width: 34, height: 34,
-                    color: unreadNotifs > 0 ? "#fdba74" : "rgba(255,255,255,0.45)",
-                    cursor: "pointer",
-                    transition: "background 0.2s, border-color 0.2s, color 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Bell size={15} />
+               <button
+  onClick={() => setNotifPanelOpen(v => !v)}
+  style={{
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: notifPanelOpen
+      ? "#fff7ed"
+      : unreadNotifs > 0
+        ? "#fff7ed"
+        : "#f9fafb",
+    border: unreadNotifs > 0
+      ? "1px solid #fdba74"
+      : "1px solid #e5e7eb",
+    borderRadius: 10,
+    width: 38,
+    height: 38,
+    color: unreadNotifs > 0 ? "#ea580c" : "#1f2937",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    flexShrink: 0,
+  }}
+>
+  <Bell size={17} strokeWidth={2.3} />
                   {unreadNotifs > 0 && (
                     <span style={{
                       position: "absolute", top: -5, right: -5,
