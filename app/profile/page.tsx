@@ -20,6 +20,10 @@ const API     = "https://new-backend-lovat.vercel.app/api";
 const WS_URL  = "https://renderbackendconsocket.onrender.com";
 const SECURITY_SEEN_KEY = "profile_security_seen_v1";
 
+// ── Distancia mínima en metros para volver a pedir negocios cercanos ──────────
+// El usuario tiene que moverse al menos esto antes de refrescar.
+const NEARBY_FETCH_THRESHOLD_METERS = 100;
+
 const RADIUS_OPTIONS = [
   { label: "3 km",          value: 3000  },
   { label: "5 km",          value: 5000  },
@@ -41,27 +45,67 @@ interface MyReport        { _id: string; targetType: "product"|"business"; targe
 interface ReportOnContent { _id: string; targetType: "product"|"business"; targetName: string; status: "pending"|"reviewed"|"dismissed"|"action_taken"; category: string; adminNote?: string; adminAction?: string; reason: string; detectedKeywords: string[]; createdAt: string; resolvedAt?: string; autoBlocked: boolean; }
 interface Announcement    { _id: string; title: string; message: string; audience: "all"|"seller"|"buyer"; durationHours: number; link?: string; createdAt: string; expiresAt: string; }
 
-// ── GPS dinámico ─────────────────────────────────────────────────────────────
+// ── Haversine: distancia en metros entre dos coordenadas ─────────────────────
+function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6_371_000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── GPS dinámico con umbral de movimiento ────────────────────────────────────
 type GpsStatus = "idle" | "loading" | "ok" | "denied" | "error";
 interface GpsState { lat: number | null; lng: number | null; status: GpsStatus; updatedAt: Date | null; }
 
 /**
- * watchPosition → se actualiza automáticamente cuando el usuario se mueve.
- * Igual que Uber: la posición es siempre la real, nunca la guardada en perfil.
+ * watchPosition igual que antes, pero ahora expone también `significantMove`:
+ * un booleano que se pone en true solo cuando el usuario se movió más de
+ * NEARBY_FETCH_THRESHOLD_METERS desde la última vez que se cargaron negocios.
+ * Así el componente sabe cuándo tiene sentido volver a hacer fetch.
  */
-function useDynamicGps() {
+function useDynamicGps(thresholdMeters: number) {
   const [gps, setGps] = useState<GpsState>({ lat: null, lng: null, status: "idle", updatedAt: null });
+
+  // Coords desde donde se hizo el último fetchNearby exitoso
+  const lastFetchedCoords = useRef<{ lat: number; lng: number } | null>(null);
+
+  // true cuando el usuario se movió lo suficiente — el componente lo consume y lo resetea
+  const [significantMove, setSignificantMove] = useState(false);
+
   const watchRef = useRef<number | null>(null);
 
   const startWatch = useCallback(() => {
     if (!navigator.geolocation) { setGps(p => ({ ...p, status: "error" })); return; }
     setGps(p => ({ ...p, status: "loading" }));
     watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, status: "ok", updatedAt: new Date() }),
+      (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setGps({ lat, lng, status: "ok", updatedAt: new Date() });
+
+        // Solo marcar movimiento significativo si ya hay coords de referencia
+        if (lastFetchedCoords.current) {
+          const dist = haversineMeters(
+            lastFetchedCoords.current.lat,
+            lastFetchedCoords.current.lng,
+            lat,
+            lng,
+          );
+          if (dist >= thresholdMeters) {
+            setSignificantMove(true);
+          }
+        } else {
+          // Primera posición: marcar como significativa para hacer el fetch inicial
+          setSignificantMove(true);
+        }
+      },
       (err) => setGps(p => ({ ...p, status: err.code === 1 ? "denied" : "error", lat: null, lng: null })),
       { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 },
     );
-  }, []);
+  }, [thresholdMeters]);
 
   useEffect(() => {
     startWatch();
@@ -70,10 +114,18 @@ function useDynamicGps() {
 
   const refresh = useCallback(() => {
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
+    // Forzar un nuevo fetch aunque no se haya movido (botón manual)
+    lastFetchedCoords.current = null;
     startWatch();
   }, [startWatch]);
 
-  return { gps, refresh };
+  // Llamar esto después de hacer fetchNearby para guardar la referencia
+  const markFetched = useCallback((lat: number, lng: number) => {
+    lastFetchedCoords.current = { lat, lng };
+    setSignificantMove(false);
+  }, []);
+
+  return { gps, refresh, significantMove, markFetched };
 }
 
 // ── Badge GPS ─────────────────────────────────────────────────────────────────
@@ -238,8 +290,8 @@ export default function ProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const socketRef      = useRef<Socket|null>(null);
 
-  // ── GPS dinámico ──────────────────────────────────────────────────────────
-  const { gps, refresh: refreshGps } = useDynamicGps();
+  // ── GPS dinámico con umbral de 100m ───────────────────────────────────────
+  const { gps, refresh: refreshGps, significantMove, markFetched } = useDynamicGps(NEARBY_FETCH_THRESHOLD_METERS);
 
   const [stats,          setStats]          = useState<Stats>({ purchases:0, favorites:0, products:0 });
   const [statsLoading,   setStatsLoading]   = useState(true);
@@ -341,7 +393,7 @@ export default function ProfilePage() {
       .finally(()=>setFollowedBizLoading(false));
   }, [user?.id]);
 
-  // ── fetchNearby — recibe siempre las coords actuales ─────────────────────
+  // ── fetchNearby ────────────────────────────────────────────────────────────
   const fetchNearby = useCallback(async (lat: number, lng: number, radius: number) => {
     setNearbyLoading(true);
     setNearbyError("");
@@ -351,13 +403,18 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error();
       const data: NearbyBusiness[] = await res.json();
       setNearbyBiz(data);
+      // Guardar referencia de dónde se hizo el fetch para calcular movimiento futuro
+      markFetched(lat, lng);
     } catch { setNearbyError("No se pudieron cargar los negocios cercanos."); }
     finally  { setNearbyLoading(false); }
-  }, []);
+  }, [markFetched]);
 
   /**
-   * Re-fetch automático cada vez que el GPS actualiza las coordenadas.
-   * Si el GPS está denegado y el perfil tiene coords guardadas, usa esas como fallback.
+   * Solo se dispara fetchNearby cuando:
+   * 1. El GPS tiene posición válida Y el usuario se movió >= NEARBY_FETCH_THRESHOLD_METERS
+   * 2. O cuando el usuario cambia el radio manualmente (selectedRadius cambia)
+   *
+   * Esto evita llamadas constantes al backend mientras el usuario está quieto.
    */
   useEffect(() => {
     if (gps.status === "idle" || gps.status === "loading") return;
@@ -365,20 +422,27 @@ export default function ProfilePage() {
     const u = user as any;
 
     if (gps.status === "ok" && gps.lat !== null && gps.lng !== null) {
-      // 📍 Ubicación real del dispositivo → siempre la más fresca
-      fetchNearby(gps.lat, gps.lng, selectedRadius);
+      // Solo actualizar si hubo movimiento significativo
+      if (significantMove) {
+        fetchNearby(gps.lat, gps.lng, selectedRadius);
+      }
     } else if ((gps.status === "denied" || gps.status === "error") && u?.locationEnabled && u?.lat && u?.lng) {
-      // GPS bloqueado → fallback a la dirección guardada en el perfil
+      // GPS bloqueado → usar coords del perfil (solo una vez, no se mueve)
       fetchNearby(u.lat, u.lng, selectedRadius);
     }
-    // Si no hay ninguna ubicación disponible no hacemos nada
-  }, [gps.lat, gps.lng, gps.status, selectedRadius]);
+  }, [gps.status, significantMove, selectedRadius]);
 
   const handleRadiusChange = useCallback((newRadius: number) => {
     setSelectedRadius(newRadius);
     localStorage.setItem("nearbyRadius", String(newRadius));
-    // El useEffect anterior se dispara automáticamente al cambiar selectedRadius
-  }, []);
+    // Al cambiar el radio forzamos un fetch con las coords actuales aunque no haya movimiento
+    const u = user as any;
+    const lat = gps.lat ?? u?.lat;
+    const lng = gps.lng ?? u?.lng;
+    if (lat && lng) {
+      fetchNearby(lat, lng, newRadius);
+    }
+  }, [gps.lat, gps.lng, user, fetchNearby]);
 
   const loadConvs = useCallback(async () => {
     const token = getToken(); if (!token) { setConvsLoading(false); return; }
@@ -446,7 +510,6 @@ export default function ProfilePage() {
   if (loading || !user) return null;
 
   const u             = user as any;
-  // La ubicación "activa" para mostrar coords en sidebar es la del GPS o la del perfil
   const displayLat    = gps.status === "ok" ? gps.lat : u.lat;
   const displayLng    = gps.status === "ok" ? gps.lng : u.lng;
   const locationActive = gps.status === "ok" || !!(u.locationEnabled && u.lat && u.lng);
@@ -458,11 +521,9 @@ export default function ProfilePage() {
   const openBanner = () => { localStorage.setItem(SECURITY_SEEN_KEY, Date.now().toString()); setGlowActive(false); setBannerOpen(true); };
   const handleSeenAnnouncement = (id: string) => { localStorage.setItem(`profile_ann_seen_${id}`, Date.now().toString()); setSeenAnnouncements(p => new Set([...p,id])); };
 
-  // handleLocationToggle ahora solo activa GPS dinámico
   const handleLocationToggle = async () => {
     const Swal = (await import("sweetalert2")).default;
     if (gps.status === "ok") {
-      // "Desactivar" en este modelo simplemente muestra aviso; el watch sigue activo
       Swal.fire({ icon:"info", title:"El GPS sigue activo en el dispositivo", text:"Para desactivarlo completamente, denegá el permiso desde el navegador.", confirmButtonColor:"#f97316" });
       return;
     }
@@ -562,7 +623,6 @@ export default function ProfilePage() {
       {bannerOpen && <ProfileBannerModal announcements={activeAnns} seenAnnouncements={seenAnnouncements} onSeenAnnouncement={handleSeenAnnouncement} onClose={()=>setBannerOpen(false)}/>}
 
       <div className="profile-page">
-        {/* Toasts reportes */}
         {reportNotifs.length > 0 && (
           <div style={{ position:"fixed", top:80, right:16, zIndex:9999, display:"flex", flexDirection:"column", gap:"0.5rem", maxWidth:360 }}>
             {reportNotifs.map(n => (
@@ -591,7 +651,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* HEADER */}
         <div className="profile-header">
           <div className="profile-avatar-wrap">
             <img src={currentAvatar} alt={user.name} className="profile-avatar"/>
@@ -624,7 +683,6 @@ export default function ProfilePage() {
         </div>
 
         <div className="profile-body">
-          {/* SIDEBAR */}
           <div className="profile-sidebar">
             <div className="profile-card">
               <h3>Configuración</h3>
@@ -636,7 +694,6 @@ export default function ProfilePage() {
                 <label className="toggle"><input type="checkbox" checked={!!user.notificationsEnabled} onChange={handleNotifToggle}/><span className="toggle-slider"/></label>
               </div>
 
-              {/* Toggle de ubicación → ahora refleja el GPS dinámico */}
               <div className="profile-setting">
                 <div className="profile-setting-info">
                   <h4>
@@ -649,7 +706,6 @@ export default function ProfilePage() {
                     {(gps.status === "denied" || gps.status === "error") && (u.lat ? `Perfil · ${radiusLabel}` : "Sin ubicación")}
                     {gps.status === "idle"    && "Inactiva"}
                   </p>
-                  {/* Badge GPS inline en sidebar */}
                   <GpsBadge gps={gps} onRefresh={refreshGps}/>
                 </div>
                 <label className="toggle">
@@ -690,10 +746,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* MAIN */}
           <div className="profile-main">
 
-            {/* NEGOCIOS CERCANOS */}
             <div className="profile-card">
               <div className="profile-chat-header">
                 <h3>
@@ -719,7 +773,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Estado GPS pendiente */}
               {(gps.status==="idle"||gps.status==="loading") && (
                 <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 12px", background:"#fef9f0", border:"1px solid #fed7aa", borderRadius:8, marginBottom:12, fontSize:"0.8rem", color:"#92400e" }}>
                   <div style={{ width:14, height:14, border:"2px solid #f97316", borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.7s linear infinite", flexShrink:0 }}/>
@@ -776,7 +829,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* MIS REPORTES */}
             <div className="profile-card">
               <div className="profile-chat-header">
                 <h3><Flag size={15} strokeWidth={1.75}/>Mis reportes enviados{pendingMyReports>0&&<span className="profile-chat-badge profile-chat-badge--title" style={{ background:"#f59e0b" }}>{pendingMyReports} pendiente{pendingMyReports!==1?"s":""}</span>}</h3>
@@ -809,7 +861,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* REPORTES SOBRE MI CONTENIDO (solo vendedores) */}
             {u.role==="seller" && (
               <div className="profile-card">
                 <div className="profile-chat-header">
@@ -843,7 +894,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* MENSAJES RECIENTES */}
             <div className="profile-card profile-chat-card">
               <div className="profile-chat-header">
                 <h3><MessageCircle size={15} strokeWidth={1.75}/>Mensajes recientes{totalUnread>0&&<span className="profile-chat-badge profile-chat-badge--title">{totalUnread>99?"99+":totalUnread} nuevo{totalUnread!==1?"s":""}</span>}</h3>
@@ -879,7 +929,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* TIENDAS SEGUIDAS */}
             <div className="profile-card">
               <div className="profile-chat-header">
                 <h3><Store size={15} strokeWidth={1.75}/>Tiendas que seguís{followedBiz.length>0&&<span className="profile-chat-badge profile-chat-badge--title">{followedBiz.length}</span>}</h3>
@@ -913,7 +962,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* DATOS PERSONALES */}
             <div className="profile-card">
               <h3><User size={15} strokeWidth={1.75}/> Datos personales</h3>
               <form className="profile-form" onSubmit={handleSaveProfile}>
@@ -925,7 +973,6 @@ export default function ProfilePage() {
               </form>
             </div>
 
-            {/* SEGURIDAD */}
             <div className="profile-card">
               <h3><KeyRound size={15} strokeWidth={1.75}/> Seguridad</h3>
               <form className="profile-form" onSubmit={handleChangePassword}>
