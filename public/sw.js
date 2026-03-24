@@ -18,36 +18,15 @@ async function getManifestIcon() {
   try {
     if (!cachedManifest) {
       const res = await fetch(MANIFEST_URL);
-      if (res.ok) {
-        cachedManifest = await res.json();
-      }
+      if (res.ok) cachedManifest = await res.json();
     }
-    // Retornar el primer icono del manifest o un icono por defecto
     if (cachedManifest?.icons && cachedManifest.icons.length > 0) {
-      return cachedManifest.icons[0].src || "/icon.png";
+      return cachedManifest.icons[0].src || "/assets/offerton.jpg";
     }
   } catch (e) {
     console.warn("Error al obtener manifest:", e);
   }
-  return "/icon.png";
-}
-
-// ── Actualizar badge en el icono de la PWA (servidor) ───────────────────────
-async function updateBadgeAPI(userId, count) {
-  try {
-    const token = localStorage?.getItem?.("marketplace_token") || "";
-    if (!token) return;
-    await fetch("https://new-backend-lovat.vercel.app/api/notification/update-badge", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ count }),
-    });
-  } catch (e) {
-    console.warn("Error al actualizar badge en servidor:", e);
-  }
+  return "/assets/offerton.jpg";
 }
 
 // ── Recibir push del servidor ────────────────────────────────────────────────
@@ -65,29 +44,25 @@ self.addEventListener("push", (event) => {
     };
   }
 
-  // 🔴 Si el push contiene un contador de órdenes/notificaciones, actualizar badge
-  if (data.badgeCount !== undefined) {
-    updateBadgeAPI(data.userId, data.badgeCount);
-  }
-
-  const icon = data.icon || "/icon.png";
-  const badge = data.badge || "/icon.png";
+  // Usar siempre el logo de Offerton como ícono de notificación
+  const icon  = "/assets/offerton.jpg";
+  const badge = "/assets/offerton.jpg";
 
   const options = {
-    body: data.body || "",
-    icon: icon,
-    badge: badge,
+    body:   data.body || "",
+    icon:   icon,
+    badge:  badge,
     vibrate: [100, 50, 100],
     data: {
-      url: data.url || "/",
+      url:        data.url || "/",
       badgeCount: data.badgeCount,
     },
     actions: [
-      { action: "open", title: "Ver ahora" },
-      { action: "dismiss", title: "Cerrar" },
+      { action: "open",    title: "Ver ahora" },
+      { action: "dismiss", title: "Cerrar"    },
     ],
-    tag: data.tag || "notification", // Agrupar notificaciones del mismo tipo
-    requireInteraction: data.requireInteraction || false,
+    tag:                 data.tag || "notification",
+    requireInteraction:  data.requireInteraction || false,
   };
 
   event.waitUntil(
@@ -95,18 +70,17 @@ self.addEventListener("push", (event) => {
       // 1️⃣ Mostrar notificación nativa del sistema
       self.registration.showNotification(data.title, options),
 
-      // 2️⃣ Notificar a todas las pestañas/ventanas abiertas
-      //    para que el Navbar muestre el toast en tiempo real
+      // 2️⃣ Notificar a todas las pestañas abiertas para el toast del Navbar
       clients
         .matchAll({ type: "window", includeUncontrolled: true })
         .then((clientList) => {
           clientList.forEach((client) => {
             client.postMessage({
-              type: "PUSH_RECEIVED",
+              type:  "PUSH_RECEIVED",
               title: data.title || "Nueva notificación",
-              body: data.body || "",
-              url: data.url || "/",
-              icon: data.icon || "/icon.png",
+              body:  data.body  || "",
+              url:   data.url   || "/",
+              icon:  icon,
             });
           });
         }),
@@ -126,7 +100,6 @@ self.addEventListener("notificationclick", (event) => {
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
-        // Si ya hay una pestaña o ventana PWA abierta, enfocarla y navegar
         for (const client of clientList) {
           if ("focus" in client) {
             client.focus();
@@ -134,18 +107,17 @@ self.addEventListener("notificationclick", (event) => {
             return;
           }
         }
-        // Si no hay ventana abierta (app cerrada), abrir una nueva
         return clients.openWindow(targetUrl);
       })
   );
 });
 
-// ── Close/dismiss notificación (botón cerrar) ────────────────────────────────
+// ── Close/dismiss notificación ───────────────────────────────────────────────
 self.addEventListener("notificationclose", (event) => {
   console.log("Notificación cerrada:", event.notification.tag);
 });
 
-// ── Sincronización en background (opcional) ─────────────────────────────────
+// ── Sincronización en background ────────────────────────────────────────────
 self.addEventListener("sync", (event) => {
   if (event.tag === "sync-orders") {
     event.waitUntil(
@@ -160,7 +132,7 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-// ── Message handler (opcional para comunicación directa) ────────────────────
+// ── Message handler ──────────────────────────────────────────────────────────
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
