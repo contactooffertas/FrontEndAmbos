@@ -104,27 +104,54 @@ export default function Navbar() {
     return () => navigator.serviceWorker?.removeEventListener("message", handler);
   }, [router]);
 
+  // ── Registrar SW y suscribir a push ─────────────────────────────────────────
+  // El SW se registra SIEMPRE (sin importar si hay user) para poder recibir
+  // notificaciones push aunque la app esté cerrada. La suscripción al backend
+  // solo ocurre cuando hay usuario logueado.
   useEffect(() => {
-    if (!user || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
     const setup = async () => {
       try {
+        // 1. Registrar el SW siempre — es lo que permite recibir push sin la app abierta
         const reg = await navigator.serviceWorker.register("/sw.js");
         await navigator.serviceWorker.ready;
+
+        // 2. A partir de acá solo continuamos si hay usuario logueado
+        if (!user) return;
+
+        // 3. Pedir permiso de notificaciones
         if (Notification.permission === "default") {
           await Notification.requestPermission();
         }
-        const existing = await reg.pushManager.getSubscription();
-        if (existing) return;
+        if (Notification.permission !== "granted") return;
+
+        // 4. Obtener clave VAPID del backend
         const vapidRes = await fetch(`${API}/push/vapid-public-key`).catch(() => null);
         if (!vapidRes?.ok) return;
         const { publicKey } = await vapidRes.json();
         if (!publicKey) return;
+
+        const token = localStorage.getItem("marketplace_token");
+
+        // 5. Si ya existe suscripción, re-enviarla al backend por si expiró en el servidor
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) {
+          await fetch(`${API}/push/subscribe`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify(existing),
+          }).catch(() => {});
+          return;
+        }
+
+        // 6. Crear nueva suscripción y enviarla al backend
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(publicKey),
         });
-        const token = localStorage.getItem("marketplace_token");
+
         await fetch(`${API}/push/subscribe`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -134,8 +161,9 @@ export default function Navbar() {
         console.warn("Push setup:", e);
       }
     };
+
     setup();
-  }, [user]);
+  }, [user]); // se re-ejecuta cuando el user se loguea/desloguea
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -235,11 +263,9 @@ export default function Navbar() {
     ? (pathname.split("/categoria/")[1]?.split("?")[0] ?? "")
     : "";
 
-  // ── Solo mostrar los botones de instalar y notificaciones si hay user ─────
   const showInstallBtn = !!user && isInstallable && !isInstalled;
   const showBell = !!user;
 
-  // ── Debug: loguear estado PWA en consola para diagnóstico ─────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
     console.log("[PWA]", {
@@ -317,7 +343,7 @@ export default function Navbar() {
 
           <div className="navbar-actions">
 
-            {/* Botón instalar PWA — solo si hay user y la app no está instalada */}
+            {/* Botón instalar PWA */}
             {showInstallBtn && (
               <button
                 onClick={handleInstall}
@@ -344,34 +370,38 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Campana — siempre visible para users logueados */}
+            {/* ── Campana ─────────────────────────────────────────────────────────
+                Siempre visible: fondo y borde con opacidad sobre blanco/oscuro.
+                No usa colores hardcodeados que dependan del tema del host.
+            ─────────────────────────────────────────────────────────────────── */}
             {showBell && (
               <div ref={notifRef} style={{ position: "relative" }}>
-               <button
-  onClick={() => setNotifPanelOpen(v => !v)}
-  style={{
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: notifPanelOpen
-      ? "#fff7ed"
-      : unreadNotifs > 0
-        ? "#fff7ed"
-        : "#f9fafb",
-    border: unreadNotifs > 0
-      ? "1px solid #fdba74"
-      : "1px solid #e5e7eb",
-    borderRadius: 10,
-    width: 38,
-    height: 38,
-    color: unreadNotifs > 0 ? "#ea580c" : "#1f2937",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    flexShrink: 0,
-  }}
->
-  <Bell size={17} strokeWidth={2.3} />
+                <button
+                  onClick={() => setNotifPanelOpen(v => !v)}
+                  style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    // Fondo siempre visible: naranja si hay notifs o panel abierto,
+                    // blanco semitransparente si no — funciona sobre cualquier navbar
+                    background: notifPanelOpen || unreadNotifs > 0
+                      ? "rgba(249,115,22,0.18)"
+                      : "rgba(255,255,255,0.12)",
+                    border: unreadNotifs > 0
+                      ? "1px solid rgba(249,115,22,0.65)"
+                      : "1px solid rgba(255,255,255,0.28)",
+                    borderRadius: 10,
+                    width: 38,
+                    height: 38,
+                    // Ícono blanco sobre fondo oscuro — naranja si hay notifs
+                    color: unreadNotifs > 0 ? "#fb923c" : "rgba(255,255,255,0.88)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Bell size={17} strokeWidth={2.3} />
                   {unreadNotifs > 0 && (
                     <span style={{
                       position: "absolute", top: -5, right: -5,
@@ -578,7 +608,6 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Instalar en barra de categorías — solo si hay user y no está instalada */}
             {showInstallBtn && (
               <button onClick={handleInstall} className="navbar-cat-link" style={{ background: "none", border: "none", cursor: "pointer" }} title={isIOSDevice ? "Cómo instalar" : "Instalar app"}>
                 <span style={{ flexShrink: 0, display: "flex" }}><Download size={14} color="#fdba74" /></span>
