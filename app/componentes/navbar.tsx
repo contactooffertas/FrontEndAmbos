@@ -1,6 +1,7 @@
 "use client";
 // app/componentes/Navbar.tsx
 
+
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -47,11 +48,15 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   return buffer;
 }
 
+// ── Actualizar badge en el icono de la PWA ──────────────────────────────────
 async function updateBadge(count: number) {
   if ("setAppBadge" in navigator) {
     try {
-      if (count > 0) await (navigator as any).setAppBadge(count);
-      else           await (navigator as any).clearAppBadge();
+      if (count > 0) {
+        await (navigator as any).setAppBadge(count);
+      } else {
+        await (navigator as any).clearAppBadge();
+      }
     } catch (e) {
       console.warn("Badge API no disponible:", e);
     }
@@ -79,10 +84,12 @@ export default function Navbar() {
   const prevShippedIds     = useRef<Set<string>>(new Set());
   const shippedInitialized = useRef(false);
 
+  // ── Detectar iOS ──────────────────────────────────────────────────────────
   useEffect(() => {
     setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
   }, []);
 
+  // ── Escuchar mensajes del SW ──────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handler = (event: MessageEvent) => {
@@ -104,6 +111,7 @@ export default function Navbar() {
     return () => navigator.serviceWorker?.removeEventListener("message", handler);
   }, [router]);
 
+  // ── Registrar SW y suscribirse a push ────────────────────────────────────
   useEffect(() => {
     if (!user || typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
@@ -137,6 +145,7 @@ export default function Navbar() {
     setup();
   }, [user]);
 
+  // ── Cerrar al click afuera ────────────────────────────────────────────────
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
@@ -150,6 +159,7 @@ export default function Navbar() {
 
   useEffect(() => { setDropdownOpen(false); }, [pathname]);
 
+  // ── Polling SELLER ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user || user.role !== "seller") return;
     const check = async () => {
@@ -162,6 +172,7 @@ export default function Navbar() {
         const data = await res.json();
         const pending = data.filter((o: any) => o.status === "pending").length;
         setPendingOrders(pending);
+        // 🔴 Actualizar badge del icono PWA con órdenes pendientes
         updateBadge(pending);
       } catch {}
     };
@@ -170,6 +181,7 @@ export default function Navbar() {
     return () => clearInterval(iv);
   }, [user]);
 
+  // ── Polling BUYER ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user || user.role === "seller") return;
     const check = async () => {
@@ -186,6 +198,7 @@ export default function Navbar() {
           prevShippedIds.current     = shippedIds;
           shippedInitialized.current = true;
           setShippedOrders(shipped.length);
+          // 🔴 Actualizar badge del icono PWA con órdenes en tránsito
           updateBadge(shipped.length);
           return;
         }
@@ -199,6 +212,7 @@ export default function Navbar() {
         }
         prevShippedIds.current = shippedIds;
         setShippedOrders(shipped.length);
+        // 🔴 Actualizar badge del icono PWA con órdenes en tránsito
         updateBadge(shipped.length);
       } catch {}
     };
@@ -216,9 +230,7 @@ export default function Navbar() {
     if (searchQuery.trim())
       router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
   };
-
-  const handleLogout = () => { logout(); setDropdownOpen(false); router.push("/"); };
-
+  const handleLogout  = () => { logout(); setDropdownOpen(false); router.push("/"); };
   const handleInstall = async () => {
     if (isIOSDevice) {
       alert('Para instalar: tocá el botón Compartir (□↑) y luego "Agregar a pantalla de inicio"');
@@ -228,17 +240,11 @@ export default function Navbar() {
     await install();
     setInstalling(false);
   };
-
   const dismissNotif = (id: string) => setPushNotifs(prev => prev.filter(n => n.id !== id));
 
   const currentSlug = pathname.startsWith("/categoria/")
     ? (pathname.split("/categoria/")[1]?.split("?")[0] ?? "")
     : "";
-
-  // ── Solo mostrar los botones de instalar y notificaciones si hay user ─────
-  const showInstallBtn = !!user && isInstallable && !isInstalled;
-  // Campana siempre visible para users logueados, tenga o no notificaciones
-  const showBell = !!user;
 
   return (
     <>
@@ -253,7 +259,7 @@ export default function Navbar() {
         .notif-row:hover { background: rgba(255,255,255,0.04) !important; }
       `}</style>
 
-      {/* Toast push flotante — solo el más reciente */}
+      {/* ── Toast push flotante ── */}
       <div style={{
         position: "fixed", top: "4.75rem", right: "1rem",
         zIndex: 99999, display: "flex", flexDirection: "column",
@@ -306,8 +312,8 @@ export default function Navbar() {
 
           <div className="navbar-actions">
 
-            {/* Botón instalar PWA — solo si hay user y la app no está instalada */}
-            {showInstallBtn && (
+            {/* ── Botón instalar PWA ── */}
+            {isInstallable && !isInstalled && (
               <button
                 onClick={handleInstall}
                 disabled={installing}
@@ -333,41 +339,31 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Campana — siempre visible para users logueados */}
-            {showBell && (
+            {/* ── Campana notificaciones push ── */}
+            {user && unreadNotifs > 0 && (
               <div ref={notifRef} style={{ position: "relative" }}>
                 <button
                   onClick={() => setNotifPanelOpen(v => !v)}
                   style={{
                     position: "relative",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    background: notifPanelOpen
-                      ? "rgba(249,115,22,0.15)"
-                      : unreadNotifs > 0
-                        ? "rgba(249,115,22,0.08)"
-                        : "rgba(255,255,255,0.05)",
-                    border: unreadNotifs > 0
-                      ? "1px solid rgba(249,115,22,0.28)"
-                      : "1px solid rgba(255,255,255,0.1)",
+                    background: notifPanelOpen ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.08)",
+                    border: "1px solid rgba(249,115,22,0.28)",
                     borderRadius: 8, width: 34, height: 34,
-                    color: unreadNotifs > 0 ? "#fdba74" : "rgba(255,255,255,0.45)",
-                    cursor: "pointer",
-                    transition: "background 0.2s, border-color 0.2s, color 0.2s",
-                    flexShrink: 0,
+                    color: "#fdba74", cursor: "pointer",
+                    transition: "background 0.2s", flexShrink: 0,
                   }}
                 >
                   <Bell size={15} />
-                  {unreadNotifs > 0 && (
-                    <span style={{
-                      position: "absolute", top: -5, right: -5,
-                      background: "#ef4444", color: "#fff", borderRadius: "999px",
-                      fontSize: "0.58rem", fontWeight: 800, minWidth: 15, height: 15,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      padding: "0 2px", lineHeight: 1,
-                    }}>
-                      {unreadNotifs > 9 ? "9+" : unreadNotifs}
-                    </span>
-                  )}
+                  <span style={{
+                    position: "absolute", top: -5, right: -5,
+                    background: "#ef4444", color: "#fff", borderRadius: "999px",
+                    fontSize: "0.58rem", fontWeight: 800, minWidth: 15, height: 15,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: "0 2px", lineHeight: 1,
+                  }}>
+                    {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                  </span>
                 </button>
 
                 {notifPanelOpen && (
@@ -379,42 +375,30 @@ export default function Navbar() {
                   }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                       <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>Notificaciones</span>
-                      {unreadNotifs > 0 && (
-                        <button onClick={() => setPushNotifs([])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}>
-                          Limpiar todo
-                        </button>
-                      )}
+                      <button onClick={() => setPushNotifs([])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}>
+                        Limpiar todo
+                      </button>
                     </div>
-
-                    {unreadNotifs === 0 ? (
-                      <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
-                        <Bell size={28} color="rgba(255,255,255,0.15)" style={{ marginBottom: 8 }} />
-                        <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
-                          No tenés notificaciones nuevas
-                        </p>
-                      </div>
-                    ) : (
-                      pushNotifs.map(n => (
-                        <div
-                          key={n.id}
-                          className="notif-row"
-                          onClick={() => { if (n.url) router.push(n.url); setNotifPanelOpen(false); }}
-                          style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "0.7rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.05)", cursor: n.url ? "pointer" : "default", transition: "background 0.15s" }}
-                        >
-                          <Bell size={13} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
-                            {n.body && <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{n.body}</p>}
-                            <p style={{ margin: "0.25rem 0 0", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>
-                              {new Date(n.receivedAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                          </div>
-                          <button onClick={e => { e.stopPropagation(); dismissNotif(n.id); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", flexShrink: 0, padding: 2 }}>
-                            <X size={12} />
-                          </button>
+                    {pushNotifs.map(n => (
+                      <div
+                        key={n.id}
+                        className="notif-row"
+                        onClick={() => { if (n.url) router.push(n.url); setNotifPanelOpen(false); }}
+                        style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "0.7rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.05)", cursor: n.url ? "pointer" : "default", transition: "background 0.15s" }}
+                      >
+                        <Bell size={13} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
+                          {n.body && <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{n.body}</p>}
+                          <p style={{ margin: "0.25rem 0 0", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>
+                            {new Date(n.receivedAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
                         </div>
-                      ))
-                    )}
+                        <button onClick={e => { e.stopPropagation(); dismissNotif(n.id); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", flexShrink: 0, padding: 2 }}>
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -486,7 +470,7 @@ export default function Navbar() {
                       </Link>
                     )}
 
-                    {showInstallBtn && (
+                    {isInstallable && !isInstalled && (
                       <>
                         <div className="navbar-dropdown-divider" />
                         <button
@@ -553,8 +537,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Instalar en barra de categorías — solo si hay user y no está instalada */}
-            {showInstallBtn && (
+            {isInstallable && !isInstalled && (
               <button onClick={handleInstall} className="navbar-cat-link" style={{ background: "none", border: "none", cursor: "pointer" }} title={isIOSDevice ? "Cómo instalar" : "Instalar app"}>
                 <span style={{ flexShrink: 0, display: "flex" }}><Download size={14} color="#fdba74" /></span>
                 <span className="category-name" style={{ color: "#fdba74" }}>Instalar</span>
@@ -567,3 +550,4 @@ export default function Navbar() {
     </>
   );
 }
+
