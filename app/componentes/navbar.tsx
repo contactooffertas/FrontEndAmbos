@@ -83,6 +83,7 @@ export default function Navbar() {
     setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
   }, []);
 
+  // ── Escuchar mensajes del SW ─────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handler = (event: MessageEvent) => {
@@ -98,46 +99,51 @@ export default function Navbar() {
           receivedAt: Date.now(),
         };
         setPushNotifs(prev => [notif, ...prev].slice(0, 20));
+        // ── Si el panel estaba abierto mostrando "sin notificaciones",
+        //    cerrarlo para que no se superponga con el toast entrante
+        setNotifPanelOpen(false);
       }
     };
     navigator.serviceWorker?.addEventListener("message", handler);
     return () => navigator.serviceWorker?.removeEventListener("message", handler);
   }, [router]);
 
-  // ── Registrar SW y suscribir a push ─────────────────────────────────────────
-  // El SW se registra SIEMPRE (sin importar si hay user) para poder recibir
-  // notificaciones push aunque la app esté cerrada. La suscripción al backend
-  // solo ocurre cuando hay usuario logueado.
+  // ── Registrar SW SIEMPRE (sin importar si hay user logueado) ─────────────────
+  // Esto permite que el SW siga activo y pueda recibir push de sesiones
+  // anteriores aunque el usuario haya cerrado la app o no esté logueado aún.
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.register("/sw.js").catch((e) => {
+      console.warn("SW register error:", e);
+    });
+  }, []);
+
+  // ── Suscribir a push: solo cuando hay usuario logueado ───────────────────────
+  useEffect(() => {
+    if (!user) return;
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     const setup = async () => {
       try {
-        // 1. Registrar el SW siempre — es lo que permite recibir push sin la app abierta
-        const reg = await navigator.serviceWorker.register("/sw.js");
-        await navigator.serviceWorker.ready;
+        const reg = await navigator.serviceWorker.ready;
 
-        // 2. A partir de acá solo continuamos si hay usuario logueado
-        if (!user) return;
-
-        // 3. Pedir permiso de notificaciones
         if (Notification.permission === "default") {
           await Notification.requestPermission();
         }
         if (Notification.permission !== "granted") return;
 
-        // 4. Obtener clave VAPID del backend
         const vapidRes = await fetch(`${API}/push/vapid-public-key`).catch(() => null);
         if (!vapidRes?.ok) return;
         const { publicKey } = await vapidRes.json();
         if (!publicKey) return;
 
         const token = localStorage.getItem("marketplace_token");
-
-        // 5. Si ya existe suscripción, re-enviarla al backend por si expiró en el servidor
         const existing = await reg.pushManager.getSubscription();
+
         if (existing) {
+          // Re-enviar al backend por si lo perdió (deploy, reinicio, etc.)
           await fetch(`${API}/push/subscribe`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -146,7 +152,6 @@ export default function Navbar() {
           return;
         }
 
-        // 6. Crear nueva suscripción y enviarla al backend
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(publicKey),
@@ -163,7 +168,7 @@ export default function Navbar() {
     };
 
     setup();
-  }, [user]); // se re-ejecuta cuando el user se loguea/desloguea
+  }, [user]);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -288,6 +293,27 @@ export default function Navbar() {
         .pwa-label { display: none; }
         @media (min-width: 540px) { .pwa-label { display: inline; } }
         .notif-row:hover { background: rgba(255,255,255,0.04) !important; }
+
+        /* Campana: fondo oscuro sólido + borde naranja — visible sobre cualquier navbar */
+        .bell-btn {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          border: 1.5px solid #f97316;
+          background: #1c1c1c;
+          color: #f97316;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.2s;
+          padding: 0;
+          outline: none;
+        }
+        .bell-btn:hover  { background: #2c1a08; }
+        .bell-btn.active { background: #2c1a08; border-color: #fb923c; }
       `}</style>
 
       {/* Toast push flotante — solo el más reciente */}
@@ -370,36 +396,13 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* ── Campana ─────────────────────────────────────────────────────────
-                Siempre visible: fondo y borde con opacidad sobre blanco/oscuro.
-                No usa colores hardcodeados que dependan del tema del host.
-            ─────────────────────────────────────────────────────────────────── */}
+            {/* Campana */}
             {showBell && (
               <div ref={notifRef} style={{ position: "relative" }}>
                 <button
+                  className={`bell-btn${notifPanelOpen ? " active" : ""}`}
                   onClick={() => setNotifPanelOpen(v => !v)}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    // Fondo siempre visible: naranja si hay notifs o panel abierto,
-                    // blanco semitransparente si no — funciona sobre cualquier navbar
-                    background: notifPanelOpen || unreadNotifs > 0
-                      ? "rgba(249,115,22,0.18)"
-                      : "rgba(255,255,255,0.12)",
-                    border: unreadNotifs > 0
-                      ? "1px solid rgba(249,115,22,0.65)"
-                      : "1px solid rgba(255,255,255,0.28)",
-                    borderRadius: 10,
-                    width: 38,
-                    height: 38,
-                    // Ícono blanco sobre fondo oscuro — naranja si hay notifs
-                    color: unreadNotifs > 0 ? "#fb923c" : "rgba(255,255,255,0.88)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    flexShrink: 0,
-                  }}
+                  title="Notificaciones"
                 >
                   <Bell size={17} strokeWidth={2.3} />
                   {unreadNotifs > 0 && (
@@ -432,44 +435,63 @@ export default function Navbar() {
                     boxShadow: "0 12px 40px rgba(0,0,0,0.65)",
                     zIndex: 99999,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)",
+                    }}>
                       <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>Notificaciones</span>
                       {unreadNotifs > 0 && (
-                        <button onClick={() => setPushNotifs([])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}>
+                        <button
+                          onClick={() => setPushNotifs([])}
+                          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}
+                        >
                           Limpiar todo
                         </button>
                       )}
                     </div>
 
-                    {unreadNotifs === 0 ? (
+                    {/* ── Sin notificaciones: mensaje simple sin superposición ── */}
+                    {unreadNotifs === 0 && (
                       <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
                         <Bell size={28} color="rgba(255,255,255,0.15)" style={{ marginBottom: 8 }} />
                         <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
                           No tenés notificaciones nuevas
                         </p>
                       </div>
-                    ) : (
-                      pushNotifs.map(n => (
-                        <div
-                          key={n.id}
-                          className="notif-row"
-                          onClick={() => { if (n.url) router.push(n.url); setNotifPanelOpen(false); }}
-                          style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "0.7rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.05)", cursor: n.url ? "pointer" : "default", transition: "background 0.15s" }}
-                        >
-                          <Bell size={13} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
-                            {n.body && <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{n.body}</p>}
-                            <p style={{ margin: "0.25rem 0 0", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>
-                              {new Date(n.receivedAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                          </div>
-                          <button onClick={e => { e.stopPropagation(); dismissNotif(n.id); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", flexShrink: 0, padding: 2 }}>
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))
                     )}
+
+                    {/* ── Con notificaciones: lista normal ── */}
+                    {unreadNotifs > 0 && pushNotifs.map(n => (
+                      <div
+                        key={n.id}
+                        className="notif-row"
+                        onClick={() => { if (n.url) router.push(n.url); setNotifPanelOpen(false); }}
+                        style={{
+                          display: "flex", alignItems: "flex-start", gap: 10,
+                          padding: "0.7rem 1rem",
+                          borderBottom: "1px solid rgba(255,255,255,0.05)",
+                          cursor: n.url ? "pointer" : "default",
+                          transition: "background 0.15s",
+                        }}
+                      >
+                        <Bell size={13} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
+                          {n.body && (
+                            <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{n.body}</p>
+                          )}
+                          <p style={{ margin: "0.25rem 0 0", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>
+                            {new Date(n.receivedAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={e => { e.stopPropagation(); dismissNotif(n.id); }}
+                          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", flexShrink: 0, padding: 2 }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
