@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "../../componentes/MainLayout";
@@ -11,18 +11,20 @@ import {
   MapPin, Package, Star, CheckCircle, ShoppingBag,
   UserPlus, MessageCircle, Heart, Tag, ShoppingCart,
   ArrowLeft, Share2, Users, TrendingUp, ChevronLeft, ChevronRight, Navigation,
+  Locate, LocateOff, RefreshCw,
 } from "lucide-react";
 import "../../styles/negocioId.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+// ── Tipos ────────────────────────────────────────────────────────────────────
 interface Business {
   _id: string; name: string; description: string; city: string;
   logo?: string; rating?: number; totalRatings?: number;
   verified?: boolean; owner?: string; followers?: string[];
   phone?: string;
-  address?: string;                                              // ← dirección de Google Maps
-  location?: { type: string; coordinates: [number, number] };  // ← coords GeoJSON
+  address?: string;
+  location?: { type: string; coordinates: [number, number] };
 }
 interface Product {
   _id: string; name: string; description?: string; price: number;
@@ -33,6 +35,17 @@ interface SocialStatus {
   followersCount: number; rating: number; totalRatings: number;
 }
 
+// ── GPS status ───────────────────────────────────────────────────────────────
+type GpsStatus = "idle" | "loading" | "ok" | "denied" | "error";
+
+interface GpsState {
+  lat: number | null;
+  lng: number | null;
+  status: GpsStatus;
+  updatedAt: Date | null;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function getRankInfo(rating: number, total: number) {
   if (total < 3)     return { label: "Nueva tienda",        color: "#6b7280", bg: "#f3f4f6" };
   if (rating >= 4.5) return { label: "🏆 Top vendedor",     color: "#92400e", bg: "#fef3c7" };
@@ -101,12 +114,123 @@ function useIsMobile(breakpoint = 640) {
   return isMobile;
 }
 
+// ── Hook GPS dinámico ────────────────────────────────────────────────────────
+/**
+ * Usa la geolocalización del browser en tiempo real.
+ * - Al montar: pide GPS automáticamente.
+ * - Retorna: coords actuales, estado y función para refrescar manualmente.
+ * - Fallback: si el user rechaza, devuelve status "denied" para que el
+ *   componente use la dirección guardada del perfil.
+ */
+function useDynamicGps() {
+  const [gps, setGps] = useState<GpsState>({
+    lat: null, lng: null, status: "idle", updatedAt: null,
+  });
+
+  const watchRef = useRef<number | null>(null);
+
+  const startWatch = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGps(prev => ({ ...prev, status: "error" }));
+      return;
+    }
+
+    setGps(prev => ({ ...prev, status: "loading" }));
+
+    // watchPosition → se actualiza cada vez que el user se mueve (igual que Uber)
+    watchRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        setGps({
+          lat:       pos.coords.latitude,
+          lng:       pos.coords.longitude,
+          status:    "ok",
+          updatedAt: new Date(),
+        });
+      },
+      (err) => {
+        const status: GpsStatus = err.code === 1 ? "denied" : "error";
+        setGps(prev => ({ ...prev, status, lat: null, lng: null }));
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge:         10_000,   // acepta coords con hasta 10s de antigüedad
+        timeout:            15_000,
+      }
+    );
+  }, []);
+
+  // Pedir GPS al montar
+  useEffect(() => {
+    startWatch();
+    return () => {
+      if (watchRef.current !== null)
+        navigator.geolocation.clearWatch(watchRef.current);
+    };
+  }, [startWatch]);
+
+  // Refresh manual: detiene el watch anterior y arranca uno nuevo
+  const refresh = useCallback(() => {
+    if (watchRef.current !== null)
+      navigator.geolocation.clearWatch(watchRef.current);
+    startWatch();
+  }, [startWatch]);
+
+  return { gps, refresh };
+}
+
+// ── Componente badge GPS ─────────────────────────────────────────────────────
+function GpsBadge({ gps, onRefresh, profileHasLoc }: {
+  gps: GpsState;
+  onRefresh: () => void;
+  profileHasLoc: boolean;
+}) {
+  const timeStr = gps.updatedAt
+    ? gps.updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
+
+  if (gps.status === "loading")
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#6b7280", background: "#f3f4f6", padding: "3px 10px", borderRadius: 20 }}>
+        <div style={{ width: 8, height: 8, border: "2px solid #f97316", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+        Obteniendo ubicación…
+      </span>
+    );
+
+  if (gps.status === "ok")
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#059669", background: "#d1fae5", padding: "3px 10px", borderRadius: 20 }}>
+        <Locate size={11} />
+        GPS activo · {timeStr}
+        <button onClick={onRefresh} title="Actualizar ubicación" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", color: "#059669" }}>
+          <RefreshCw size={11} />
+        </button>
+      </span>
+    );
+
+  if (gps.status === "denied")
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#b45309", background: "#fef3c7", padding: "3px 10px", borderRadius: 20 }}>
+        <LocateOff size={11} />
+        {profileHasLoc ? "GPS bloqueado · usando dirección guardada" : "GPS bloqueado · sin filtro de distancia"}
+        <button onClick={onRefresh} title="Reintentar" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", color: "#b45309" }}>
+          <RefreshCw size={11} />
+        </button>
+      </span>
+    );
+
+  return null; // status idle/error no muestra nada hasta que se resuelve
+}
+
+// ── Página principal ─────────────────────────────────────────────────────────
 export default function NegocioPublicoPage() {
   const { id }        = useParams<{ id: string }>();
   const { user }      = useAuth();
   const { addToCart } = useCart();
   const router        = useRouter();
   const isMobile      = useIsMobile();
+
+  // GPS dinámico (reemplaza las coords fijas del perfil)
+  const { gps, refresh: refreshGps } = useDynamicGps();
 
   const [business,        setBusiness]        = useState<Business | null>(null);
   const [products,        setProducts]        = useState<Product[]>([]);
@@ -122,9 +246,24 @@ export default function NegocioPublicoPage() {
 
   const token         = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
   const currentUserId = (user as any)?._id || (user as any)?.id;
-  const userLat       = (user as any)?.lat;
-  const userLng       = (user as any)?.lng;
-  const userHasLoc    = !!(user?.locationEnabled && userLat && userLng);
+
+  // Coords del perfil (fallback si GPS está denegado)
+  const profileLat    = (user as any)?.lat;
+  const profileLng    = (user as any)?.lng;
+  const profileHasLoc = !!(user?.locationEnabled && profileLat && profileLng);
+
+  // ── Resolución de coordenadas: GPS dinámico > perfil guardado > ninguna ──
+  const activeLat: number | null =
+    gps.status === "ok"     ? gps.lat :
+    gps.status === "denied" && profileHasLoc ? profileLat :
+    null;
+
+  const activeLng: number | null =
+    gps.status === "ok"     ? gps.lng :
+    gps.status === "denied" && profileHasLoc ? profileLng :
+    null;
+
+  const hasActiveLoc = activeLat !== null && activeLng !== null;
 
   const ITEMS_PER_PAGE = isMobile ? 4 : 12;
   const totalPages     = Math.ceil(products.length / ITEMS_PER_PAGE);
@@ -154,14 +293,17 @@ export default function NegocioPublicoPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // ── Fetch productos — con lat/lng/userId para filtrado por radio ──────────
+  // ── Fetch productos — se re-ejecuta cada vez que cambian las coords GPS ──
   useEffect(() => {
     if (!id) return;
+    // Esperar a que GPS se resuelva (ok o denied) antes de buscar
+    if (gps.status === "idle" || gps.status === "loading") return;
 
     const params = new URLSearchParams({ businessId: id, limit: "40" });
-    if (userHasLoc) {
-      params.set("lat", userLat.toString());
-      params.set("lng", userLng.toString());
+
+    if (hasActiveLoc) {
+      params.set("lat", activeLat!.toString());
+      params.set("lng", activeLng!.toString());
     }
     if (currentUserId) params.set("userId", currentUserId);
 
@@ -171,7 +313,9 @@ export default function NegocioPublicoPage() {
       .then(data => setProducts(data.products || []))
       .catch(() => setProducts([]))
       .finally(() => setProductsLoading(false));
-  }, [id, currentUserId, userHasLoc]);
+
+  // activeLat y activeLng cambian cada vez que el GPS actualiza → re-fetch automático
+  }, [id, activeLat, activeLng, currentUserId, gps.status]);
 
   // ── Social status ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -344,7 +488,9 @@ export default function NegocioPublicoPage() {
         <button className="nid-back-btn" onClick={() => router.back()}>
           <ArrowLeft size={16} /> Volver
         </button>
-        <div className="nid-topbar-actions">
+        <div className="nid-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Badge GPS visible en el topbar */}
+          <GpsBadge gps={gps} onRefresh={refreshGps} profileHasLoc={profileHasLoc} />
           <button className="nid-share-btn" onClick={handleShare}>
             <Share2 size={15} /> Compartir
           </button>
@@ -381,22 +527,23 @@ export default function NegocioPublicoPage() {
             {business.description && <p className="nid-desc">{business.description}</p>}
 
             <div className="nid-meta">
-              {/* Dirección de Google Maps o ciudad como fallback */}
               <span className="nid-meta-item">
                 <MapPin size={13} />
                 {businessAddress}
               </span>
 
-              {/* Badge de ubicación verificada con Google */}
-       {hasVerifiedLocation && (
-        <a href={`https://www.google.com/maps?q=${business?.location?.coordinates[1]},${business?.location?.coordinates[0]}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="nid-meta-item"
-        style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem", textDecoration: "none", cursor: "pointer" }}>
-    <Navigation size={11} /> Ubicación verificada
-           </a>
-          )}
+              {hasVerifiedLocation && (
+                <a
+                  href={`https://www.google.com/maps?q=${business?.location?.coordinates[1]},${business?.location?.coordinates[0]}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="nid-meta-item"
+                  style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem", textDecoration: "none", cursor: "pointer" }}
+                >
+                  <Navigation size={11} /> Ubicación verificada
+                </a>
+              )}
+
               <span className="nid-meta-item nid-meta-item--bold">
                 <Users size={13} />
                 {social.followersCount} {social.followersCount === 1 ? "seguidor" : "seguidores"}
@@ -474,6 +621,25 @@ export default function NegocioPublicoPage() {
           )}
         </div>
 
+        {/* Aviso si GPS está resolviendo */}
+        {(gps.status === "idle" || gps.status === "loading") && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fef9f0", border: "1px solid #fed7aa", borderRadius: 8, marginBottom: 12, fontSize: "0.8rem", color: "#92400e" }}>
+            <div style={{ width: 14, height: 14, border: "2px solid #f97316", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+            Obteniendo tu ubicación actual para mostrarte los productos disponibles en tu zona…
+          </div>
+        )}
+
+        {/* Aviso si GPS denegado y sin perfil de ubicación */}
+        {gps.status === "denied" && !profileHasLoc && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 8, marginBottom: 12, fontSize: "0.8rem", color: "#92400e" }}>
+            <LocateOff size={14} style={{ flexShrink: 0 }} />
+            GPS bloqueado. Se muestran todos los productos sin filtro de distancia.
+            <button onClick={refreshGps} style={{ marginLeft: "auto", background: "none", border: "1px solid #f97316", color: "#f97316", borderRadius: 6, padding: "2px 8px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}>
+              Reintentar
+            </button>
+          </div>
+        )}
+
         {productsLoading ? (
           <div className="nid-products-grid">
             {[...Array(isMobile ? 4 : 12)].map((_, i) => (
@@ -484,8 +650,8 @@ export default function NegocioPublicoPage() {
           <div className="nid-empty">
             <ShoppingBag size={52} strokeWidth={1} />
             <p style={{ marginTop: 12 }}>
-              {userHasLoc
-                ? "Este negocio no tiene productos disponibles en tu zona."
+              {hasActiveLoc
+                ? "Este negocio no tiene productos disponibles en tu zona actual."
                 : "Este negocio aún no tiene productos publicados."}
             </p>
           </div>
