@@ -29,6 +29,9 @@ const NAV_CATEGORIES = [
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+// VAPID public key — tiene que coincidir exactamente con la del backend
+const VAPID_PUBLIC_KEY = "BLR8fiu0VNED_-qHI0rOQn_UPEtJptD4wiYJXuBQxgBhFFRf_SvU54F95IBaBG86V-cv3wwZ4l_NlLD236io1rw";
+
 interface PushNotif {
   id: string;
   title: string;
@@ -83,7 +86,7 @@ export default function Navbar() {
     setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
   }, []);
 
-  // ── Escuchar mensajes del SW ─────────────────────────────────────────────────
+  // ── Escuchar mensajes del SW ──────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handler = (event: MessageEvent) => {
@@ -92,15 +95,13 @@ export default function Navbar() {
       }
       if (event.data?.type === "PUSH_RECEIVED") {
         const notif: PushNotif = {
-          id: `${Date.now()}-${Math.random()}`,
-          title: event.data.title || "Nueva notificacion",
-          body:  event.data.body  || "",
-          url:   event.data.url,
+          id:         `${Date.now()}-${Math.random()}`,
+          title:      event.data.title || "Nueva notificación",
+          body:       event.data.body  || "",
+          url:        event.data.url,
           receivedAt: Date.now(),
         };
         setPushNotifs(prev => [notif, ...prev].slice(0, 20));
-        // ── Si el panel estaba abierto mostrando "sin notificaciones",
-        //    cerrarlo para que no se superponga con el toast entrante
         setNotifPanelOpen(false);
       }
     };
@@ -108,18 +109,16 @@ export default function Navbar() {
     return () => navigator.serviceWorker?.removeEventListener("message", handler);
   }, [router]);
 
-  // ── Registrar SW SIEMPRE (sin importar si hay user logueado) ─────────────────
-  // Esto permite que el SW siga activo y pueda recibir push de sesiones
-  // anteriores aunque el usuario haya cerrado la app o no esté logueado aún.
+  // ── Registrar SW siempre (incluso sin usuario logueado) ──────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
     navigator.serviceWorker.register("/sw.js").catch((e) => {
-      console.warn("SW register error:", e);
+      console.warn("[SW] register error:", e);
     });
   }, []);
 
-  // ── Suscribir a push: solo cuando hay usuario logueado ───────────────────────
+  // ── Suscribir a push cuando hay usuario logueado ──────────────────────────
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
@@ -129,47 +128,49 @@ export default function Navbar() {
       try {
         const reg = await navigator.serviceWorker.ready;
 
+        // Pedir permiso si aún no fue decidido
         if (Notification.permission === "default") {
           await Notification.requestPermission();
         }
         if (Notification.permission !== "granted") return;
 
-        const vapidRes = await fetch(`${API}/push/vapid-public-key`).catch(() => null);
-        if (!vapidRes?.ok) return;
-        const { publicKey } = await vapidRes.json();
-        if (!publicKey) return;
-
         const token = localStorage.getItem("marketplace_token");
+        if (!token) return;
+
         const existing = await reg.pushManager.getSubscription();
 
         if (existing) {
-          // Re-enviar al backend por si lo perdió (deploy, reinicio, etc.)
+          // ✅ BUG CORREGIDO: re-enviar con toJSON() y wrapper { subscription }
           await fetch(`${API}/push/subscribe`, {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify(existing),
+            body:    JSON.stringify({ subscription: existing.toJSON() }),
           }).catch(() => {});
           return;
         }
 
+        // No hay suscripción previa → crear una nueva
         const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
+          userVisibleOnly:      true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
         });
 
         await fetch(`${API}/push/subscribe`, {
-          method: "POST",
+          method:  "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify(sub),
+          body:    JSON.stringify({ subscription: sub.toJSON() }),
         });
+
+        console.log("[Push] Suscripción nueva guardada ✅");
       } catch (e) {
-        console.warn("Push setup:", e);
+        console.warn("[Push] setup error:", e);
       }
     };
 
     setup();
   }, [user]);
 
+  // ── Cerrar dropdowns al hacer click afuera ────────────────────────────────
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
@@ -183,6 +184,7 @@ export default function Navbar() {
 
   useEffect(() => { setDropdownOpen(false); }, [pathname]);
 
+  // ── Órdenes pendientes (vendedor) ─────────────────────────────────────────
   useEffect(() => {
     if (!user || user.role !== "seller") return;
     const check = async () => {
@@ -203,6 +205,7 @@ export default function Navbar() {
     return () => clearInterval(iv);
   }, [user]);
 
+  // ── Órdenes en camino (comprador) ─────────────────────────────────────────
   useEffect(() => {
     if (!user || user.role === "seller") return;
     const check = async () => {
@@ -215,6 +218,7 @@ export default function Navbar() {
         const data: any[] = await res.json();
         const shipped    = data.filter(o => o.status === "shipped");
         const shippedIds = new Set(shipped.map(o => o._id as string));
+
         if (!shippedInitialized.current) {
           prevShippedIds.current     = shippedIds;
           shippedInitialized.current = true;
@@ -222,9 +226,10 @@ export default function Navbar() {
           updateBadge(shipped.length);
           return;
         }
+
         const newShipped = shipped.filter(o => !prevShippedIds.current.has(o._id));
         if (newShipped.length > 0 && Notification.permission === "granted") {
-          new Notification("Tu pedido esta en camino", {
+          new Notification("Tu pedido está en camino", {
             body: newShipped.length === 1
               ? `Pedido #${newShipped[0]._id.slice(-8).toUpperCase()} fue despachado`
               : `${newShipped.length} pedidos fueron despachados`,
@@ -269,7 +274,7 @@ export default function Navbar() {
     : "";
 
   const showInstallBtn = !!user && isInstallable && !isInstalled;
-  const showBell = !!user;
+  const showBell       = !!user;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -278,7 +283,7 @@ export default function Navbar() {
       isInstalled,
       isIOSDevice,
       standalone: window.matchMedia("(display-mode: standalone)").matches,
-      userAgent: navigator.userAgent.slice(0, 80),
+      userAgent:  navigator.userAgent.slice(0, 80),
     });
   }, [isInstallable, isInstalled, isIOSDevice]);
 
@@ -294,7 +299,6 @@ export default function Navbar() {
         @media (min-width: 540px) { .pwa-label { display: inline; } }
         .notif-row:hover { background: rgba(255,255,255,0.04) !important; }
 
-        /* Campana: fondo oscuro sólido + borde naranja — visible sobre cualquier navbar */
         .bell-btn {
           position: relative;
           display: flex;
@@ -325,21 +329,33 @@ export default function Navbar() {
       }}>
         {pushNotifs.slice(0, 1).map(n => (
           <div key={n.id + "_t"} style={{
-            background: "rgba(15,15,15,0.97)",
-            border: "1px solid rgba(249,115,22,0.35)",
-            borderLeft: "3px solid #f97316",
-            borderRadius: 12, padding: "0.8rem 1rem",
-            display: "flex", alignItems: "flex-start", gap: 10,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
+            background:   "rgba(15,15,15,0.97)",
+            border:       "1px solid rgba(249,115,22,0.35)",
+            borderLeft:   "3px solid #f97316",
+            borderRadius: 12,
+            padding:      "0.8rem 1rem",
+            display:      "flex",
+            alignItems:   "flex-start",
+            gap:          10,
+            boxShadow:    "0 8px 32px rgba(0,0,0,0.55)",
             pointerEvents: "all",
-            animation: "slideInRight 0.3s ease",
+            animation:    "slideInRight 0.3s ease",
           }}>
             <Bell size={15} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.82rem", color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
-              {n.body && <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>{n.body}</p>}
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.82rem", color: "#fff", lineHeight: 1.3 }}>
+                {n.title}
+              </p>
+              {n.body && (
+                <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>
+                  {n.body}
+                </p>
+              )}
             </div>
-            <button onClick={() => dismissNotif(n.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 2, flexShrink: 0 }}>
+            <button
+              onClick={() => dismissNotif(n.id)}
+              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 2, flexShrink: 0 }}
+            >
               <X size={13} />
             </button>
           </div>
@@ -420,26 +436,28 @@ export default function Navbar() {
 
                 {notifPanelOpen && (
                   <div style={{
-                    position: "fixed",
-                    top: "4.5rem",
-                    left: "0.5rem",
-                    right: "0.5rem",
-                    width: "auto",
-                    maxWidth: 340,
+                    position:   "fixed",
+                    top:        "4.5rem",
+                    left:       "0.5rem",
+                    right:      "0.5rem",
+                    width:      "auto",
+                    maxWidth:   340,
                     marginLeft: "auto",
-                    maxHeight: "70vh",
-                    overflowY: "auto",
+                    maxHeight:  "70vh",
+                    overflowY:  "auto",
                     background: "#111",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    border:     "1px solid rgba(255,255,255,0.1)",
                     borderRadius: 14,
-                    boxShadow: "0 12px 40px rgba(0,0,0,0.65)",
-                    zIndex: 99999,
+                    boxShadow:  "0 12px 40px rgba(0,0,0,0.65)",
+                    zIndex:     99999,
                   }}>
                     <div style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)",
                     }}>
-                      <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>Notificaciones</span>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>
+                        Notificaciones
+                      </span>
                       {unreadNotifs > 0 && (
                         <button
                           onClick={() => setPushNotifs([])}
@@ -450,7 +468,6 @@ export default function Navbar() {
                       )}
                     </div>
 
-                    {/* ── Sin notificaciones: mensaje simple sin superposición ── */}
                     {unreadNotifs === 0 && (
                       <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
                         <Bell size={28} color="rgba(255,255,255,0.15)" style={{ marginBottom: 8 }} />
@@ -460,7 +477,6 @@ export default function Navbar() {
                       </div>
                     )}
 
-                    {/* ── Con notificaciones: lista normal ── */}
                     {unreadNotifs > 0 && pushNotifs.map(n => (
                       <div
                         key={n.id}
@@ -476,9 +492,13 @@ export default function Navbar() {
                       >
                         <Bell size={13} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{n.title}</p>
+                          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>
+                            {n.title}
+                          </p>
                           {n.body && (
-                            <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{n.body}</p>
+                            <p style={{ margin: "0.15rem 0 0", fontSize: "0.73rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
+                              {n.body}
+                            </p>
                           )}
                           <p style={{ margin: "0.25rem 0 0", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>
                             {new Date(n.receivedAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
@@ -501,7 +521,11 @@ export default function Navbar() {
               <div className="navbar-user" ref={dropdownRef} onClick={() => setDropdownOpen(v => !v)}>
 
                 {user.role !== "seller" && (
-                  <Link href="/panel?tab=cart" onClick={e => e.stopPropagation()} style={{ position: "relative", display: "flex", alignItems: "center", marginRight: "0.5rem", color: "var(--text-muted)", textDecoration: "none" }}>
+                  <Link
+                    href="/panel?tab=cart"
+                    onClick={e => e.stopPropagation()}
+                    style={{ position: "relative", display: "flex", alignItems: "center", marginRight: "0.5rem", color: "var(--text-muted)", textDecoration: "none" }}
+                  >
                     <ShoppingCart size={20} />
                     {cartCount > 0 && (
                       <span style={{ position: "absolute", top: -7, right: -8, background: "#f97316", color: "#fff", borderRadius: "999px", fontSize: "0.65rem", fontWeight: 700, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", lineHeight: 1 }}>
@@ -578,21 +602,21 @@ export default function Navbar() {
 
                     <div className="navbar-dropdown-divider" />
                     <button className="logout-btn" onClick={handleLogout}>
-                      <LogOut size={16} /> Cerrar sesion
+                      <LogOut size={16} /> Cerrar sesión
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <>
-                <Link href="/login"    className="btn btn-ghost hide-mobile">Iniciar sesion</Link>
+                <Link href="/login"    className="btn btn-ghost hide-mobile">Iniciar sesión</Link>
                 <Link href="/register" className="btn btn-primary">Registrarse</Link>
               </>
             )}
           </div>
         </div>
 
-        {/* Barra de categorias */}
+        {/* Barra de categorías */}
         <nav className="navbar-cats">
           <div className="navbar-cats-inner">
 
@@ -631,7 +655,12 @@ export default function Navbar() {
             )}
 
             {showInstallBtn && (
-              <button onClick={handleInstall} className="navbar-cat-link" style={{ background: "none", border: "none", cursor: "pointer" }} title={isIOSDevice ? "Cómo instalar" : "Instalar app"}>
+              <button
+                onClick={handleInstall}
+                className="navbar-cat-link"
+                style={{ background: "none", border: "none", cursor: "pointer" }}
+                title={isIOSDevice ? "Cómo instalar" : "Instalar app"}
+              >
                 <span style={{ flexShrink: 0, display: "flex" }}><Download size={14} color="#fdba74" /></span>
                 <span className="category-name" style={{ color: "#fdba74" }}>Instalar</span>
               </button>
