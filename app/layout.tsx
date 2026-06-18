@@ -4,7 +4,7 @@ import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Offerton - Las mejores ofertas',
+  title: 'Offertas - Las mejores ofertas',
   description: 'Encuentra las mejores ofertas cerca tuyo',
   viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
   authors: [{ name: 'Offerton' }],
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Offerton - Las mejores ofertas',
     description: 'Encuentra las mejores ofertas cerca tuyo',
-    url: 'https://offerton.com',
-    siteName: 'Offerton',
+    url: 'https://offertas.com',
+    siteName: 'Offertas',
     locale: 'es_AR',
     type: 'website',
   },
@@ -32,8 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
 
         {/* Favicon */}
-        <link rel="icon" href="/assets/offerton.png" type="image/jpeg" />
-        <link rel="shortcut icon" href="/assets/offerton.png" type="image/jpeg" />
+        <link rel="icon" href="/assets/ofertas.webp" type="image/jpeg" />
+        <link rel="shortcut icon" href="/assets/ofertas.webp" type="image/jpeg" />
 
         {/* PWA - Manifest */}
         <link rel="manifest" href="/manifest.json" />
@@ -42,8 +42,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Offerton" />
-        <link rel="apple-touch-icon" href="/assets/offerton-192.png" />
+        <meta name="apple-mobile-web-app-title" content="Offertas" />
+        <link rel="apple-touch-icon" href="/assets/ofertas.webp" />
 
         {/* Android Chrome */}
         <meta name="mobile-web-app-capable" content="yes" />
