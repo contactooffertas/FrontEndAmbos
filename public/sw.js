@@ -21,12 +21,12 @@ async function getManifestIcon() {
       if (res.ok) cachedManifest = await res.json();
     }
     if (cachedManifest?.icons && cachedManifest.icons.length > 0) {
-      return cachedManifest.icons[0].src || "/assets/offerton.jpg";
+      return cachedManifest.icons[0].src || "/assets/offertas.webp";
     }
   } catch (e) {
     console.warn("Error al obtener manifest:", e);
   }
-  return "/assets/offerton.jpg";
+  return "/assets/offertas.webp";
 }
 
 // ── Recibir push del servidor ────────────────────────────────────────────────
@@ -44,8 +44,8 @@ self.addEventListener("push", (event) => {
     };
   }
 
-  const icon  = "/assets/offerton.jpg";
-  const badge = "/assets/offerton.jpg";
+  const icon  = "/assets/offertas.webp";
+  const badge = "/assets/offertas.webp";
 
   const options = {
     body:   data.body || "",
