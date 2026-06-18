@@ -1,35 +1,52 @@
 // public/sw.js
-// Service Worker — maneja push notifications, navegación y actualización de badge
+// Service Worker — push notifications, navegación, badge
 
 const MANIFEST_URL = "/manifest.json";
 let cachedManifest = null;
 
-// ── Instalar y activar ───────────────────────────────────────────────────────
-self.addEventListener("install", (event) => {
+// ── Instalar ──────────────────────────────────────────────────────────────────
+self.addEventListener("install", () => {
+  // Activar inmediatamente sin esperar que otras pestañas cierren
   self.skipWaiting();
 });
 
+// ── Activar ───────────────────────────────────────────────────────────────────
 self.addEventListener("activate", (event) => {
+  // Tomar control de todas las pestañas abiertas de inmediato
   event.waitUntil(clients.claim());
 });
 
-// ── Obtener manifest.json para leer el logo dinámico ─────────────────────────
-async function getManifestIcon() {
+// ── Fetch — OBLIGATORIO para recibir push con app cerrada ─────────────────────
+// Sin este handler, algunos navegadores no entregan push cuando la app está cerrada.
+// No cacheamos nada, solo dejamos pasar todo al network.
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    fetch(event.request).catch(() =>
+      new Response("", { status: 503, statusText: "Service Unavailable" })
+    )
+  );
+});
+
+// ── Helper: obtener ícono del manifest ───────────────────────────────────────
+async function getIcon() {
   try {
     if (!cachedManifest) {
       const res = await fetch(MANIFEST_URL);
       if (res.ok) cachedManifest = await res.json();
     }
-    if (cachedManifest?.icons && cachedManifest.icons.length > 0) {
-      return cachedManifest.icons[0].src || "/assets/offertas.webp";
+    if (cachedManifest?.icons?.length) {
+      return cachedManifest.icons[0].src;
     }
   } catch (e) {
-    console.warn("Error al obtener manifest:", e);
+    console.warn("[SW] getIcon error:", e);
   }
-  return "/assets/offertas.webp";
+  return "/assets/ofertas.webp";
 }
 
-// ── Recibir push del servidor ────────────────────────────────────────────────
+// ── Push ──────────────────────────────────────────────────────────────────────
+// Se dispara aunque la app esté completamente cerrada.
+// El navegador despierta el SW en background, muestra la notificación nativa
+// del SO y (si la app está abierta) manda un mensaje al Navbar para el toast.
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -39,37 +56,39 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {
       title: "Nueva notificación",
-      body: event.data.text(),
-      url: "/",
+      body:  event.data.text(),
+      url:   "/",
     };
   }
 
-  const icon  = "/assets/offertas.webp";
-  const badge = "/assets/offertas.webp";
+  const icon  = data.icon  || "/assets/ofertas.webp";
+  const badge = data.badge || "/assets/ofertas.webp";
 
   const options = {
-    body:   data.body || "",
-    icon:   icon,
-    badge:  badge,
-    vibrate: [100, 50, 100],
+    body:    data.body  || "",
+    icon,
+    badge,
+    image:   data.image || undefined,        // imagen grande en Android
+    vibrate: data.vibrate || [100, 50, 100],
     data: {
-      url:        data.url || "/",
-      badgeCount: data.badgeCount,
+      url:        data.url        || "/",
+      badgeCount: data.badgeCount || 0,
     },
     actions: [
       { action: "open",    title: "Ver ahora" },
       { action: "dismiss", title: "Cerrar"    },
     ],
-    tag:                 data.tag || "notification",
-    requireInteraction:  data.requireInteraction || false,
+    tag:                data.tag                || "offertas-notif",
+    renotify:           data.renotify           ?? true,
+    requireInteraction: data.requireInteraction ?? false,
   };
 
   event.waitUntil(
     Promise.all([
-      // 1️⃣ Notificación nativa — funciona aunque la app esté cerrada
-      self.registration.showNotification(data.title, options),
+      // 1️⃣ Notificación nativa del SO — visible aunque la app esté cerrada
+      self.registration.showNotification(data.title || "Offertas", options),
 
-      // 2️⃣ Si la app está abierta, mandar toast al Navbar
+      // 2️⃣ Si la app está abierta en alguna pestaña → toast in-app al Navbar
       clients
         .matchAll({ type: "window", includeUncontrolled: true })
         .then((clientList) => {
@@ -79,7 +98,7 @@ self.addEventListener("push", (event) => {
               title: data.title || "Nueva notificación",
               body:  data.body  || "",
               url:   data.url   || "/",
-              icon:  icon,
+              icon,
             });
           });
         }),
@@ -87,7 +106,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// ── Click en la notificación ─────────────────────────────────────────────────
+// ── Click en la notificación ──────────────────────────────────────────────────
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
@@ -99,6 +118,7 @@ self.addEventListener("notificationclick", (event) => {
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
+        // Si la app ya está abierta, enfocarla y navegar
         for (const client of clientList) {
           if ("focus" in client) {
             client.focus();
@@ -106,17 +126,18 @@ self.addEventListener("notificationclick", (event) => {
             return;
           }
         }
+        // Si la app está cerrada, abrirla
         return clients.openWindow(targetUrl);
       })
   );
 });
 
-// ── Close/dismiss notificación ───────────────────────────────────────────────
+// ── Cierre de notificación ────────────────────────────────────────────────────
 self.addEventListener("notificationclose", (event) => {
-  console.log("Notificación cerrada:", event.notification.tag);
+  console.log("[SW] Notificación cerrada:", event.notification.tag);
 });
 
-// ── Sincronización en background ────────────────────────────────────────────
+// ── Background sync ───────────────────────────────────────────────────────────
 self.addEventListener("sync", (event) => {
   if (event.tag === "sync-orders") {
     event.waitUntil(
@@ -131,11 +152,13 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-// ── Message handler ──────────────────────────────────────────────────────────
+// ── Mensajes desde el frontend ────────────────────────────────────────────────
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
   }
+
   if (event.data?.type === "CHECK_UPDATES") {
     event.waitUntil(
       fetch(MANIFEST_URL)
