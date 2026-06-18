@@ -2,18 +2,6 @@
 // components/footer.tsx
 
 import Link from "next/link";
-import {
-  ShoppingCart,
-  Facebook,
-  Instagram,
-  Twitter,
-  MessageCircle,
-  Monitor,
-  Shirt,
-  Home,
-  Dumbbell,
-  ShoppingBag,
-} from "lucide-react";
 import "../styles/footer.css";
 
 export default function Footer() {
@@ -85,12 +73,6 @@ export default function Footer() {
             </li>
             <li>
               <Link href="/register">Registrarse</Link>
-            </li>
-            <li>
-              <Link href="/profile">Mi perfil</Link>
-            </li>
-            <li>
-              <Link href="/mis-productos">Mis productos</Link>
             </li>
           </ul>
         </div>
