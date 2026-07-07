@@ -38,6 +38,8 @@ interface PushNotif {
   body: string;
   url?: string;
   receivedAt: number;
+  /** true si viene de un anuncio del admin (persistente en BD, se marca leído por usuario) */
+  isAnnouncement?: boolean;
 }
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
@@ -78,9 +80,10 @@ export default function Navbar() {
   const [isIOSDevice,    setIsIOSDevice]    = useState(false);
 
   const dropdownRef        = useRef<HTMLDivElement>(null);
-  const notifRef           = useRef<HTMLDivElement>(null);
+  const notifRef            = useRef<HTMLDivElement>(null);
   const prevShippedIds     = useRef<Set<string>>(new Set());
   const shippedInitialized = useRef(false);
+  const announcementSocketRef = useRef<ReturnType<typeof import("socket.io-client")["io"]> | null>(null);
 
   useEffect(() => {
     setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
@@ -168,6 +171,82 @@ export default function Navbar() {
     };
 
     setup();
+  }, [user]);
+
+  // ── Anuncios del admin: traer los que este usuario todavía no leyó ───────
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem("marketplace_token");
+    if (!token) return;
+
+    fetch(`${API}/announcements/active`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => (r.ok ? r.json() : { announcements: [] }))
+      .then(data => {
+        const anns: PushNotif[] = (data.announcements || []).map((a: any) => ({
+          id:             a._id,
+          title:          a.title,
+          body:           a.message,
+          url:            a.link,
+          receivedAt:     new Date(a.createdAt).getTime(),
+          isAnnouncement: true,
+        }));
+        if (anns.length) {
+          setPushNotifs(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const fresh = anns.filter(a => !existingIds.has(a.id));
+            return [...fresh, ...prev];
+          });
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
+  // ── Anuncios en vivo: escuchar por socket mientras la app está abierta ───
+  useEffect(() => {
+    if (!user) return;
+    if (typeof window === "undefined") return;
+
+    let cleanup: () => void;
+
+    (async () => {
+      const { io } = await import("socket.io-client");
+      const token = localStorage.getItem("marketplace_token");
+
+      const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000", {
+        auth: { token },
+        transports: ["websocket"],
+      });
+
+      announcementSocketRef.current = socket;
+
+      socket.on("connect", () => {
+        socket.emit("join_user_room", (user as any)?._id || (user as any)?.id);
+      });
+
+      socket.on("new_announcement", (payload: any) => {
+        const notif: PushNotif = {
+          id:             payload._id,
+          title:          payload.title,
+          body:           payload.message,
+          url:            payload.link,
+          receivedAt:     Date.now(),
+          isAnnouncement: true,
+        };
+        setPushNotifs(prev => {
+          if (prev.some(p => p.id === notif.id)) return prev;
+          return [notif, ...prev].slice(0, 20);
+        });
+      });
+
+      cleanup = () => {
+        socket.disconnect();
+        announcementSocketRef.current = null;
+      };
+    })();
+
+    return () => { cleanup?.(); };
   }, [user]);
 
   // ── Cerrar dropdowns al hacer click afuera ────────────────────────────────
@@ -267,7 +346,38 @@ export default function Navbar() {
     setInstalling(false);
   };
 
-  const dismissNotif = (id: string) => setPushNotifs(prev => prev.filter(n => n.id !== id));
+  // ── Descartar notificación — si es un anuncio, avisamos al backend para
+  //    que quede marcado como leído SOLO para este usuario (readBy) ─────────
+  const dismissNotif = (id: string) => {
+    const notif = pushNotifs.find(n => n.id === id);
+    setPushNotifs(prev => prev.filter(n => n.id !== id));
+
+    if (notif?.isAnnouncement) {
+      const token = localStorage.getItem("marketplace_token");
+      if (token) {
+        fetch(`${API}/announcements/${id}/read`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+    }
+  };
+
+  const clearAllNotifs = () => {
+    // Marcar como leídos todos los anuncios antes de limpiar la lista local
+    const token = localStorage.getItem("marketplace_token");
+    if (token) {
+      pushNotifs
+        .filter(n => n.isAnnouncement)
+        .forEach(n => {
+          fetch(`${API}/announcements/${n.id}/read`, {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => {});
+        });
+    }
+    setPushNotifs([]);
+  };
 
   const currentSlug = pathname.startsWith("/categoria/")
     ? (pathname.split("/categoria/")[1]?.split("?")[0] ?? "")
@@ -460,7 +570,7 @@ export default function Navbar() {
                       </span>
                       {unreadNotifs > 0 && (
                         <button
-                          onClick={() => setPushNotifs([])}
+                          onClick={clearAllNotifs}
                           style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}
                         >
                           Limpiar todo
