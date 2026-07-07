@@ -61,21 +61,10 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
 type GpsStatus = "idle" | "loading" | "ok" | "denied" | "error";
 interface GpsState { lat: number | null; lng: number | null; status: GpsStatus; updatedAt: Date | null; }
 
-/**
- * watchPosition igual que antes, pero ahora expone también `significantMove`:
- * un booleano que se pone en true solo cuando el usuario se movió más de
- * NEARBY_FETCH_THRESHOLD_METERS desde la última vez que se cargaron negocios.
- * Así el componente sabe cuándo tiene sentido volver a hacer fetch.
- */
 function useDynamicGps(thresholdMeters: number) {
   const [gps, setGps] = useState<GpsState>({ lat: null, lng: null, status: "idle", updatedAt: null });
-
-  // Coords desde donde se hizo el último fetchNearby exitoso
   const lastFetchedCoords = useRef<{ lat: number; lng: number } | null>(null);
-
-  // true cuando el usuario se movió lo suficiente — el componente lo consume y lo resetea
   const [significantMove, setSignificantMove] = useState(false);
-
   const watchRef = useRef<number | null>(null);
 
   const startWatch = useCallback(() => {
@@ -85,8 +74,6 @@ function useDynamicGps(thresholdMeters: number) {
       (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
         setGps({ lat, lng, status: "ok", updatedAt: new Date() });
-
-        // Solo marcar movimiento significativo si ya hay coords de referencia
         if (lastFetchedCoords.current) {
           const dist = haversineMeters(
             lastFetchedCoords.current.lat,
@@ -98,7 +85,6 @@ function useDynamicGps(thresholdMeters: number) {
             setSignificantMove(true);
           }
         } else {
-          // Primera posición: marcar como significativa para hacer el fetch inicial
           setSignificantMove(true);
         }
       },
@@ -114,12 +100,10 @@ function useDynamicGps(thresholdMeters: number) {
 
   const refresh = useCallback(() => {
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
-    // Forzar un nuevo fetch aunque no se haya movido (botón manual)
     lastFetchedCoords.current = null;
     startWatch();
   }, [startWatch]);
 
-  // Llamar esto después de hacer fetchNearby para guardar la referencia
   const markFetched = useCallback((lat: number, lng: number) => {
     lastFetchedCoords.current = { lat, lng };
     setSignificantMove(false);
@@ -290,7 +274,6 @@ export default function ProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const socketRef      = useRef<Socket|null>(null);
 
-  // ── GPS dinámico con umbral de 100m ───────────────────────────────────────
   const { gps, refresh: refreshGps, significantMove, markFetched } = useDynamicGps(NEARBY_FETCH_THRESHOLD_METERS);
 
   const [stats,          setStats]          = useState<Stats>({ purchases:0, favorites:0, products:0 });
@@ -345,6 +328,8 @@ export default function ProfilePage() {
       .finally(() => setStatsLoading(false));
   }, [user?.id]);
 
+  // ── Anuncios: el backend YA excluye los que este usuario marcó como leídos
+  //    (readBy en el modelo), así que lo que llega acá son los no leídos.
   const loadAnnouncements = useCallback(async () => {
     const token = getToken();
     if (!token || annsLoaded) return;
@@ -393,7 +378,6 @@ export default function ProfilePage() {
       .finally(()=>setFollowedBizLoading(false));
   }, [user?.id]);
 
-  // ── fetchNearby ────────────────────────────────────────────────────────────
   const fetchNearby = useCallback(async (lat: number, lng: number, radius: number) => {
     setNearbyLoading(true);
     setNearbyError("");
@@ -403,31 +387,19 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error();
       const data: NearbyBusiness[] = await res.json();
       setNearbyBiz(data);
-      // Guardar referencia de dónde se hizo el fetch para calcular movimiento futuro
       markFetched(lat, lng);
     } catch { setNearbyError("No se pudieron cargar los negocios cercanos."); }
     finally  { setNearbyLoading(false); }
   }, [markFetched]);
 
-  /**
-   * Solo se dispara fetchNearby cuando:
-   * 1. El GPS tiene posición válida Y el usuario se movió >= NEARBY_FETCH_THRESHOLD_METERS
-   * 2. O cuando el usuario cambia el radio manualmente (selectedRadius cambia)
-   *
-   * Esto evita llamadas constantes al backend mientras el usuario está quieto.
-   */
   useEffect(() => {
     if (gps.status === "idle" || gps.status === "loading") return;
-
     const u = user as any;
-
     if (gps.status === "ok" && gps.lat !== null && gps.lng !== null) {
-      // Solo actualizar si hubo movimiento significativo
       if (significantMove) {
         fetchNearby(gps.lat, gps.lng, selectedRadius);
       }
     } else if ((gps.status === "denied" || gps.status === "error") && u?.locationEnabled && u?.lat && u?.lng) {
-      // GPS bloqueado → usar coords del perfil (solo una vez, no se mueve)
       fetchNearby(u.lat, u.lng, selectedRadius);
     }
   }, [gps.status, significantMove, selectedRadius]);
@@ -435,7 +407,6 @@ export default function ProfilePage() {
   const handleRadiusChange = useCallback((newRadius: number) => {
     setSelectedRadius(newRadius);
     localStorage.setItem("nearbyRadius", String(newRadius));
-    // Al cambiar el radio forzamos un fetch con las coords actuales aunque no haya movimiento
     const u = user as any;
     const lat = gps.lat ?? u?.lat;
     const lng = gps.lng ?? u?.lng;
@@ -519,7 +490,23 @@ export default function ProfilePage() {
   const hasUnseenAnn  = activeAnns.some(a => !seenAnnouncements.has(a._id));
 
   const openBanner = () => { localStorage.setItem(SECURITY_SEEN_KEY, Date.now().toString()); setGlowActive(false); setBannerOpen(true); };
-  const handleSeenAnnouncement = (id: string) => { localStorage.setItem(`profile_ann_seen_${id}`, Date.now().toString()); setSeenAnnouncements(p => new Set([...p,id])); };
+
+  // ── ÚNICO CAMBIO REAL: además de guardar en localStorage (caché local
+  //    instantánea), avisamos al backend para que quede marcado como leído
+  //    SOLO para este usuario (readBy), y así no vuelva a aparecer en
+  //    ningún dispositivo — sin afectar a los demás usuarios.
+  const handleSeenAnnouncement = (id: string) => {
+    localStorage.setItem(`profile_ann_seen_${id}`, Date.now().toString());
+    setSeenAnnouncements(p => new Set([...p, id]));
+
+    const token = getToken();
+    if (token) {
+      fetch(`${API}/announcements/${id}/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
+  };
 
   const handleLocationToggle = async () => {
     const Swal = (await import("sweetalert2")).default;
