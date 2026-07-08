@@ -1,7 +1,7 @@
 "use client";
 // app/componentes/Navbar.tsx
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../context/authContext";
@@ -40,6 +40,8 @@ interface PushNotif {
   receivedAt: number;
   /** true si viene de un anuncio del admin (persistente en BD, se marca leído por usuario) */
   isAnnouncement?: boolean;
+  /** true una vez que ya avisamos al backend que este usuario lo leyó */
+  markedRead?: boolean;
 }
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
@@ -76,18 +78,30 @@ export default function Navbar() {
   const [shippedOrders,  setShippedOrders]  = useState(0);
   const [installing,     setInstalling]     = useState(false);
   const [pushNotifs,     setPushNotifs]     = useState<PushNotif[]>([]);
+  // ── Toast flotante: SOLO para eventos que llegan en vivo (push/socket),
+  //    nunca para lo que ya traemos del historial al montar ─────────────────
+  const [toastNotif,     setToastNotif]     = useState<PushNotif | null>(null);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const [isIOSDevice,    setIsIOSDevice]    = useState(false);
 
-  const dropdownRef        = useRef<HTMLDivElement>(null);
-  const notifRef            = useRef<HTMLDivElement>(null);
-  const prevShippedIds     = useRef<Set<string>>(new Set());
-  const shippedInitialized = useRef(false);
+  const dropdownRef           = useRef<HTMLDivElement>(null);
+  const notifRef               = useRef<HTMLDivElement>(null);
+  const prevShippedIds        = useRef<Set<string>>(new Set());
+  const shippedInitialized    = useRef(false);
   const announcementSocketRef = useRef<ReturnType<typeof import("socket.io-client")["io"]> | null>(null);
+  const toastTimerRef         = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
   }, []);
+
+  // ── Auto-ocultar el toast a los 6s ────────────────────────────────────────
+  useEffect(() => {
+    if (!toastNotif) return;
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastNotif(null), 6000);
+    return () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); };
+  }, [toastNotif]);
 
   // ── Escuchar mensajes del SW ──────────────────────────────────────────────
   useEffect(() => {
@@ -105,6 +119,7 @@ export default function Navbar() {
           receivedAt: Date.now(),
         };
         setPushNotifs(prev => [notif, ...prev].slice(0, 20));
+        setToastNotif(notif); // ← esto SÍ es en vivo, se muestra como toast
         setNotifPanelOpen(false);
       }
     };
@@ -131,7 +146,6 @@ export default function Navbar() {
       try {
         const reg = await navigator.serviceWorker.ready;
 
-        // Pedir permiso si aún no fue decidido
         if (Notification.permission === "default") {
           await Notification.requestPermission();
         }
@@ -143,7 +157,6 @@ export default function Navbar() {
         const existing = await reg.pushManager.getSubscription();
 
         if (existing) {
-          // ✅ BUG CORREGIDO: re-enviar con toJSON() y wrapper { subscription }
           await fetch(`${API}/push/subscribe`, {
             method:  "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -152,7 +165,6 @@ export default function Navbar() {
           return;
         }
 
-        // No hay suscripción previa → crear una nueva
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly:      true,
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
@@ -174,6 +186,8 @@ export default function Navbar() {
   }, [user]);
 
   // ── Anuncios del admin: traer los que este usuario todavía no leyó ───────
+  //    Van SOLO a la lista del panel — NUNCA disparan el toast, porque no
+  //    son un evento nuevo, son historial que ya podría haber visto.
   useEffect(() => {
     if (!user) return;
     const token = localStorage.getItem("marketplace_token");
@@ -191,6 +205,7 @@ export default function Navbar() {
           url:            a.link,
           receivedAt:     new Date(a.createdAt).getTime(),
           isAnnouncement: true,
+          markedRead:     false,
         }));
         if (anns.length) {
           setPushNotifs(prev => {
@@ -204,6 +219,7 @@ export default function Navbar() {
   }, [user]);
 
   // ── Anuncios en vivo: escuchar por socket mientras la app está abierta ───
+  //    Estos SÍ son eventos nuevos → van a la lista Y disparan el toast.
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
@@ -233,11 +249,13 @@ export default function Navbar() {
           url:            payload.link,
           receivedAt:     Date.now(),
           isAnnouncement: true,
+          markedRead:     false,
         };
         setPushNotifs(prev => {
           if (prev.some(p => p.id === notif.id)) return prev;
           return [notif, ...prev].slice(0, 20);
         });
+        setToastNotif(notif);
       });
 
       cleanup = () => {
@@ -326,7 +344,9 @@ export default function Navbar() {
   }, [user]);
 
   const avatarBadge  = user?.role === "seller" ? pendingOrders : shippedOrders;
-  const unreadNotifs = pushNotifs.length;
+  // ── El badge de la campanita solo cuenta lo que todavía no fue "visto"
+  //    (abrir el panel marca los anuncios como leídos, ver más abajo) ───────
+  const unreadNotifs = pushNotifs.filter(n => !n.markedRead).length;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,13 +366,13 @@ export default function Navbar() {
     setInstalling(false);
   };
 
-  // ── Descartar notificación — si es un anuncio, avisamos al backend para
-  //    que quede marcado como leído SOLO para este usuario (readBy) ─────────
+  // ── Descartar una notificación puntual (❌) — si es anuncio, se marca leído ─
   const dismissNotif = (id: string) => {
     const notif = pushNotifs.find(n => n.id === id);
     setPushNotifs(prev => prev.filter(n => n.id !== id));
+    if (toastNotif?.id === id) setToastNotif(null);
 
-    if (notif?.isAnnouncement) {
+    if (notif?.isAnnouncement && !notif.markedRead) {
       const token = localStorage.getItem("marketplace_token");
       if (token) {
         fetch(`${API}/announcements/${id}/read`, {
@@ -363,8 +383,38 @@ export default function Navbar() {
     }
   };
 
+  // ── Marcar TODOS los anuncios pendientes como leídos — se llama al abrir
+  //    la campanita, porque "verlos" en el panel ya cuenta como visto ───────
+  const markAllAnnouncementsRead = useCallback(() => {
+    const token = localStorage.getItem("marketplace_token");
+    const toMark = pushNotifs.filter(n => n.isAnnouncement && !n.markedRead);
+    if (!toMark.length) return;
+
+    if (token) {
+      toMark.forEach(n => {
+        fetch(`${API}/announcements/${n.id}/read`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      });
+    }
+    setPushNotifs(prev => prev.map(n => n.isAnnouncement ? { ...n, markedRead: true } : n));
+  }, [pushNotifs]);
+
+  // ── Abrir/cerrar campanita — al abrir: ocultamos el toast (evita que
+  //    quede uno encima del otro) y marcamos como leído lo que se ve ────────
+  const toggleNotifPanel = () => {
+    setNotifPanelOpen(prev => {
+      const next = !prev;
+      if (next) {
+        setToastNotif(null);
+        markAllAnnouncementsRead();
+      }
+      return next;
+    });
+  };
+
   const clearAllNotifs = () => {
-    // Marcar como leídos todos los anuncios antes de limpiar la lista local
     const token = localStorage.getItem("marketplace_token");
     if (token) {
       pushNotifs
@@ -377,6 +427,7 @@ export default function Navbar() {
         });
     }
     setPushNotifs([]);
+    setToastNotif(null);
   };
 
   const currentSlug = pathname.startsWith("/categoria/")
@@ -430,15 +481,15 @@ export default function Navbar() {
         .bell-btn.active { background: #2c1a08; border-color: #fb923c; }
       `}</style>
 
-      {/* Toast push flotante — solo el más reciente */}
-      <div style={{
-        position: "fixed", top: "4.75rem", right: "1rem",
-        zIndex: 99999, display: "flex", flexDirection: "column",
-        gap: "0.5rem", maxWidth: 320, width: "calc(100vw - 2rem)",
-        pointerEvents: "none",
-      }}>
-        {pushNotifs.slice(0, 1).map(n => (
-          <div key={n.id + "_t"} style={{
+      {/* Toast push flotante — SOLO eventos en vivo, nunca superpuesto con el panel */}
+      {toastNotif && !notifPanelOpen && (
+        <div style={{
+          position: "fixed", top: "4.75rem", right: "1rem",
+          zIndex: 99999, display: "flex", flexDirection: "column",
+          gap: "0.5rem", maxWidth: 320, width: "calc(100vw - 2rem)",
+          pointerEvents: "none",
+        }}>
+          <div style={{
             background:   "rgba(15,15,15,0.97)",
             border:       "1px solid rgba(249,115,22,0.35)",
             borderLeft:   "3px solid #f97316",
@@ -454,23 +505,23 @@ export default function Navbar() {
             <Bell size={15} color="#f97316" style={{ flexShrink: 0, marginTop: 2 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ margin: 0, fontWeight: 700, fontSize: "0.82rem", color: "#fff", lineHeight: 1.3 }}>
-                {n.title}
+                {toastNotif.title}
               </p>
-              {n.body && (
+              {toastNotif.body && (
                 <p style={{ margin: "0.2rem 0 0", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>
-                  {n.body}
+                  {toastNotif.body}
                 </p>
               )}
             </div>
             <button
-              onClick={() => dismissNotif(n.id)}
+              onClick={() => setToastNotif(null)}
               style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 2, flexShrink: 0 }}
             >
               <X size={13} />
             </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       <header className="navbar">
         <div className="navbar-inner">
@@ -527,7 +578,7 @@ export default function Navbar() {
               <div ref={notifRef} style={{ position: "relative" }}>
                 <button
                   className={`bell-btn${notifPanelOpen ? " active" : ""}`}
-                  onClick={() => setNotifPanelOpen(v => !v)}
+                  onClick={toggleNotifPanel}
                   title="Notificaciones"
                 >
                   <Bell size={17} strokeWidth={2.3} />
@@ -568,7 +619,7 @@ export default function Navbar() {
                       <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff" }}>
                         Notificaciones
                       </span>
-                      {unreadNotifs > 0 && (
+                      {pushNotifs.length > 0 && (
                         <button
                           onClick={clearAllNotifs}
                           style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", cursor: "pointer" }}
@@ -578,7 +629,7 @@ export default function Navbar() {
                       )}
                     </div>
 
-                    {unreadNotifs === 0 && (
+                    {pushNotifs.length === 0 && (
                       <div style={{ padding: "2rem 1rem", textAlign: "center" }}>
                         <Bell size={28} color="rgba(255,255,255,0.15)" style={{ marginBottom: 8 }} />
                         <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
@@ -587,7 +638,7 @@ export default function Navbar() {
                       </div>
                     )}
 
-                    {unreadNotifs > 0 && pushNotifs.map(n => (
+                    {pushNotifs.length > 0 && pushNotifs.map(n => (
                       <div
                         key={n.id}
                         className="notif-row"
