@@ -16,11 +16,6 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
 });
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
-// NO es necesario para recibir push (eso lo dispara el Push Service directo).
-// Lo dejamos vacío para no interceptar/enmascarar las requests normales de la app.
-// Si en algún momento necesitás cachear assets para offline, se agrega acá con
-// cache.match() en vez de inventar una Response falsa.
 self.addEventListener("fetch", () => {
   // sin intervención — dejar pasar todo al network normalmente
 });
