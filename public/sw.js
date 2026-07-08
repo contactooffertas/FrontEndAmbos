@@ -16,15 +16,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
 });
 
-// ── Fetch — OBLIGATORIO para recibir push con app cerrada ─────────────────────
-// Sin este handler, algunos navegadores no entregan push cuando la app está cerrada.
-// No cacheamos nada, solo dejamos pasar todo al network.
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    fetch(event.request).catch(() =>
-      new Response("", { status: 503, statusText: "Service Unavailable" })
-    )
-  );
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+// NO es necesario para recibir push (eso lo dispara el Push Service directo).
+// Lo dejamos vacío para no interceptar/enmascarar las requests normales de la app.
+// Si en algún momento necesitás cachear assets para offline, se agrega acá con
+// cache.match() en vez de inventar una Response falsa.
+self.addEventListener("fetch", () => {
+  // sin intervención — dejar pasar todo al network normalmente
 });
 
 // ── Helper: obtener ícono del manifest ───────────────────────────────────────
@@ -43,10 +41,28 @@ async function getIcon() {
   return "/assets/ofertas.webp";
 }
 
+// ── Helper: actualizar badge del ícono (como WhatsApp) ───────────────────────
+// Solo tiene efecto si la PWA está instalada (agregada a inicio / como app).
+// En una pestaña normal del navegador la Badging API no hace nada, es
+// limitación del navegador, no del código.
+async function updateBadge(count) {
+  if (!("setAppBadge" in self.registration)) return;
+  try {
+    if (count > 0) {
+      await self.registration.setAppBadge(count);
+    } else {
+      await self.registration.clearAppBadge();
+    }
+  } catch (e) {
+    console.warn("[SW] updateBadge error:", e);
+  }
+}
+
 // ── Push ──────────────────────────────────────────────────────────────────────
 // Se dispara aunque la app esté completamente cerrada.
 // El navegador despierta el SW en background, muestra la notificación nativa
-// del SO y (si la app está abierta) manda un mensaje al Navbar para el toast.
+// del SO, actualiza el badge del ícono y (si la app está abierta) manda un
+// mensaje al Navbar para el toast.
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -61,8 +77,8 @@ self.addEventListener("push", (event) => {
     };
   }
 
-  const icon  = data.icon  || "/assets/ofertas.webp";
-  const badge = data.badge || "/assets/ofertas.webp";
+  const icon  = data.icon  || "/assets/offerton-192.png";
+  const badge = data.badge || "/assets/offerton-512.png";
 
   const options = {
     body:    data.body  || "",
@@ -88,7 +104,10 @@ self.addEventListener("push", (event) => {
       // 1️⃣ Notificación nativa del SO — visible aunque la app esté cerrada
       self.registration.showNotification(data.title || "Offertas", options),
 
-      // 2️⃣ Si la app está abierta en alguna pestaña → toast in-app al Navbar
+      // 2️⃣ Badge en el ícono de la app instalada (número, como WhatsApp)
+      updateBadge(data.badgeCount || 1),
+
+      // 3️⃣ Si la app está abierta en alguna pestaña → toast in-app al Navbar
       clients
         .matchAll({ type: "window", includeUncontrolled: true })
         .then((clientList) => {
@@ -115,20 +134,25 @@ self.addEventListener("notificationclick", (event) => {
   const targetUrl = event.notification.data?.url || "/";
 
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        // Si la app ya está abierta, enfocarla y navegar
-        for (const client of clientList) {
-          if ("focus" in client) {
-            client.focus();
-            client.postMessage({ type: "NAVIGATE", url: targetUrl });
-            return;
+    Promise.all([
+      // Limpiar el badge al interactuar con la notificación
+      updateBadge(0),
+
+      clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((clientList) => {
+          // Si la app ya está abierta, enfocarla y navegar
+          for (const client of clientList) {
+            if ("focus" in client) {
+              client.focus();
+              client.postMessage({ type: "NAVIGATE", url: targetUrl });
+              return;
+            }
           }
-        }
-        // Si la app está cerrada, abrirla
-        return clients.openWindow(targetUrl);
-      })
+          // Si la app está cerrada, abrirla
+          return clients.openWindow(targetUrl);
+        }),
+    ])
   );
 });
 
@@ -156,6 +180,11 @@ self.addEventListener("sync", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
+  }
+
+  if (event.data?.type === "CLEAR_BADGE") {
+    event.waitUntil(updateBadge(0));
     return;
   }
 
