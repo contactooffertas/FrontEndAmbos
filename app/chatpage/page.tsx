@@ -520,6 +520,10 @@ function ChatPageInner() {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
+        // ── Aviso instantáneo por socket de que ya lo vi, además del fetch
+        //    REST de arriba — así el otro usuario ve la tilde azul en el
+        //    momento, sin depender de que el backend reemita el evento ──
+        socket.emit("read_messages", { conversationId: msg.conversation });
       }
 
       // ── Solo sonar si el mensaje es de otra persona ──
@@ -681,6 +685,9 @@ function ChatPageInner() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+      // ── Avisamos por socket que ya leímos, además del fetch REST de arriba,
+      //    para que el que envió vea la tilde azul al instante ──
+      socketRef.current?.emit("read_messages", { conversationId: id });
       socketRef.current?.emit("join_conv", { conversationId: id });
     } catch { /* silent */ }
     finally { setMsgsLoading(false); }
