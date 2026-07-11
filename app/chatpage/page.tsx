@@ -512,6 +512,10 @@ function ChatPageInner() {
       }
     });
 
+    socket.on("connect_error", (err) => {
+      console.warn("[socket] connect_error:", err.message);
+    });
+
     socket.on("new_message", (msg: Message) => {
       const isActive = msg.conversation === activeIdRef.current;
       const isMe     = msg.sender._id === userId;
