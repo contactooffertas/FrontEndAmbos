@@ -245,10 +245,20 @@ export default function Navbar() {
 
       const socket = io(WS_URL, {
         auth: { token },
-        transports: ["websocket"],
+        // FIX: antes forzaba transports: ["websocket"], que intenta abrir el
+        // WS directo sin pasar por polling primero. En Render (sobre todo en
+        // plan free, que duerme el servicio) eso falla seguido — "WebSocket
+        // is closed before the connection is established". Dejamos que
+        // negocie polling → upgrade a websocket, igual que hace el chat.
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
       });
 
       announcementSocketRef.current = socket;
+
+      socket.on("connect_error", (err) => {
+        console.warn("[navbar-socket] connect_error:", err.message);
+      });
 
       socket.on("connect", () => {
         socket.emit("join_user_room", myId);
