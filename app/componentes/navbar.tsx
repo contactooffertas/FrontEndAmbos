@@ -29,6 +29,12 @@ const NAV_CATEGORIES = [
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+// Mismo servidor de sockets que usa el chat (app/chat/page.tsx -> WS_URL).
+// Antes acá se apuntaba a NEXT_PUBLIC_SOCKET_URL/localhost, un server distinto
+// al de Render donde el backend realmente emite los eventos -> por eso nunca
+// llegaban ni anuncios en vivo con certeza ni mensajes de chat.
+const WS_URL = "https://renderbackendconsocket.onrender.com";
+
 // VAPID public key — tiene que coincidir exactamente con la del backend
 const VAPID_PUBLIC_KEY = "BLR8fiu0VNED_-qHI0rOQn_UPEtJptD4wiYJXuBQxgBhFFRf_SvU54F95IBaBG86V-cv3wwZ4l_NlLD236io1rw";
 
@@ -90,6 +96,11 @@ export default function Navbar() {
   const shippedInitialized    = useRef(false);
   const announcementSocketRef = useRef<ReturnType<typeof import("socket.io-client")["io"]> | null>(null);
   const toastTimerRef         = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Ref de pathname para usar el valor actual dentro del socket sin tener
+  //    que reconectar el socket cada vez que cambia la ruta ─────────────────
+  const pathnameRef = useRef(pathname);
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
 
   useEffect(() => {
     setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
@@ -218,8 +229,9 @@ export default function Navbar() {
       .catch(() => {});
   }, [user]);
 
-  // ── Anuncios en vivo: escuchar por socket mientras la app está abierta ───
-  //    Estos SÍ son eventos nuevos → van a la lista Y disparan el toast.
+  // ── Eventos en vivo mientras la app está abierta: anuncios del admin Y
+  //    mensajes nuevos de chat. Mismo socket (mismo server que usa el chat)
+  //    para que ambos lleguen sin tener que salir/volver a entrar a una página.
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
@@ -229,8 +241,9 @@ export default function Navbar() {
     (async () => {
       const { io } = await import("socket.io-client");
       const token = localStorage.getItem("marketplace_token");
+      const myId  = (user as any)?._id || (user as any)?.id;
 
-      const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000", {
+      const socket = io(WS_URL, {
         auth: { token },
         transports: ["websocket"],
       });
@@ -238,7 +251,7 @@ export default function Navbar() {
       announcementSocketRef.current = socket;
 
       socket.on("connect", () => {
-        socket.emit("join_user_room", (user as any)?._id || (user as any)?.id);
+        socket.emit("join_user_room", myId);
       });
 
       socket.on("new_announcement", (payload: any) => {
@@ -256,6 +269,29 @@ export default function Navbar() {
           return [notif, ...prev].slice(0, 20);
         });
         setToastNotif(notif);
+      });
+
+      // ── Mensaje de chat nuevo → va a la campanita en tiempo real ─────────
+      socket.on("new_message", (msg: any) => {
+        const senderId = msg?.sender?._id || msg?.sender;
+        if (!senderId || senderId === myId) return; // no notificarme mis propios mensajes
+
+        const notif: PushNotif = {
+          id:         msg._id || `${Date.now()}-${Math.random()}`,
+          title:      `Mensaje de ${msg?.sender?.name || "un usuario"}`,
+          body:       msg?.text || (msg?.image ? "📷 Imagen" : ""),
+          url:        msg?.conversation ? `/chat?conversationId=${msg.conversation}` : "/chat",
+          receivedAt: Date.now(),
+        };
+
+        setPushNotifs(prev => {
+          if (prev.some(p => p.id === notif.id)) return prev;
+          return [notif, ...prev].slice(0, 20);
+        });
+
+        // Si ya está en /chat, esa página ya muestra el mensaje y suena la
+        // notificación propia — evitamos duplicar el toast acá.
+        if (!pathnameRef.current.startsWith("/chat")) setToastNotif(notif);
       });
 
       cleanup = () => {
