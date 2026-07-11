@@ -409,8 +409,12 @@ function ChatPageInner() {
   const fileRef        = useRef<HTMLInputElement | null>(null);
   const typingTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeIdRef    = useRef<string | null>(null);
+  // Ref con la lista de conversaciones actualizada, para poder resolver el id
+  // del "otro" participante dentro del handler de socket sin recrear el efecto
+  const conversationsRef = useRef<Conversation[]>([]);
 
   useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
 
   const activeConv = conversations.find((c) => c._id === activeId) ?? null;
   const effectiveConv =
@@ -557,13 +561,22 @@ function ChatPageInner() {
     });
 
     socket.on("messages_read", ({ conversationId }: { conversationId: string }) => {
-      if (conversationId === activeIdRef.current)
-        setMessages((prev) =>
-          prev.map((m) => ({
-            ...m,
-            readBy: m.readBy.includes(userId) ? m.readBy : [...m.readBy, userId],
-          }))
-        );
+      if (conversationId !== activeIdRef.current) return;
+      // FIX: antes se agregaba el propio userId al readBy de cada mensaje.
+      // Para los mensajes que YO mandé, mi id ya estaba ahí desde que los
+      // creé (readBy: [me] en el backend) → la condición nunca agregaba
+      // nada y el remitente jamás veía la tilde azul en vivo, solo al
+      // recargar (porque ahí el fetch trae el readBy real de la base).
+      // Lo correcto es agregar el id del OTRO participante, que es quien
+      // efectivamente acaba de leer la conversación.
+      const conv    = conversationsRef.current.find((c) => c._id === conversationId);
+      const otherId = conv?.other?._id;
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (!otherId || m.readBy.includes(otherId)) return m;
+          return { ...m, readBy: [...m.readBy, otherId] };
+        })
+      );
     });
 
     socket.on("typing", ({ conversationId }: { conversationId: string }) => {
