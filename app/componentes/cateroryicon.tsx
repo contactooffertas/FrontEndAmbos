@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 // Tus 3 webp que están en app/componentes/icons/
-import HomeWebp from "./icons/Home.webp";
+import HomeWebp from "./icons/Home.png";
 import ShirtWebp from "./icons/Shirt.webp";
 import MonitorWebp from "./icons/Monitor.webp";
 
