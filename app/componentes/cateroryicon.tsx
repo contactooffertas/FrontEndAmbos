@@ -17,8 +17,8 @@ import ShoppingCartWebp from "./icons/ShoppingCart.png";
 import BellWebp from "./icons/Bell.png";
 import DumbbellWebp from "./icons/Dumbbell.png";
 import HeartWebp from "./icons/Heart.png";
-import Gift from "./icons/Gift.png";
-import Cart from "./icons/Cart.png";
+import GiftWebp from "./icons/Gift.png";
+import CartWebp from "./icons/Cart.png";
 
 type LucideIcon = React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
