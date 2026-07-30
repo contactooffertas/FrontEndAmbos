@@ -8,16 +8,20 @@ import {
   Trash2, Pencil, Plus, X,
 } from "lucide-react";
 
-interface CategoryIconProps extends ComponentProps<"svg"> {
+// Props que usa tu componente
+interface CategoryIconProps {
   name: string;
   size?: number | string;
   strokeWidth?: number | string;
+  absoluteStrokeWidth?: boolean;
   color?: string;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-type IconComponent = (props: any) => React.ReactElement | null;
+// Fix: Acepta cualquier cosa que devuelva React (lucide + img)
+type AnyIconComponent = React.ComponentType<any>;
 
-// Tu icono custom que pesa igual que lucide
 const ImgIcon = ({ src, size = 14, style,...rest }: any) => (
   <img
     src={src}
@@ -29,17 +33,17 @@ const ImgIcon = ({ src, size = 14, style,...rest }: any) => (
   />
 );
 
-const ICON_MAP: Record<string, IconComponent> = {
-  // Lucide que quedan
+const ICON_MAP: Record<string, AnyIconComponent> = {
+  // Lucide
   Dumbbell, ShoppingBag, Heart, Car, Gift,
   BookOpen, PawPrint, Tag, MapPin, Bell, CheckCircle, Package, Star,
   Search, User, LogOut, Store, ShoppingCart, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
 
-  // REEMPLAZOS - ahora apuntan a tus webp
-  Home: (p) => <ImgIcon src="/icons/Home.webp" {...p} />,
-  Shirt: (p) => <ImgIcon src="/icons/Shirt.webp" {...p} />,
-  Monitor: (p) => <ImgIcon src="/icons/Monitor.webp" {...p} />,
+  // CUSTOM WEBP - reemplazan a Home, Shirt, Monitor
+  Home: (p: any) => <ImgIcon src="/icons/Home.webp" {...p} />,
+  Shirt: (p: any) => <ImgIcon src="/icons/Shirt.webp" {...p} />,
+  Monitor: (p: any) => <ImgIcon src="/icons/Monitor.webp" {...p} />,
 };
 
 const CategoryIcon = memo(function CategoryIcon({ name,...props }: CategoryIconProps) {
