@@ -3,8 +3,8 @@
 import React, { memo } from "react";
 import {
   Dumbbell, ShoppingBag, Heart, Car, Gift,
-  BookOpen, PawPrint, Tag, MapPin, Bell, CheckCircle, Package, Star,
-  Search, User, LogOut, Store, ShoppingCart, ChevronDown, ArrowRight,
+  BookOpen, PawPrint, Tag, MapPin, CheckCircle, Package, Star,
+  Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
   type LucideProps,
 } from "lucide-react";
@@ -13,6 +13,8 @@ import {
 import HomeWebp from "./icons/Home.png";
 import ShirtWebp from "./icons/Shirt.png";
 import MonitorWebp from "./icons/Monitor.png";
+import ShoppingCartWebp from "./icons/ShoppingCart.png";
+import BellWebp from "./icons/Bell.png";
 
 type LucideIcon = React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
@@ -38,6 +40,8 @@ const CUSTOM_ICONS = {
   Home: HomeWebp,
   Shirt: ShirtWebp,
   Monitor: MonitorWebp,
+  ShoppingCart: ShoppingCartWebp,
+  Bell: BellWebp,
 } as const;
 
 const WebpIcon = ({ src, size = 24, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
