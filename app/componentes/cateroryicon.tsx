@@ -1,54 +1,63 @@
 "use client";
 // app/componentes/cateroryicon.tsx
-import React, { memo, type ComponentProps } from "react";
+import React, { memo } from "react";
 import {
   Dumbbell, ShoppingBag, Heart, Car, Gift,
   BookOpen, PawPrint, Tag, MapPin, Bell, CheckCircle, Package, Star,
   Search, User, LogOut, Store, ShoppingCart, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
+  type LucideProps,
 } from "lucide-react";
 
-// Props que usa tu componente
+// Tus 3 webp que están en app/componentes/icons/
+import HomeWebp from "./icons/Home.webp";
+import ShirtWebp from "./icons/Shirt.webp";
+import MonitorWebp from "./icons/Monitor.webp";
+
+type LucideIcon = React.ForwardRefExoticComponent<
+  Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
+>;
+
 interface CategoryIconProps {
   name: string;
   size?: number | string;
   strokeWidth?: number | string;
-  absoluteStrokeWidth?: boolean;
   color?: string;
   className?: string;
   style?: React.CSSProperties;
 }
 
-// Fix: Acepta cualquier cosa que devuelva React (lucide + img)
-type AnyIconComponent = React.ComponentType<any>;
-
-const ImgIcon = ({ src, size = 14, style,...rest }: any) => (
-  <img
-    src={src}
-    alt=""
-    width={Number(size)}
-    height={Number(size)}
-    style={{ objectFit: "contain", display: "block", flexShrink: 0,...style }}
-    {...rest}
-  />
-);
-
-const ICON_MAP: Record<string, AnyIconComponent> = {
-  // Lucide
+const LUCIDE_ICONS = {
   Dumbbell, ShoppingBag, Heart, Car, Gift,
   BookOpen, PawPrint, Tag, MapPin, Bell, CheckCircle, Package, Star,
   Search, User, LogOut, Store, ShoppingCart, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
+} as const satisfies Record<string, LucideIcon>;
 
-  // CUSTOM WEBP - reemplazan a Home, Shirt, Monitor
-  Home: (p: any) => <ImgIcon src="./icons/Home.webp" {...p} />,
-  Shirt: (p: any) => <ImgIcon src="./icons/Shirt.webp" {...p} />,
-  Monitor: (p: any) => <ImgIcon src="./icons/Monitor.webp" {...p} />,
-};
+const CUSTOM_ICONS = {
+  Home: HomeWebp,
+  Shirt: ShirtWebp,
+  Monitor: MonitorWebp,
+} as const;
 
-const CategoryIcon = memo(function CategoryIcon({ name,...props }: CategoryIconProps) {
-  const Icon = ICON_MAP[name]?? Package;
-  return <Icon {...props} />;
+const WebpIcon = ({ src, size = 14, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
+  <img
+    src={src.src}
+    alt=""
+    width={Number(size)}
+    height={Number(size)}
+    style={{ objectFit: "contain", display: "block", flexShrink: 0, ...style }}
+  />
+);
+
+const CategoryIcon = memo(function CategoryIcon({ name, size = 14, style, ...props }: CategoryIconProps) {
+  if (name in CUSTOM_ICONS) {
+    const src = CUSTOM_ICONS[name as keyof typeof CUSTOM_ICONS];
+    return <WebpIcon src={src as { src: string }} size={size} style={style} />;
+  }
+
+  const LucideComp = LUCIDE_ICONS[name as keyof typeof LUCIDE_ICONS] ?? Package;
+  return <LucideComp size={Number(size)} style={style} {...props} />;
 });
 
 CategoryIcon.displayName = "CategoryIcon";
