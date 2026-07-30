@@ -40,7 +40,7 @@ const CUSTOM_ICONS = {
   Monitor: MonitorWebp,
 } as const;
 
-const WebpIcon = ({ src, size = 14, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
+const WebpIcon = ({ src, size = 24, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
   <img
     src={src.src}
     alt=""
@@ -50,7 +50,7 @@ const WebpIcon = ({ src, size = 14, style }: { src: { src: string }; size?: numb
   />
 );
 
-const CategoryIcon = memo(function CategoryIcon({ name, size = 14, style, ...props }: CategoryIconProps) {
+const CategoryIcon = memo(function CategoryIcon({ name, size = 24, style, ...props }: CategoryIconProps) {
   if (name in CUSTOM_ICONS) {
     const src = CUSTOM_ICONS[name as keyof typeof CUSTOM_ICONS];
     return <WebpIcon src={src as { src: string }} size={size} style={style} />;
