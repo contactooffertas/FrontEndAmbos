@@ -41,9 +41,9 @@ const ICON_MAP: Record<string, AnyIconComponent> = {
   Trash2, Pencil, Plus, X,
 
   // CUSTOM WEBP - reemplazan a Home, Shirt, Monitor
-  Home: (p: any) => <ImgIcon src="/icons/Home.webp" {...p} />,
-  Shirt: (p: any) => <ImgIcon src="/icons/Shirt.webp" {...p} />,
-  Monitor: (p: any) => <ImgIcon src="/icons/Monitor.webp" {...p} />,
+  Home: (p: any) => <ImgIcon src="./icons/Home.webp" {...p} />,
+  Shirt: (p: any) => <ImgIcon src="./icons/Shirt.webp" {...p} />,
+  Monitor: (p: any) => <ImgIcon src="./icons/Monitor.webp" {...p} />,
 };
 
 const CategoryIcon = memo(function CategoryIcon({ name,...props }: CategoryIconProps) {
