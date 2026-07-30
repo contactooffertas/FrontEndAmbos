@@ -11,8 +11,8 @@ import {
 
 // Tus 3 webp que están en app/componentes/icons/
 import HomeWebp from "./icons/Home.png";
-import ShirtWebp from "./icons/Shirt.webp";
-import MonitorWebp from "./icons/Monitor.webp";
+import ShirtWebp from "./icons/Shirt.png";
+import MonitorWebp from "./icons/Monitor.png";
 
 type LucideIcon = React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
