@@ -919,7 +919,6 @@
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════════════
    OFERTAS FLASH — pegar este bloque al final de app/styles/home.css
    ══════════════════════════════════════════════════════════════════════ */
@@ -962,6 +961,7 @@
 /* ── Carrusel horizontal (no es grilla rígida por fila) ── */
 .flash-grid {
   display: flex;
+  align-items: stretch;
   gap: 0.9rem;
   overflow-x: auto;
   padding: 0.35rem 0.15rem 1.1rem;
@@ -982,10 +982,13 @@
   background: transparent;
 }
 
-/* ── Tarjeta de oferta flash ── */
+/* ── Tarjeta de oferta flash ──
+   Estructura: .flash-card (columna) > .flash-card-link (contenido clickeable)
+   + .flash-card-footer (botón, siempre visible, con su propio padding para
+   no quedar pegado ni recortado contra el border-radius de la card). ── */
 .flash-card {
   position: relative;
-  flex: 0 0 210px;
+  flex: 0 0 216px;
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
@@ -994,8 +997,6 @@
   border: 1.5px solid rgba(245, 158, 11, 0.35);
   box-shadow: 0 2px 10px rgba(245, 158, 11, 0.12);
   overflow: hidden;
-  text-decoration: none;
-  color: inherit;
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
@@ -1014,6 +1015,7 @@
   transition: opacity 0.25s ease;
   animation: flashBorderShift 3s linear infinite;
   pointer-events: none;
+  z-index: 1;
 }
 
 @keyframes flashBorderShift {
@@ -1029,6 +1031,13 @@
 
 .flash-card:hover::before {
   opacity: 1;
+}
+
+.flash-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  position: relative;
 }
 
 .flash-card-badge {
@@ -1055,6 +1064,8 @@
   50% { transform: scale(1.06); }
 }
 
+/* Reloj con cuenta regresiva real (mm:ss), visible siempre; se pone rojo
+   y pulsa cuando quedan 5 minutos o menos para transmitir urgencia. */
 .flash-card-timer {
   position: absolute;
   top: 8px;
@@ -1068,8 +1079,15 @@
   color: #fff;
   font-size: 0.63rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   padding: 3px 7px;
   border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.flash-card-timer.urgent {
+  background: rgba(239, 68, 68, 0.92);
+  animation: flashBadgeBounce 1s ease-in-out infinite;
 }
 
 .flash-card-img-wrap {
@@ -1092,7 +1110,7 @@
 }
 
 .flash-card-body {
-  padding: 0.65rem 0.75rem 0.85rem;
+  padding: 0.65rem 0.75rem 0.35rem;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -1142,6 +1160,44 @@
   text-decoration: line-through;
 }
 
+/* ── Footer del botón: separado del contenido clickeable, con padding
+   propio para que el botón nunca quede recortado ni pegado al borde. ── */
+.flash-card-footer {
+  padding: 0.35rem 0.7rem 0.7rem;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.flash-card-cart-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(249, 115, 22, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.flash-card-cart-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.45);
+  filter: brightness(1.05);
+}
+
+.flash-card-cart-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.35);
+}
+
 /* ── Badge flash dentro de las tarjetas del grid normal de productos ── */
 .product-flash-badge {
   position: absolute;
@@ -1180,13 +1236,17 @@
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .flash-card {
-    flex-basis: 165px;
+    flex-basis: 172px;
   }
   .flash-section-icon {
     width: 30px;
     height: 30px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   VENTANA FLOTANTE DE OFERTAS FLASH
+   ══════════════════════════════════════════════════════════════════════ */
 
 .flash-overlay {
   position: fixed;
@@ -1234,7 +1294,7 @@
 }
 
 .flash-overlay-card {
-  flex: 0 0 84px;
+  flex: 0 0 92px;
   display: flex;
   flex-direction: column;
 }
@@ -1245,8 +1305,8 @@
 }
 
 .flash-overlay-card-img {
-  width: 84px;
-  height: 84px;
+  width: 92px;
+  height: 92px;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -1274,6 +1334,9 @@
   font-size: 0.55rem;
   color: #9ca3af;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .flash-overlay-card-name {
@@ -1284,6 +1347,30 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Reloj con cuenta regresiva real dentro de la ventana flotante — es el
+   agregado principal pedido: aprovecha mejor el espacio y suma urgencia. */
+.flash-overlay-card-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 0.56rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 5px;
+  border-radius: 999px;
+  margin-bottom: 0.25rem;
+}
+
+.flash-overlay-card-timer.urgent {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fca5a5;
+  animation: flashBadgeBounce 1s ease-in-out infinite;
 }
 
 .flash-overlay-card-prices {
@@ -1311,7 +1398,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  padding: 0.3rem;
+  padding: 0.32rem;
   border: none;
   border-radius: 6px;
   background: #f97316;
@@ -1319,6 +1406,12 @@
   font-size: 0.62rem;
   font-weight: 700;
   cursor: pointer;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+
+.flash-overlay-card-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 
 .flash-overlay-added-toast {
