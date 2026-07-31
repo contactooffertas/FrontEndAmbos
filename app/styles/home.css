@@ -236,18 +236,6 @@
   margin-top: 0.25rem;
 }
 
-.section-link {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  white-space: nowrap;
-  transition: gap 0.2s;
-}
-.section-link:hover { gap: 0.6rem; }
-
 /* ── Category Cards ── */
 .categories-grid {
   display: grid;
@@ -391,12 +379,6 @@
 /* ═══════════════════════════════════════════════════════
    BUSINESS CARDS — foto como banner prominente
    ═══════════════════════════════════════════════════════ */
-.businesses-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
-}
-
 .biz-card {
   background: white;
   border-radius: 18px;
@@ -558,21 +540,6 @@
   margin-top: auto;
 }
 
-.biz-card-follow-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding: 0.5rem;
-  border-radius: 9px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s;
-  font-family: inherit;
-}
-
 .biz-card-visit-btn {
   flex: 1;
   display: flex;
@@ -641,26 +608,6 @@
   background: rgba(249, 115, 22, 0.18);
   border-color: rgba(249, 115, 22, 0.6);
   transform: scale(1.08);
-}
-
-.fbs-ver-todos-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0.9rem;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: #fff;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.2s;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
-}
-.fbs-ver-todos-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
 }
 
 .featured-biz-slider__track {
@@ -788,18 +735,6 @@
 .banner .btn-white { background: white; color: var(--primary); font-weight: 700; flex-shrink: 0; }
 .banner .btn-white:hover { background: var(--primary-light); }
 
-/* ── Skeleton ── */
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton 1.4s infinite;
-  border-radius: 8px;
-}
-@keyframes skeleton {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 /* ══════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════ */
@@ -884,7 +819,6 @@
     font-size: 0.55rem;
   }
 
-  .businesses-grid { grid-template-columns: 1fr; }
   .biz-card-banner { height: 200px; }
 
   .featured-biz-slider__track { grid-template-columns: 1fr; }
@@ -920,10 +854,9 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   OFERTAS FLASH — pegar este bloque al final de app/styles/home.css
+   OFERTAS FLASH — grilla/carrusel dentro de la home
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ── Sección ── */
 .flash-section {
   position: relative;
 }
@@ -983,9 +916,8 @@
 }
 
 /* ── Tarjeta de oferta flash ──
-   Estructura: .flash-card (columna) > .flash-card-link (contenido clickeable)
-   + .flash-card-footer (botón, siempre visible, con su propio padding para
-   no quedar pegado ni recortado contra el border-radius de la card). ── */
+   Estructura: .flash-card (columna) > .flash-card-content (contenido clickeable)
+   + .flash-card-footer (botón, siempre visible, con su propio padding). ── */
 .flash-card {
   position: relative;
   flex: 0 0 216px;
@@ -1033,10 +965,9 @@
   opacity: 1;
 }
 
-.flash-card-link {
+.flash-card-content {
   display: block;
   color: inherit;
-  text-decoration: none;
   position: relative;
 }
 
@@ -1233,7 +1164,7 @@
   color: #ea580c;
 }
 
-/* ── Responsive ── */
+/* ── Responsive tarjetas flash ── */
 @media (max-width: 600px) {
   .flash-card {
     flex-basis: 172px;
@@ -1245,7 +1176,9 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   VENTANA FLOTANTE DE OFERTAS FLASH
+   VENTANA FLOTANTE DE OFERTAS FLASH (widget compacto, no gigante)
+   El componente aplica algunos estilos inline; usamos !important en los
+   puntos justos para forzar un tamaño contenido tanto en PC como en mobile.
    ══════════════════════════════════════════════════════════════════════ */
 
 .flash-overlay {
@@ -1253,20 +1186,26 @@
   bottom: 1.25rem;
   right: 1.25rem;
   z-index: 60;
-  width: 300px;
-  background: #18181b;
-  border: 1px solid rgba(250, 204, 21, 0.35);
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  width: 340px !important;
+  max-width: calc(100vw - 2rem);
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  padding: 0.6rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.4rem !important;
+  box-sizing: border-box !important;
 }
 
 .flash-overlay-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.55rem 0.75rem;
-  background: linear-gradient(90deg, #f59e0b, #f97316);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 0.25rem !important;
+  background: none !important;
 }
 
 .flash-overlay-title {
@@ -1274,166 +1213,190 @@
   align-items: center;
   gap: 0.3rem;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.78rem !important;
   font-weight: 800;
 }
 
 .flash-overlay-close {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.2) !important;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.7rem !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50%;
 }
 
-.flash-overlay-track {
+/* Fila con flechas + slide, contenida */
+.flash-overlay-body {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.flash-overlay-nav-btn {
+  width: 26px !important;
+  height: 26px !important;
+  flex-shrink: 0 !important;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
   display: flex;
-  gap: 0.5rem;
-  padding: 0.65rem;
-  overflow-x: auto;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
+.flash-overlay-slide {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.flash-overlay-dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding-bottom: 2px;
+}
+
+.flash-overlay-dot {
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+
+/* Tarjeta interna: fila compacta imagen + info + botón (antes quedaba en
+   columna por una regla vieja, causando que el overlay se viera gigante) */
 .flash-overlay-card {
-  flex: 0 0 92px;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+  border-radius: 12px !important;
+  padding: 0.5rem !important;
+  box-sizing: border-box !important;
 }
 
-.flash-overlay-card-img-link {
-  position: relative;
-  display: block;
+.flash-overlay-card-media {
+  position: relative !important;
+  width: 60px !important;
+  height: 60px !important;
+  flex-shrink: 0 !important;
 }
 
 .flash-overlay-card-img {
-  width: 92px;
-  height: 92px;
-  object-fit: cover;
-  border-radius: 8px;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+  display: block;
 }
 
 .flash-overlay-card-badge {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  background: #111;
-  color: #facc15;
-  font-size: 0.55rem;
-  font-weight: 800;
-  padding: 1px 4px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
+  top: 2px !important;
+  left: 2px !important;
+  padding: 1px 4px !important;
+  border-radius: 4px !important;
+  font-size: 0.52rem !important;
+  gap: 1px !important;
 }
 
 .flash-overlay-card-body {
-  margin-top: 0.3rem;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.1rem !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
 }
 
 .flash-overlay-card-biz {
-  font-size: 0.55rem;
-  color: #9ca3af;
-  margin: 0;
+  font-size: 0.6rem !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .flash-overlay-card-name {
-  font-size: 0.65rem;
-  color: #f4f4f5;
-  margin: 0.1rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 0.76rem !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
-/* Reloj con cuenta regresiva real dentro de la ventana flotante — es el
-   agregado principal pedido: aprovecha mejor el espacio y suma urgencia. */
 .flash-overlay-card-timer {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(245, 158, 11, 0.16);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
-  font-size: 0.56rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  padding: 1px 5px;
-  border-radius: 999px;
-  margin-bottom: 0.25rem;
-}
-
-.flash-overlay-card-timer.urgent {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: rgba(239, 68, 68, 0.55);
-  color: #fca5a5;
-  animation: flashBadgeBounce 1s ease-in-out infinite;
+  font-size: 0.6rem !important;
+  gap: 2px !important;
 }
 
 .flash-overlay-card-prices {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
+  gap: 0.3rem !important;
+  margin-top: 0.1rem !important;
 }
 
 .flash-overlay-card-final {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #fbbf24;
+  font-size: 0.9rem !important;
 }
 
 .flash-overlay-card-orig {
-  font-size: 0.6rem;
-  color: #6b7280;
-  text-decoration: line-through;
+  font-size: 0.66rem !important;
 }
 
 .flash-overlay-card-btn {
-  margin-top: 0.3rem;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.32rem;
-  border: none;
-  border-radius: 6px;
-  background: #f97316;
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: filter 0.18s ease, transform 0.18s ease;
-}
-
-.flash-overlay-card-btn:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+  padding: 0.4rem 0.55rem !important;
+  font-size: 0.66rem !important;
+  border-radius: 8px !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
 }
 
 .flash-overlay-added-toast {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  background: rgba(34, 197, 94, 0.95);
-  color: #fff;
-  font-size: 0.5rem;
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: 4px;
   z-index: 3;
+  font-size: 0.52rem !important;
+  padding: 1px 4px !important;
+  border-radius: 5px !important;
 }
 
-@media (max-width: 480px) {
+/* ── Responsive del overlay: en mobile queda como bottom sheet angosto,
+   nunca a lo ancho de toda la pantalla ── */
+@media (max-width: 600px) {
   .flash-overlay {
-    width: calc(100vw - 2rem);
-    right: 1rem;
-    left: 1rem;
+    width: calc(100vw - 1.5rem) !important;
+    max-width: 320px !important;
+    right: 0.75rem !important;
+    bottom: 0.75rem !important;
+  }
+  .flash-overlay-card-media {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  .flash-overlay-card-name {
+    font-size: 0.7rem !important;
+  }
+  .flash-overlay-card-final {
+    font-size: 0.82rem !important;
+  }
+  .flash-overlay-card-btn {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.62rem !important;
   }
 }
-.flash-overlay-card--full {
-  width: 100%;
+
+@media (max-width: 400px) {
+  .flash-overlay {
+    width: calc(100vw - 1.25rem) !important;
+    max-width: 280px !important;
+    right: 0.6rem !important;
+    bottom: 0.6rem !important;
+  }
+  .flash-overlay-card-media {
+    width: 46px !important;
+    height: 46px !important;
+  }
 }
