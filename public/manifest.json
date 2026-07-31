@@ -1,6 +1,6 @@
 {
-  "name": "Offertas - Las Mejores Ofertas",
-  "short_name": "Offertas",
+  "name": "Mercado Rosario - Las Mejores Ofertas",
+  "short_name": "MR",
   "description": "Encuentra las mejores ofertas cerca tuyo en tiempo real",
   "start_url": "/",
   "scope": "/",
