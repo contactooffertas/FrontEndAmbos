@@ -36,7 +36,7 @@ interface CategoryIconProps {
 }
 
 const LUCIDE_ICONS = {
-  ShoppingBag,PawPrint, Tag, MapPin, CheckCircle, Package, Star,
+ Tag, MapPin, CheckCircle, Star,
   Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
 } as const satisfies Record<string, LucideIcon>;
@@ -52,6 +52,8 @@ const CUSTOM_ICONS = {
   Cart: CartWebp,
   Gift: GiftWebp,
   BookOpen: BookOpenWebp,
+  ShoppingBag: ShoppingBagWebp,
+  PawPrint: PawPrintWebp,
 } as const;
 
 const WebpIcon = ({ src, size = 24, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
