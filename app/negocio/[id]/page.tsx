@@ -11,7 +11,7 @@ import {
   MapPin, Package, Star, CheckCircle, ShoppingBag,
   UserPlus, MessageCircle, Heart, Tag, ShoppingCart,
   ArrowLeft, Share2, Users, TrendingUp, ChevronLeft, ChevronRight, Navigation,
-  Locate, LocateOff, RefreshCw,
+  Locate, LocateOff, RefreshCw, Phone,
 } from "lucide-react";
 import "../../styles/negocioId.css";
 
@@ -52,6 +52,26 @@ function getRankInfo(rating: number, total: number) {
   if (rating >= 4.0) return { label: "⭐ Muy valorado",     color: "#065f46", bg: "#d1fae5" };
   if (rating >= 3.0) return { label: "👍 Buena reputación", color: "#1e40af", bg: "#dbeafe" };
   return { label: "En desarrollo", color: "#6b7280", bg: "#f3f4f6" };
+}
+
+// Formatea un teléfono argentino (o cualquier formato local) al estándar
+// que espera wa.me: código de país + 9 (celular AR) + número, solo dígitos.
+function formatPhoneForWhatsApp(phone?: string): string | null {
+  if (!phone) return null;
+  let digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+
+  if (digits.startsWith("54")) {
+    if (!digits.startsWith("549")) {
+      digits = "549" + digits.slice(2);
+    }
+    return digits;
+  }
+
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  if (digits.startsWith("15")) digits = digits.slice(2);
+
+  return `549${digits}`;
 }
 
 function DiscountBadge({ discount }: { discount?: number }) {
@@ -114,10 +134,34 @@ function useIsMobile(breakpoint = 640) {
   return isMobile;
 }
 
-// ── Hook GPS dinámico ────────────────────────────────────────────────────────
+// ── Config de throttling del GPS ────────────────────────────────────────────
+// Para un marketplace no hace falta precisión "tipo Uber" en tiempo real.
+// Estos valores evitan re-fetches constantes a productos (y a Google Maps)
+// cuando hay muchos usuarios conectados a la vez.
+const GPS_MIN_INTERVAL_MS = 30_000; // no aceptar una nueva posición antes de 30s
+const GPS_MIN_DISTANCE_M  = 100;    // ni aunque haya pasado el tiempo, si no se movió ~100m
+
+// Distancia entre dos coords en metros (fórmula haversine)
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── Hook GPS dinámico (throttled) ───────────────────────────────────────────
 /**
- * Usa la geolocalización del browser en tiempo real.
+ * Usa la geolocalización del browser, pero throttleada:
  * - Al montar: pide GPS automáticamente.
+ * - Solo actualiza el estado (y dispara re-fetch de productos) si pasó
+ *   GPS_MIN_INTERVAL_MS Y el usuario se movió más de GPS_MIN_DISTANCE_M.
+ * - enableHighAccuracy: false → usa red/wifi en vez de GPS puro, más liviano
+ *   y no fuerza actualizaciones constantes en mobile.
  * - Retorna: coords actuales, estado y función para refrescar manualmente.
  * - Fallback: si el user rechaza, devuelve status "denied" para que el
  *   componente use la dirección guardada del perfil.
@@ -127,7 +171,8 @@ function useDynamicGps() {
     lat: null, lng: null, status: "idle", updatedAt: null,
   });
 
-  const watchRef = useRef<number | null>(null);
+  const watchRef        = useRef<number | null>(null);
+  const lastAcceptedRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
 
   const startWatch = useCallback(() => {
     if (!navigator.geolocation) {
@@ -137,23 +182,38 @@ function useDynamicGps() {
 
     setGps(prev => ({ ...prev, status: "loading" }));
 
-    // watchPosition → se actualiza cada vez que el user se mueve (igual que Uber)
     watchRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        setGps({
-          lat:       pos.coords.latitude,
-          lng:       pos.coords.longitude,
-          status:    "ok",
-          updatedAt: new Date(),
-        });
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const now  = Date.now();
+        const last = lastAcceptedRef.current;
+
+        // Primera lectura: siempre se acepta
+        if (!last) {
+          lastAcceptedRef.current = { lat, lng, time: now };
+          setGps({ lat, lng, status: "ok", updatedAt: new Date() });
+          return;
+        }
+
+        const elapsed = now - last.time;
+        const moved   = distanceMeters(last.lat, last.lng, lat, lng);
+
+        // Throttle: ignora la lectura si no pasó el tiempo mínimo,
+        // o si pasó el tiempo pero no se movió lo suficiente
+        if (elapsed < GPS_MIN_INTERVAL_MS || moved < GPS_MIN_DISTANCE_M) {
+          return;
+        }
+
+        lastAcceptedRef.current = { lat, lng, time: now };
+        setGps({ lat, lng, status: "ok", updatedAt: new Date() });
       },
       (err) => {
         const status: GpsStatus = err.code === 1 ? "denied" : "error";
         setGps(prev => ({ ...prev, status, lat: null, lng: null }));
       },
       {
-        enableHighAccuracy: true,
-        maximumAge:         10_000,   // acepta coords con hasta 10s de antigüedad
+        enableHighAccuracy: false,    // red/wifi, no GPS de alta precisión
+        maximumAge:         30_000,   // acepta coords cacheadas hasta 30s
         timeout:            15_000,
       }
     );
@@ -168,10 +228,11 @@ function useDynamicGps() {
     };
   }, [startWatch]);
 
-  // Refresh manual: detiene el watch anterior y arranca uno nuevo
+  // Refresh manual: resetea el throttle para que la próxima lectura entre sí o sí
   const refresh = useCallback(() => {
     if (watchRef.current !== null)
       navigator.geolocation.clearWatch(watchRef.current);
+    lastAcceptedRef.current = null;
     startWatch();
   }, [startWatch]);
 
@@ -429,6 +490,18 @@ export default function NegocioPublicoPage() {
     }
   };
 
+  // ── Contacto directo por WhatsApp ─────────────────────────────────────────
+  const handleWhatsapp = () => {
+    const waPhone = formatPhoneForWhatsApp(business?.phone);
+    if (!waPhone) {
+      toast("error", "Este negocio no tiene WhatsApp cargado");
+      return;
+    }
+    const message = "Vi tu negocio en MercadoRosario, la web de Rosario, quiero saber qué productos más tenés";
+    const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const handleAddToCart = (product: Product) => {
     if (!user) { requireAuth(); return; }
     addToCart({
@@ -459,6 +532,7 @@ export default function NegocioPublicoPage() {
   const rankInfo            = getRankInfo(social.rating, social.totalRatings);
   const businessAddress     = business?.address || business?.city || "Dirección no disponible";
   const hasVerifiedLocation = !!(business?.location?.coordinates?.length);
+  const hasWhatsapp         = !!formatPhoneForWhatsApp(business?.phone);
 
   if (loading) return (
     <MainLayout>
@@ -588,6 +662,21 @@ export default function NegocioPublicoPage() {
                   : <><MessageCircle size={15} /> Contactar</>
                 }
               </button>
+
+              {hasWhatsapp && (
+                <button
+                  className="nid-social-btn"
+                  onClick={handleWhatsapp}
+                  style={{
+                    border:     "1.5px solid #25D366",
+                    background: "rgba(37,211,102,0.08)",
+                    color:      "#128C4A",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Phone size={15} /> WhatsApp
+                </button>
+              )}
             </div>
 
             <div className="nid-star-wrap">
