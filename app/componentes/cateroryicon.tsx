@@ -2,7 +2,7 @@
 // app/componentes/cateroryicon.tsx
 import React, { memo } from "react";
 import {
-  Tag, MapPin, CheckCircle, Star,
+  Package,Tag, MapPin, CheckCircle, Star,
   Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
   type LucideProps,
