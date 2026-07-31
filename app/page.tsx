@@ -26,11 +26,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import "../app/styles/home.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
+const BACKEND_ORIGIN = "https://new-backend-lovat.vercel.app";
 
 interface Product {
   _id: string;
@@ -90,6 +92,11 @@ const imgUrl = (url?: string) =>
 const logoUrl = (name: string, url?: string) =>
   url ||
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=300&background=f97316&color=fff`;
+
+// URL linda de compartir: https://new-backend-lovat.vercel.app/p/<id>
+// El backend arma ahí la preview (imagen + nombre + precio) y redirige
+// automáticamente a /negocio/<id>?p=<productId> resaltando el producto.
+const shareUrlFor = (productId: string) => `${BACKEND_ORIGIN}/p/${productId}`;
 
 // ─── Stars ───────────────────────────────────────────────────────────────────
 function PartialStar({ fill, size = 14 }: { fill: number; size?: number }) {
@@ -302,6 +309,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
 function ProductCard({ product, currentUserId }: { product: Product; currentUserId?: string }) {
   const { addToCart } = useCart();
   const [liked, setLiked] = useState(false);
+  const [justShared, setJustShared] = useState(false);
 
   const isFeatured = product._isFeatured === true;
   const isOutOfRange = product._outOfRange === true;
@@ -338,6 +346,37 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
     setLiked((v) => !v);
   };
 
+  // ── Compartir producto ────────────────────────────────────────────────────
+  // Usa la URL "linda" del backend (/p/<id>) que arma una preview con
+  // imagen + nombre + precio (Open Graph) y redirige al negocio resaltando
+  // este producto en particular.
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = shareUrlFor(product._id);
+    const shareData = {
+      title: product.name,
+      text: `${product.name} · $${product.price.toLocaleString()}`,
+      url,
+    };
+    if (typeof navigator !== "undefined" && (navigator as any).share) {
+      try {
+        await (navigator as any).share(shareData);
+      } catch {
+        /* usuario canceló el share nativo, no hacemos nada */
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setJustShared(true);
+      setTimeout(() => setJustShared(false), 1800);
+    } catch {
+      const Swal = (await import("sweetalert2")).default;
+      Swal.fire({ icon: "info", title: "Enlace para compartir", text: url });
+    }
+  };
+
   return (
     <div
       className="product-card"
@@ -356,6 +395,20 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
             {liked ? "♥" : "♡"}
           </span>
         </button>
+        <button
+          className="product-fav-btn product-fav-btn--always"
+          style={{ right: "2.6rem" }}
+          onClick={handleShare}
+          aria-label="Compartir producto"
+          title="Compartir"
+        >
+          <Share2 size={15} style={{ color: justShared ? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} />
+        </button>
+        {justShared && (
+          <span style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(34,197,94,0.95)", color: "#fff", fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px", borderRadius: 6, zIndex: 3 }}>
+            ¡Enlace copiado!
+          </span>
+        )}
       </div>
 
       {isFeatured && isOutOfRange && (
@@ -396,11 +449,19 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         <button className="btn btn-primary" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }} onClick={handleCart}>
           <ShoppingCart size={15} /> Agregar al carrito
         </button>
-        {bizId && (
-          <Link href={`/negocio/${bizId}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.38rem", borderRadius: "8px", border: "1.5px solid var(--border)", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, textDecoration: "none", transition: "all 0.2s" }}>
-            <Store size={13} style={{ marginRight: "0.25rem" }} /> Visitar negocio
-          </Link>
-        )}
+        <div style={{ display: "flex", gap: "0.4rem", width: "100%" }}>
+          {bizId && (
+            <Link href={`/negocio/${bizId}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.38rem", borderRadius: "8px", border: "1.5px solid var(--border)", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, textDecoration: "none", transition: "all 0.2s" }}>
+              <Store size={13} style={{ marginRight: "0.25rem" }} /> Visitar negocio
+            </Link>
+          )}
+          <button
+            onClick={handleShare}
+            style={{ flex: bizId ? undefined : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", padding: "0.38rem 0.7rem", borderRadius: "8px", border: "1.5px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, cursor: "pointer" }}
+          >
+            <Share2 size={13} /> Compartir
+          </button>
+        </div>
         <ReportModal
           targetType="product"
           targetId={product._id}
