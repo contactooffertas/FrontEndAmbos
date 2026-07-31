@@ -412,6 +412,9 @@ function FlashOffersSection({ products }: { products: Product[] }) {
           <FlashOfferCard key={p._id} product={p} />
         ))}
       </div>
+       <button className="btn btn-primary" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }} onClick={handleCart}>
+          <ShoppingCart size={15} /> Agregar al carrito
+        </button>
     </section>
   );
 }
