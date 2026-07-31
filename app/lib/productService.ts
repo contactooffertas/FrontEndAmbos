@@ -1,5 +1,4 @@
 // app/lib/productService.ts
-
 import {
   Laptop,
   Shirt,
@@ -26,7 +25,6 @@ function authHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-// Lee lat/lng del usuario desde localStorage (guardado por authContext)
 function getUserLocation(): { lat: number; lng: number; locationEnabled: boolean } | null {
   try {
     const raw = localStorage.getItem("marketplace_user");
@@ -39,6 +37,14 @@ function getUserLocation(): { lat: number; lng: number; locationEnabled: boolean
   } catch {
     return null;
   }
+}
+
+export interface FlashOffer {
+  active: boolean;
+  discount: number;
+  startAt: string | null;
+  endAt: string | null;
+  durationHours: number;
 }
 
 export interface Product {
@@ -55,6 +61,8 @@ export interface Product {
   imagePublicId?: string;
   businessId?: string;
   createdAt?: string;
+  flashOffer?: FlashOffer;
+  flashOfferSecondsLeft?: number;
 }
 
 export const CATEGORIES = [
@@ -83,11 +91,9 @@ export async function getPublicProducts(filters?: {
   search?: string;
 }): Promise<{ products: Product[] }> {
   const params = new URLSearchParams();
-
   if (filters?.category) params.set("category", filters.category);
   if (filters?.search)   params.set("search", filters.search);
 
-  // Adjuntar coordenadas del comprador si las tiene activadas
   const location = getUserLocation();
   if (location) {
     params.set("lat", location.lat.toString());
@@ -133,4 +139,27 @@ export async function deleteProduct(id: string): Promise<void> {
     headers: authHeaders(),
   });
   return handleResponse<void>(res);
+}
+
+// ── Oferta Flash ─────────────────────────────────────────────────────────
+export async function setFlashOffer(
+  id: string,
+  hours: number,
+  discount: number
+): Promise<Product> {
+  const res = await fetch(`${API_URL}/products/${id}/flash-offer`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ hours, discount }),
+  });
+  return handleResponse<Product>(res);
+}
+
+export async function cancelFlashOffer(id: string): Promise<Product> {
+  const res = await fetch(`${API_URL}/products/${id}/flash-offer`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ active: false }),
+  });
+  return handleResponse<Product>(res);
 }
