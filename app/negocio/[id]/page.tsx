@@ -135,9 +135,7 @@ function useIsMobile(breakpoint = 640) {
 }
 
 // ── Config de throttling del GPS ────────────────────────────────────────────
-// Para un marketplace no hace falta precisión "tipo Uber" en tiempo real.
-// Estos valores evitan re-fetches constantes a productos (y a Google Maps)
-// cuando hay muchos usuarios conectados a la vez.
+
 const GPS_MIN_INTERVAL_MS = 30_000; // no aceptar una nueva posición antes de 30s
 const GPS_MIN_DISTANCE_M  = 100;    // ni aunque haya pasado el tiempo, si no se movió ~100m
 
@@ -497,7 +495,7 @@ export default function NegocioPublicoPage() {
       toast("error", "Este negocio no tiene WhatsApp cargado");
       return;
     }
-    const message = "Vi tu negocio en MercadoRosario, la web de Rosario, quiero saber qué productos más tenés";
+    const message = "Vi tu negocio en MercadoRosario, quiero saber qué otros productos tenés, gracias";
     const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
