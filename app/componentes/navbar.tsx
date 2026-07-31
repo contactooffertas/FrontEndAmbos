@@ -731,21 +731,7 @@ export default function Navbar() {
             {user ? (
               <div className="navbar-user" ref={dropdownRef} onClick={() => setDropdownOpen(v => !v)}>
 
-                {user.role !== "seller" && (
-                  <Link
-                    href="/panel?tab=cart"
-                    onClick={e => e.stopPropagation()}
-                    style={{ position: "relative", display: "flex", alignItems: "center", marginRight: "0.5rem", color: "var(--text-muted)", textDecoration: "none" }}
-                  >
-                    <ShoppingCart size={20} />
-                    {cartCount > 0 && (
-                      <span style={{ position: "absolute", top: -7, right: -8, background: "#f97316", color: "#fff", borderRadius: "999px", fontSize: "0.65rem", fontWeight: 700, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px", lineHeight: 1 }}>
-                        {cartCount > 99 ? "99+" : cartCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
-
+              
                 <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
                       <Link
                     href="/panel?tab=cart"
