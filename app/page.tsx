@@ -132,16 +132,16 @@ function dedupeById<T extends { _id: string }>(items: T[]): T[] {
 // Precio BASE sobre el que se calcula el descuento de la oferta flash.
 // Usamos el precio ORIGINAL del producto (antes de cualquier descuento
 // regular ya aplicado), no el precio ya rebajado. Ejemplo:
-//   - Precio original: $65.000
-//   - Descuento regular: 5%  -> precio "normal" mostrado: $61.750
-//   - Oferta flash: 20% OFF -> debe calcularse sobre el original:
-//       $65.000 * 0.80 = $52.000  (no $61.750 * 0.80 = $49.400)
+// - Precio original: $65.000
+// - Descuento regular: 5% -> precio "normal" mostrado: $61.750
+// - Oferta flash: 20% OFF -> debe calcularse sobre el original:
+// $65.000 * 0.80 = $52.000 (no $61.750 * 0.80 = $49.400)
 function flashBasePrice(product: Product): number {
-  return product.originalPrice ?? product.price;
+  return product.originalPrice?? product.price;
 }
 
 function computeFlashFinalPrice(product: Product): number {
-  const discount = product.flashOffer?.discount ?? 0;
+  const discount = product.flashOffer?.discount?? 0;
   return flashBasePrice(product) * (1 - discount / 100);
 }
 
@@ -160,7 +160,7 @@ function formatFlashTime(seconds?: number): string {
 // badges de las flash cards y en la ventana flotante, actualizado segundo
 // a segundo para que se sienta la urgencia.
 function formatClockCountdown(seconds?: number): string {
-  const s = Math.max(0, Math.floor(seconds ?? 0));
+  const s = Math.max(0, Math.floor(seconds?? 0));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
@@ -186,7 +186,7 @@ function PartialStar({ fill, size = 14 }: { fill: number; size?: number }) {
       <polygon
         points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
         fill={`url(#${id})`}
-        stroke={fill > 0.05 ? "#f97316" : "#d1d5db"}
+        stroke={fill > 0.05? "#f97316" : "#d1d5db"}
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
@@ -207,7 +207,7 @@ function StarRow({ rating = 0, size = 13 }: { rating?: number; size?: number }) 
 // ─── Hero Slider ──────────────────────────────────────────────────────────────
 function HeroSlider({ products }: { products: Product[] }) {
   const suscriptorProducts = products.filter((p) => p.business?.cuotaSuscriptor === true);
-  const usePool = suscriptorProducts.length > 0 ? suscriptorProducts : products;
+  const usePool = suscriptorProducts.length > 0? suscriptorProducts : products;
 
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
@@ -230,16 +230,16 @@ function HeroSlider({ products }: { products: Product[] }) {
   const slice = [0, 1, 2].map((offset) => usePool[(idx + offset) % usePool.length]);
 
   return (
-    <div className="hero-visual" style={{ opacity: fade ? 1 : 0, transition: "opacity 0.35s ease" }}>
+    <div className="hero-visual" style={{ opacity: fade? 1 : 0, transition: "opacity 0.35s ease" }}>
       {slice.map((p, i) => {
-        const rating = p.business?.rating ?? 0;
+        const rating = p.business?.rating?? 0;
         const bizId = p.business?._id;
         const featured = p._isFeatured;
         return (
           <div
             key={`${p._id}-${i}`}
             className="hero-card"
-            style={featured ? { outline: "1.5px solid rgba(249,115,22,0.55)", boxShadow: "0 0 0 1px rgba(249,115,22,0.18)" } : undefined}
+            style={featured? { outline: "1.5px solid rgba(249,115,22,0.55)", boxShadow: "0 0 0 1px rgba(249,115,22,0.18)" } : undefined}
           >
             {featured && (
               <div style={{ position: "absolute", top: 7, left: 7, zIndex: 2, background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontSize: "0.57rem", fontWeight: 800, padding: "2px 6px", borderRadius: 5, display: "flex", alignItems: "center", gap: 2, boxShadow: "0 1px 4px rgba(249,115,22,0.4)" }}>
@@ -251,7 +251,7 @@ function HeroSlider({ products }: { products: Product[] }) {
               <p className="hero-card-name">{p.name}</p>
               <div className="hero-card-stars">
                 <StarRow rating={rating} size={11} />
-                <span className="hero-card-rating-text">{rating > 0 ? rating.toFixed(1) : "Sin votos"}</span>
+                <span className="hero-card-rating-text">{rating > 0? rating.toFixed(1) : "Sin votos"}</span>
               </div>
               <div className="hero-card-footer">
                 <div className="hero-card-footer-row">
@@ -276,7 +276,7 @@ function HeroSlider({ products }: { products: Product[] }) {
 // ─── Business Card ────────────────────────────────────────────────────────────
 function BusinessCard({ featured }: { featured: FeaturedBusiness }) {
   const b = featured.business;
-  const followers = b.followers?.length ?? 0;
+  const followers = b.followers?.length?? 0;
   return (
     <div className="biz-card" style={{ border: "1.5px solid rgba(249,115,22,0.4)" }}>
       <Link href={`/negocio/${b._id}`} className="biz-card-banner">
@@ -293,16 +293,15 @@ function BusinessCard({ featured }: { featured: FeaturedBusiness }) {
         {b.description && <p className="biz-card-desc">{b.description}</p>}
         <div className="biz-card-stats">
           <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <StarRow rating={b.rating ?? 0} size={13} />
+            <StarRow rating={b.rating?? 0} size={13} />
             <span className="biz-card-stat-text">
-              {b.rating && b.rating > 0 ? `${b.rating.toFixed(1)} (${b.totalRatings ?? 0})` : "Sin calificación"}
+              {b.rating && b.rating > 0? `${b.rating.toFixed(1)} (${b.totalRatings?? 0})` : "Sin calificación"}
             </span>
           </div>
           <div className="biz-card-meta-row">
             {followers > 0 && <span className="biz-card-meta-item"><Users size={12} />{followers} seguidores</span>}
-            {(b.totalProducts ?? 0) > 0 && <span className="biz-card-meta-item"><Package size={12} />{b.totalProducts} productos</span>}
+            {(b.totalProducts?? 0) > 0 && <span className="biz-card-meta-item"><Package size={12} />{b.totalProducts} productos</span>}
           </div>
-        </div>
         <div className="biz-card-actions">
           <Link href={`/negocio/${b._id}`} className="biz-card-visit-btn"><Store size={13} /> Visitar tienda</Link>
         </div>
@@ -344,7 +343,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
             <span className="section-title-icon"><Store size={20} strokeWidth={2} /></span>
             Negocios destacados
           </h2>
-          <p className="section-subtitle">{total} negocio{total !== 1 ? "s" : ""} con plan activo</p>
+          <p className="section-subtitle">{total} negocio{total!== 1? "s" : ""} con plan activo</p>
         </div>
         {total > SHOW && (
           <div className="featured-biz-slider__controls">
@@ -353,7 +352,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
           </div>
         )}
       </div>
-      <div className="featured-biz-slider__track" style={{ opacity: fade ? 1 : 0 }}>
+      <div className="featured-biz-slider__track" style={{ opacity: fade? 1 : 0 }}>
         {visible.map((f) => <BusinessCard key={`${f._id}-${startIdx}`} featured={f} />)}
       </div>
       {showDots && (
@@ -361,7 +360,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
           {Array.from({ length: total }, (_, i) => (
             <button
               key={i}
-              className={`fbs-dot ${i === startIdx ? "active" : ""}`}
+              className={`fbs-dot ${i === startIdx? "active" : ""}`}
               onClick={() => { setFade(false); setTimeout(() => { setStartIdx(i); setFade(true); }, 280); }}
               aria-label={`Ir al negocio ${i + 1}`}
             />
@@ -378,28 +377,23 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
 }
 
 // ─── Flash Offer Card (grid estático) ──────────────────────────────────────
-// Ya NO navega al hacer click: es solo informativa (imagen, título, negocio,
-// precio y reloj) + botón para agregar al carrito. El precio final se
-// calcula sobre el precio ORIGINAL del producto (ver computeFlashFinalPrice).
 function FlashOfferCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
-  const discount = product.flashOffer?.discount ?? 0;
+  const discount = product.flashOffer?.discount?? 0;
   const finalPrice = computeFlashFinalPrice(product);
   const basePrice = flashBasePrice(product);
 
-  // Reloj propio de la card, tickea segundo a segundo. Se re-sincroniza si
-  // el producto trae un nuevo valor del back.
-  const [secondsLeft, setSecondsLeft] = useState<number>(product.flashOfferSecondsLeft ?? 0);
+  const [secondsLeft, setSecondsLeft] = useState<number>(product.flashOfferSecondsLeft?? 0);
   useEffect(() => {
-    setSecondsLeft(product.flashOfferSecondsLeft ?? 0);
+    setSecondsLeft(product.flashOfferSecondsLeft?? 0);
   }, [product.flashOfferSecondsLeft]);
   useEffect(() => {
     const t = setInterval(() => {
-      setSecondsLeft((s) => (s > 0 ? s - 1 : 0));
+      setSecondsLeft((s) => (s > 0? s - 1 : 0));
     }, 1000);
     return () => clearInterval(t);
   }, []);
-  const isUrgent = secondsLeft > 0 && secondsLeft <= 300; // últimos 5 min
+  const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
 
   const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -416,7 +410,7 @@ function FlashOfferCard({ product }: { product: Product }) {
       businessName: product.business?.name,
       businessPhone: product.business?.phone || "",
       stock: product.stock || 99,
-    });
+    } as any);
   };
 
   return (
@@ -425,7 +419,7 @@ function FlashOfferCard({ product }: { product: Product }) {
         <span className="flash-card-badge">
           <Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%
         </span>
-        <span className={`flash-card-timer ${isUrgent ? "urgent" : ""}`}>
+        <span className={`flash-card-timer ${isUrgent? "urgent" : ""}`}>
           <Clock size={10} /> {formatClockCountdown(secondsLeft)}
         </span>
         <div className="flash-card-img-wrap">
@@ -456,9 +450,6 @@ function FlashOffersSection({ products }: { products: Product[] }) {
   const [randomized, setRandomized] = useState<Product[]>([]);
 
   useEffect(() => {
-    // Dedupe por _id ANTES de mezclar: esto es lo que evita que la misma
-    // oferta aparezca 2 veces en la grilla cuando el producto viene
-    // repetido en `products` (ej. featured + random).
     const flashProducts = dedupeById(products.filter((p) => p.flashOffer?.active === true));
     if (flashProducts.length === 0) {
       setRandomized([]);
@@ -480,7 +471,7 @@ function FlashOffersSection({ products }: { products: Product[] }) {
             Ofertas Flash
           </h2>
           <p className="section-subtitle">
-            {randomized.length} oferta{randomized.length !== 1 ? "s" : ""} por tiempo limitado
+            {randomized.length} oferta{randomized.length!== 1? "s" : ""} por tiempo limitado
           </p>
         </div>
       </div>
@@ -493,9 +484,7 @@ function FlashOffersSection({ products }: { products: Product[] }) {
   );
 }
 
-// ─── Flash Offer Overlay Card (card de la ventana flotante) ───────────────
-// Tampoco navega al negocio: solo imagen, nombre del negocio, título,
-// precio y reloj + botón de agregar al carrito.
+// ─── FIX: ESTE ES EL QUE OCUPABA POCO, AHORA OCUPA TODO EL DIV ─────────────
 function FlashOverlayCard({
   product,
   secondsLeft,
@@ -507,32 +496,175 @@ function FlashOverlayCard({
   onAdd: (p: Product) => void;
   justAdded: boolean;
 }) {
-  const discount = product.flashOffer?.discount ?? 0;
+  const discount = product.flashOffer?.discount?? 0;
   const finalPrice = computeFlashFinalPrice(product);
   const basePrice = flashBasePrice(product);
   const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
 
   return (
-    <div className="flash-overlay-card">
-      <div className="flash-overlay-card-media">
-        <img src={imgUrl(product.image)} alt={product.name} className="flash-overlay-card-img" />
-        <span className="flash-overlay-card-badge">
+    <div
+      className="flash-overlay-card"
+      style={{
+        display: "flex",
+        width: "100%",
+        minWidth: "100%",
+        gap: "1.2rem",
+        alignItems: "center",
+        background: "#111",
+        borderRadius: "16px",
+        padding: "1rem",
+        flex: 1,
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        className="flash-overlay-card-media"
+        style={{
+          position: "relative",
+          width: "160px",
+          height: "160px",
+          flexShrink: 0,
+        }}
+      >
+        <img
+          src={imgUrl(product.image)}
+          alt={product.name}
+          className="flash-overlay-card-img"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            borderRadius: "12px",
+          }}
+        />
+        <span
+          className="flash-overlay-card-badge"
+          style={{
+            position: "absolute",
+            top: 6,
+            left: 6,
+            background: "#f97316",
+            color: "#fff",
+            padding: "2px 6px",
+            borderRadius: "6px",
+            fontSize: "0.7rem",
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
           <Zap size={10} fill="#fff" strokeWidth={0} /> -{discount}%
         </span>
-        {justAdded && <span className="flash-overlay-added-toast">¡Agregado!</span>}
+        {justAdded && (
+          <span
+            className="flash-overlay-added-toast"
+            style={{
+              position: "absolute",
+              bottom: 6,
+              left: 6,
+              right: 6,
+              background: "#22c55e",
+              color: "#fff",
+              textAlign: "center",
+              borderRadius: "6px",
+              fontSize: "0.7rem",
+              padding: "2px",
+            }}
+          >
+            ¡Agregado!
+          </span>
+        )}
       </div>
-      <div className="flash-overlay-card-body">
-        {product.business?.name && <p className="flash-overlay-card-biz">{product.business.name}</p>}
-        <p className="flash-overlay-card-name">{product.name}</p>
-        <span className={`flash-overlay-card-timer ${isUrgent ? "urgent" : ""}`}>
-          <Clock size={10} /> {formatClockCountdown(secondsLeft)}
+
+      <div
+        className="flash-overlay-card-body"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.4rem",
+          minWidth: 0,
+        }}
+      >
+        {product.business?.name && (
+          <p
+            className="flash-overlay-card-biz"
+            style={{
+              color: "#9ca3af",
+              fontSize: "0.85rem",
+              margin: 0,
+            }}
+          >
+            {product.business.name}
+          </p>
+        )}
+        <p
+          className="flash-overlay-card-name"
+          style={{
+            color: "#fff",
+            fontWeight: 800,
+            fontSize: "1.1rem",
+            margin: 0,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {product.name}
+        </p>
+        <span
+          className={`flash-overlay-card-timer ${isUrgent? "urgent" : ""}`}
+          style={{
+            color: isUrgent? "#ef4444" : "#fbbf24",
+            fontSize: "0.8rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <Clock size={12} /> {formatClockCountdown(secondsLeft)} restantes
         </span>
-        <div className="flash-overlay-card-prices">
-          <span className="flash-overlay-card-final">
+        <div
+          className="flash-overlay-card-prices"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            marginTop: "0.3rem",
+          }}
+        >
+          <span
+            className="flash-overlay-card-final"
+            style={{
+              color: "#f97316",
+              fontWeight: 900,
+              fontSize: "1.4rem",
+            }}
+          >
             ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </span>
-          <span className="flash-overlay-card-orig">${basePrice.toLocaleString()}</span>
+          <span
+            className="flash-overlay-card-orig"
+            style={{
+              color: "#6b7280",
+              textDecoration: "line-through",
+              fontSize: "0.9rem",
+            }}
+          >
+            ${basePrice.toLocaleString()}
+          </span>
         </div>
+      </div>
+
+      <div
+        style={{
+          marginLeft: "auto",
+          display: "flex",
+          alignItems: "center",
+          flexShrink: 0,
+        }}
+      >
         <button
           className="flash-overlay-card-btn"
           onClick={(e) => {
@@ -540,15 +672,27 @@ function FlashOverlayCard({
             e.stopPropagation();
             onAdd(product);
           }}
+          style={{
+            background: "#f97316",
+            color: "#fff",
+            border: 0,
+            borderRadius: "999px",
+            padding: "0.8rem 1.2rem",
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
         >
-          <ShoppingCart size={14} /> Agregar al carrito
+          <ShoppingCart size={16} /> Agregar al carrito
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Flash Offer Overlay (ventana flotante, una sola oferta a la vez) ─────
 function FlashOfferOverlay({ products }: { products: Product[] }) {
   const { addToCart } = useCart();
   const [pool, setPool] = useState<Product[]>([]);
@@ -557,18 +701,12 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   const [visible, setVisible] = useState(true);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
 
-  // Reloj en vivo por producto: un solo interval global que resta 1s a
-  // todos los contadores, en vez de un timer por card.
   const [countdowns, setCountdowns] = useState<Record<string, number>>({});
 
-  // Se oculta solo para la vista actual (memoria del componente): no se
-  // guarda en storage, así que al recargar la página vuelve a aparecer
-  // mientras la oferta siga activa entre los productos.
   const dismiss = () => {
     setVisible(false);
   };
 
-  // Arma el pool DEDUPLICADO por _id, así nunca se repite la misma oferta.
   useEffect(() => {
     const flashProducts = products.filter((p) => p.flashOffer?.active === true);
     const unique = dedupeById(flashProducts);
@@ -578,21 +716,18 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     setCountdowns((prev) => {
       const next: Record<string, number> = {};
       unique.forEach((p) => {
-        // Si ya lo veníamos contando, seguimos desde ahí; si es nuevo,
-        // arranca del valor que trae el producto.
-        next[p._id] = prev[p._id] ?? (p.flashOfferSecondsLeft ?? 0);
+        next[p._id] = prev[p._id]?? (p.flashOfferSecondsLeft?? 0);
       });
       return next;
     });
   }, [products]);
 
-  // Tick global cada 1s para todos los contadores activos.
   useEffect(() => {
     const t = setInterval(() => {
       setCountdowns((prev) => {
         const next: Record<string, number> = {};
         for (const id in prev) {
-          next[id] = prev[id] > 0 ? prev[id] - 1 : 0;
+          next[id] = prev[id] > 0? prev[id] - 1 : 0;
         }
         return next;
       });
@@ -600,8 +735,6 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     return () => clearInterval(t);
   }, []);
 
-  // Navega con fade. dir = 1 (siguiente) o -1 (anterior). El índice se
-  // normaliza abajo contra el largo real del pool en cada render.
   const goTo = useCallback((dir: number) => {
     setFade(false);
     setTimeout(() => {
@@ -611,21 +744,16 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   }, []);
 
   const total = pool.length;
-  const safeIdx = total > 0 ? ((idx % total) + total) % total : 0;
+  const safeIdx = total > 0? ((idx % total) + total) % total : 0;
 
-  // Auto-avanza cada 4s (mostrando UNA sola oferta con fade); se reinicia
-  // solo si el usuario navega a mano gracias a la dependencia de safeIdx.
   useEffect(() => {
     if (total <= 1) return;
     const t = setInterval(() => goTo(1), 4000);
     return () => clearInterval(t);
   }, [total, safeIdx, goTo]);
 
-  // Precio flash calculado sobre el precio ORIGINAL (ver
-  // computeFlashFinalPrice) y "congelado" en el carrito al momento de
-  // agregar.
   const handleAdd = (product: Product) => {
-    const discount = product.flashOffer?.discount ?? 0;
+    const discount = product.flashOffer?.discount?? 0;
     const finalPrice = computeFlashFinalPrice(product);
     const basePrice = flashBasePrice(product);
     addToCart({
@@ -640,7 +768,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
       businessName: product.business?.name,
       businessPhone: product.business?.phone || "",
       stock: product.stock || 99,
-    });
+    } as any);
     setJustAddedId(product._id);
     setTimeout(() => setJustAddedId(null), 1500);
   };
@@ -650,44 +778,157 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   const current = pool[safeIdx];
 
   return (
-    <div className="flash-overlay">
-      <div className="flash-overlay-header">
-        <span className="flash-overlay-title">
+    <div
+      className="flash-overlay"
+      style={{
+        width: "100%",
+        minWidth: "100%",
+        background: "linear-gradient(90deg,#f97316 0%,#ea580c 100%)",
+        borderRadius: "18px",
+        padding: "0.6rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        className="flash-overlay-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          color: "#fff",
+          padding: "0 0.4rem",
+        }}
+      >
+        <span
+          className="flash-overlay-title"
+          style={{
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           <Zap size={14} fill="#fff" strokeWidth={0} /> Ofertas Flash
         </span>
-        <button className="flash-overlay-close" onClick={dismiss} aria-label="Cerrar">
+        <button
+          className="flash-overlay-close"
+          onClick={dismiss}
+          aria-label="Cerrar"
+          style={{
+            background: "rgba(0,0,0,0.2)",
+            border: 0,
+            color: "#fff",
+            borderRadius: "50%",
+            width: 28,
+            height: 28,
+            cursor: "pointer",
+          }}
+        >
           ✕
         </button>
       </div>
 
-      <div className="flash-overlay-body">
+      <div
+        className="flash-overlay-body"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          width: "100%",
+          minWidth: "100%",
+        }}
+      >
         {total > 1 && (
-          <button className="flash-overlay-nav-btn" onClick={() => goTo(-1)} aria-label="Anterior">
-            <ChevronLeft size={16} />
+          <button
+            className="flash-overlay-nav-btn"
+            onClick={() => goTo(-1)}
+            aria-label="Anterior"
+            style={{
+              background: "rgba(0,0,0,0.3)",
+              border: 0,
+              color: "#fff",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <ChevronLeft size={18} />
           </button>
         )}
 
-        <div className="flash-overlay-slide" style={{ opacity: fade ? 1 : 0 }}>
+        <div
+          className="flash-overlay-slide"
+          style={{
+            flex: 1,
+            opacity: fade? 1 : 0,
+            transition: "opacity 0.25s",
+            minWidth: 0,
+            width: "100%",
+          }}
+        >
           <FlashOverlayCard
             key={current._id}
             product={current}
-            secondsLeft={countdowns[current._id] ?? current.flashOfferSecondsLeft ?? 0}
+            secondsLeft={countdowns[current._id]?? current.flashOfferSecondsLeft?? 0}
             onAdd={handleAdd}
             justAdded={justAddedId === current._id}
           />
         </div>
 
         {total > 1 && (
-          <button className="flash-overlay-nav-btn" onClick={() => goTo(1)} aria-label="Siguiente">
-            <ChevronRight size={16} />
+          <button
+            className="flash-overlay-nav-btn"
+            onClick={() => goTo(1)}
+            aria-label="Siguiente"
+            style={{
+              background: "rgba(0,0,0,0.3)",
+              border: 0,
+              color: "#fff",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            <ChevronRight size={18} />
           </button>
         )}
       </div>
 
       {total > 1 && (
-        <div className="flash-overlay-dots">
+        <div
+          className="flash-overlay-dots"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 6,
+            paddingBottom: 4,
+          }}
+        >
           {pool.map((p, i) => (
-            <span key={p._id} className={`flash-overlay-dot ${i === safeIdx ? "active" : ""}`} />
+            <span
+              key={p._id}
+              className={`flash-overlay-dot ${i === safeIdx? "active" : ""}`}
+              style={{
+                width: i === safeIdx? 20 : 8,
+                height: 8,
+                borderRadius: 999,
+                background: i === safeIdx? "#fff" : "rgba(255,255,255,0.4)",
+                transition: "all 0.2s",
+              }}
+            />
           ))}
         </div>
       )}
@@ -707,28 +948,28 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   const bizId = product.business?._id;
   const bizName = product.business?.name;
   const bizCity = product.business?.city;
-  const followers = product.business?.followers?.length ?? 0;
-  const rating = product.business?.rating ?? 0;
-  const totalRatings = product.business?.totalRatings ?? 0;
+  const followers = product.business?.followers?.length?? 0;
+  const rating = product.business?.rating?? 0;
+  const totalRatings = product.business?.totalRatings?? 0;
 
-  const flashDiscount = product.flashOffer?.discount ?? 0;
+  const flashDiscount = product.flashOffer?.discount?? 0;
   const flashBase = flashBasePrice(product);
-  const flashFinalPrice = isFlash ? computeFlashFinalPrice(product) : product.price;
+  const flashFinalPrice = isFlash? computeFlashFinalPrice(product) : product.price;
 
   const handleCart = () => {
     addToCart({
       _id: product._id,
       productId: product._id,
       name: product.name,
-      price: isFlash ? Number(flashFinalPrice.toFixed(2)) : product.price,
-      originalPrice: isFlash ? flashBase : product.originalPrice,
-      discount: isFlash ? flashDiscount : product.discount,
+      price: isFlash? Number(flashFinalPrice.toFixed(2)) : product.price,
+      originalPrice: isFlash? flashBase : product.originalPrice,
+      discount: isFlash? flashDiscount : product.discount,
       image: product.image,
       businessId: bizId,
       businessName: bizName,
       businessPhone: product.business?.phone || "",
       stock: product.stock || 99,
-    });
+    } as any);
   };
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -738,13 +979,9 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       Swal.fire({ icon: "info", title: "Iniciá sesión", timer: 2000, showConfirmButton: false });
       return;
     }
-    setLiked((v) => !v);
+    setLiked((v) =>!v);
   };
 
-  // ── Compartir producto ────────────────────────────────────────────────────
-  // Usa la URL "linda" del backend (/p/<id>) que arma una preview con
-  // imagen + nombre + precio (Open Graph) y redirige al negocio resaltando
-  // este producto en particular.
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -754,7 +991,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       text: `${product.name} · $${product.price.toLocaleString()}`,
       url,
     };
-    if (typeof navigator !== "undefined" && (navigator as any).share) {
+    if (typeof navigator!== "undefined" && (navigator as any).share) {
       try {
         await (navigator as any).share(shareData);
       } catch {
@@ -777,15 +1014,15 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       className="product-card"
       style={
         isFlash
-          ? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" }
+         ? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" }
           : isFeatured
-          ? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" }
+         ? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" }
           : undefined
       }
     >
       <div className="product-image-wrap">
         <img src={imgUrl(product.image)} alt={product.name} loading="lazy" />
-        {!isFlash && product.discount ? <span className="product-discount-badge">-{product.discount}%</span> : null}
+        {!isFlash && product.discount? <span className="product-discount-badge">-{product.discount}%</span> : null}
 
         {isFlash && (
           <span className="product-flash-badge">
@@ -800,8 +1037,8 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         )}
 
         <button className="product-fav-btn product-fav-btn--always" onClick={handleLike}>
-          <span style={{ fontSize: "1.05rem", color: liked ? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>
-            {liked ? "♥" : "♡"}
+          <span style={{ fontSize: "1.05rem", color: liked? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>
+            {liked? "♥" : "♡"}
           </span>
         </button>
         <button
@@ -811,7 +1048,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
           aria-label="Compartir producto"
           title="Compartir"
         >
-          <Share2 size={15} style={{ color: justShared ? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} />
+          <Share2 size={15} style={{ color: justShared? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} />
         </button>
         {justShared && (
           <span style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(34,197,94,0.95)", color: "#fff", fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px", borderRadius: 6, zIndex: 3 }}>
@@ -835,18 +1072,18 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       )}
 
       <div className="product-body">
-        {bizId ? (
+        {bizId? (
           <Link href={`/negocio/${bizId}`} className="product-business" style={{ textDecoration: "none", color: "inherit" }}>
-            {bizName}{bizCity ? ` · ${bizCity}` : ""}
+            {bizName}{bizCity? ` · ${bizCity}` : ""}
             {product.business?.verified && <span style={{ color: "#f97316", marginLeft: "0.2rem" }}>✓</span>}
           </Link>
         ) : (
-          <div className="product-business">{bizName}{bizCity ? ` · ${bizCity}` : ""}</div>
+          <div className="product-business">{bizName}{bizCity? ` · ${bizCity}` : ""}</div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
           <StarRow rating={rating} size={13} />
           <span style={{ fontSize: "0.71rem", color: "#9ca3af", fontWeight: 500 }}>
-            {rating > 0 ? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}
+            {rating > 0? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}
           </span>
           {followers > 0 && (
             <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: "0.71rem", color: "#9ca3af" }}>
@@ -856,7 +1093,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         </div>
         <div className="product-name">{product.name}</div>
         <div className="product-prices">
-          {isFlash ? (
+          {isFlash? (
             <>
               <span className="product-price product-price--flash">
                 ${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -884,7 +1121,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
           )}
           <button
             onClick={handleShare}
-            style={{ flex: bizId ? undefined : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", padding: "0.38rem 0.7rem", borderRadius: "8px", border: "1.5px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, cursor: "pointer" }}
+            style={{ flex: bizId? undefined : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", padding: "0.38rem 0.7rem", borderRadius: "8px", border: "1.5px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, cursor: "pointer" }}
           >
             <Share2 size={13} /> Compartir
           </button>
@@ -893,7 +1130,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
           targetType="product"
           targetId={product._id}
           targetName={product.name}
-          token={typeof window !== "undefined" ? localStorage.getItem("marketplace_token") || "" : ""}
+          token={typeof window!== "undefined"? localStorage.getItem("marketplace_token") || "" : ""}
           onRequireAuth={async () => {
             const Swal = (await import("sweetalert2")).default;
             Swal.fire({ icon: "info", title: "Iniciá sesión para reportar", timer: 2000, showConfirmButton: false });
@@ -917,9 +1154,6 @@ function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [reportedProductIds, setReportedProductIds] = useState<Set<string>>(new Set());
 
-  // ── Banners persistentes en localStorage ─────────────────────────────────────
-  // Se guardan por dispositivo, no por sesión, así no vuelven a aparecer
-  // aunque el user haga logout y login de nuevo.
   const [geoBannerDismissed, setGeoBannerDismissed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("geo_banner_dismissed") === "true";
@@ -939,19 +1173,17 @@ function HomeContent() {
     setNotifBannerDismissed(true);
   };
 
-  // ── También ocultar el banner si el permiso ya fue concedido a nivel del navegador ──
-  // Aunque el user haga logout, si ya dio permiso en el navegador no tiene sentido mostrarlo.
-  const notifAlreadyGranted = typeof window !== "undefined" && Notification.permission === "granted";
+  const notifAlreadyGranted = typeof window!== "undefined" && Notification.permission === "granted";
 
   const currentUserId = (user as any)?._id || (user as any)?.id;
   const userLat = (user as any)?.lat;
   const userLng = (user as any)?.lng;
-  const userHasLoc = !!(user?.locationEnabled && userLat && userLng);
+  const userHasLoc =!!(user?.locationEnabled && userLat && userLng);
 
   const [userRadius] = useState<number>(() => {
     if (typeof window === "undefined") return 3000;
     const saved = localStorage.getItem("nearbyRadius");
-    return saved ? parseInt(saved) : 3000;
+    return saved? parseInt(saved) : 3000;
   });
 
   const buildLocationParams = (extra: Record<string, string> = {}): string => {
@@ -967,17 +1199,17 @@ function HomeContent() {
 
   useEffect(() => {
     fetch(`${API}/products/public-stats`)
-      .then((r) => r.json())
-      .then(setPublicStats)
-      .catch(() => {});
+     .then((r) => r.json())
+     .then(setPublicStats)
+     .catch(() => {});
   }, []);
 
   useEffect(() => {
     setLoading(true);
     const params = buildLocationParams({ limit: "60" });
     fetch(`${API}/products/featured?${params}`)
-      .then((r) => r.json())
-      .then(async (data) => {
+     .then((r) => r.json())
+     .then(async (data) => {
         const featured: Product[] = data.products || [];
         if (featured.length === 0) {
           const r2 = await fetch(`${API}/products/random?${buildLocationParams({ limit: "40" })}`);
@@ -991,10 +1223,10 @@ function HomeContent() {
           if (searchParam) extra.search = searchParam;
           const r2 = await fetch(`${API}/products/random?${buildLocationParams(extra)}`);
           const d2 = await r2.json();
-          setAllProducts([...featured, ...(d2.products || [])]);
+          setAllProducts([...featured,...(d2.products || [])]);
         }
       })
-      .catch(async () => {
+     .catch(async () => {
         try {
           const r2 = await fetch(`${API}/products/random?${buildLocationParams({ limit: "40" })}`);
           const d2 = await r2.json();
@@ -1003,30 +1235,30 @@ function HomeContent() {
           setAllProducts([]);
         }
       })
-      .finally(() => setLoading(false));
+     .finally(() => setLoading(false));
   }, [currentUserId, userHasLoc, userRadius, activeCategory, searchParam]);
 
   useEffect(() => {
     if (!allProducts.length) return;
-    const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
+    const token = typeof window!== "undefined"? localStorage.getItem("marketplace_token") : null;
     if (!token) { setReportedProductIds(new Set()); return; }
-    const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id);
+    const productIds = allProducts.filter((p) =>!p._isFeatured).map((p) => p._id);
     if (!productIds.length) return;
     fetch(`${API}/reports/batch-check`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ productIds }),
     })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); })
-      .catch(() => {});
+     .then((r) => (r.ok? r.json() : null))
+     .then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); })
+     .catch(() => {});
   }, [allProducts]);
 
   useEffect(() => {
     fetch(`${API}/products/featured-businesses`)
-      .then((r) => r.json())
-      .then((data) => setFeaturedBusinesses(Array.isArray(data) ? data : []))
-      .catch(() => setFeaturedBusinesses([]));
+     .then((r) => r.json())
+     .then((data) => setFeaturedBusinesses(Array.isArray(data)? data : []))
+     .catch(() => setFeaturedBusinesses([]));
   }, []);
 
   const handleRequestGeo = async () => {
@@ -1044,7 +1276,7 @@ function HomeContent() {
       const ok = await enableLocation();
       Swal.fire(
         ok
-          ? { icon: "success", title: "¡Ubicación activada!", timer: 2000, showConfirmButton: false }
+         ? { icon: "success", title: "¡Ubicación activada!", timer: 2000, showConfirmButton: false }
           : { icon: "error", title: "No se pudo activar", text: "Verificá los permisos de tu navegador." }
       );
     }
@@ -1066,34 +1298,28 @@ function HomeContent() {
       const ok = await enableNotifications();
       if (!ok) Swal.fire({ icon: "warning", title: "Permisos denegados", text: "Habilitá las notificaciones desde la configuración." });
     }
-    // Siempre dismissar aunque haya cancelado — si lo cerró una vez, no volvemos a molestar
     dismissNotifBanner();
   };
 
   const radiusLabel =
-    userRadius === 0 ? "todo el país"
-    : userRadius >= 1000 ? `${userRadius / 1000} km`
+    userRadius === 0? "todo el país"
+    : userRadius >= 1000? `${userRadius / 1000} km`
     : `${userRadius} m`;
 
   const sectionTitle = searchParam
-    ? `Resultados para "${searchParam}"`
+   ? `Resultados para "${searchParam}"`
     : activeCategory
-      ? (categories.find((c) => c.slug === activeCategory)?.name || activeCategory) + " — Ofertas"
-      : userHasLoc ? `Ofertas en ${radiusLabel}` : "Ofertas del día";
+     ? (categories.find((c) => c.slug === activeCategory)?.name || activeCategory) + " — Ofertas")
+      : userHasLoc? `Ofertas en ${radiusLabel}` : "Ofertas del día";
 
   const heroProducts = allProducts.slice(0, 9);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
-  const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
+  const gridProducts = allProducts.filter((p) =>!reportedProductIds.has(p._id));
 
-  // ── El banner de notificaciones se oculta si:
-  //    1. Ya fue dismissado (localStorage)
-  //    2. El permiso del navegador ya es "granted" (ya activó antes)
-  //    3. No hay usuario logueado
-  const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
+  const showNotifBanner =!!user &&!notifBannerDismissed &&!notifAlreadyGranted;
 
   return (
     <MainLayout>
-      {/* ─── Hero ─────────────────────────────────────────────────────────── */}
       <section className="hero">
         <div className="hero-inner">
           <div>
@@ -1108,11 +1334,11 @@ function HomeContent() {
             </div>
             <div className="hero-stats">
               <div className="hero-stat">
-                <span className="hero-stat-num">{publicStats.totalProducts > 0 ? `+${publicStats.totalProducts.toLocaleString()}` : "—"}</span>
+                <span className="hero-stat-num">{publicStats.totalProducts > 0? `+${publicStats.totalProducts.toLocaleString()}` : "—"}</span>
                 <span className="hero-stat-label">Productos</span>
               </div>
               <div className="hero-stat">
-                <span className="hero-stat-num">{publicStats.totalBusinesses > 0 ? `+${publicStats.totalBusinesses.toLocaleString()}` : "—"}</span>
+                <span className="hero-stat-num">{publicStats.totalBusinesses > 0? `+${publicStats.totalBusinesses.toLocaleString()}` : "—"}</span>
                 <span className="hero-stat-label">Negocios</span>
               </div>
               <div className="hero-stat">
@@ -1125,8 +1351,7 @@ function HomeContent() {
         </div>
       </section>
 
-      {/* ─── Banner geo ───────────────────────────────────────────────────── */}
-      {!user?.locationEnabled && !geoBannerDismissed && (
+      {!user?.locationEnabled &&!geoBannerDismissed && (
         <div style={{ padding: "1.5rem 1.5rem 0" }}>
           <div className="geo-banner">
             <span className="geo-banner-icon"><MapPin size={26} strokeWidth={1.75} /></span>
@@ -1142,7 +1367,6 @@ function HomeContent() {
         </div>
       )}
 
-      {/* ─── Banner notificaciones ─────────────────────────────────────────── */}
       {showNotifBanner && (
         <div style={{ padding: "1rem 1.5rem 0" }}>
           <div className="geo-banner" style={{ borderColor: "rgba(249,115,22,0.3)" }}>
@@ -1159,17 +1383,14 @@ function HomeContent() {
         </div>
       )}
 
-      {/* ─── Ofertas Flash (grid, aleatorio) ───────────────────────────────── */}
       <FlashOffersSection products={allProducts} />
 
-      {/* ─── Negocios destacados ───────────────────────────────────────────── */}
       {featuredBusinesses.length > 0 && (
         <section className="section">
           <FeaturedBusinessesSlider businesses={featuredBusinesses} />
         </section>
       )}
 
-      {/* ─── Categorías ───────────────────────────────────────────────────── */}
       <section className="section">
         <div className="section-header">
           <div>
@@ -1178,12 +1399,12 @@ function HomeContent() {
           </div>
         </div>
         <div className="categories-grid">
-          <div className={`category-card ${!activeCategory ? "active" : ""}`} onClick={() => setActiveCategory("")}>
+          <div className={`category-card ${!activeCategory? "active" : ""}`} onClick={() => setActiveCategory("")}>
             <Tag size={30} strokeWidth={2.5} />
             <span className="category-name">Todas</span>
           </div>
           {categories.map((cat) => (
-            <div key={cat.slug} className={`category-card ${activeCategory === cat.slug ? "active" : ""}`} onClick={() => setActiveCategory(cat.slug)}>
+            <div key={cat.slug} className={`category-card ${activeCategory === cat.slug? "active" : ""}`} onClick={() => setActiveCategory(cat.slug)}>
               <CategoryIcon name={cat.iconName} size={24} strokeWidth={1.75} />
               <span className="category-name">{cat.name}</span>
             </div>
@@ -1191,14 +1412,13 @@ function HomeContent() {
         </div>
       </section>
 
-      {/* ─── Grid de ofertas ──────────────────────────────────────────────── */}
       <section className="section" id="offers">
         <div className="section-header">
           <div>
             <h2 className="section-title">
               <span className="section-title-icon">
-                {hasFeatured ? <Crown size={20} strokeWidth={2} style={{ color: "#f97316" }} />
-                  : userHasLoc ? <MapPin size={20} strokeWidth={2} />
+                {hasFeatured? <Crown size={20} strokeWidth={2} style={{ color: "#f97316" }} />
+                  : userHasLoc? <MapPin size={20} strokeWidth={2} />
                   : <TrendingUp size={20} strokeWidth={2} />}
               </span>
               {sectionTitle}
@@ -1206,21 +1426,21 @@ function HomeContent() {
             <p className="section-subtitle">
               {gridProducts.length} productos
               {hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#f97316", fontSize: "0.75rem", fontWeight: 600 }}>· incluye destacados</span>}
-              {userHasLoc && !hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#4ade80", fontSize: "0.75rem", fontWeight: 600 }}>· {radiusLabel}</span>}
+              {userHasLoc &&!hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#4ade80", fontSize: "0.75rem", fontWeight: 600 }}>· {radiusLabel}</span>}
             </p>
           </div>
         </div>
 
-        {loading ? (
+        {loading? (
           <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
             <Clock size={32} style={{ opacity: 0.4, display: "block", margin: "0 auto 1rem" }} />
             <p>Cargando ofertas...</p>
           </div>
-        ) : gridProducts.length === 0 ? (
+        ) : gridProducts.length === 0? (
           <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
             <Search size={48} strokeWidth={1} style={{ opacity: 0.3, display: "block", margin: "0 auto 1rem" }} />
             <h3>No encontramos resultados</h3>
-            <p>{userHasLoc ? `No hay productos en ${radiusLabel}. Probá con un radio más amplio.` : "Probá con otra búsqueda o categoría."}</p>
+            <p>{userHasLoc? `No hay productos en ${radiusLabel}. Probá con un radio más amplio.` : "Probá con otra búsqueda o categoría."}</p>
           </div>
         ) : (
           <div className="products-grid">
@@ -1231,7 +1451,6 @@ function HomeContent() {
         )}
       </section>
 
-      {/* ─── Banner CTA ────────────────────────────────────────────────────── */}
       <div className="banner" style={{ margin: "0 1.5rem" }}>
         <div>
           <h2>¿Tenés un negocio?</h2>
@@ -1240,7 +1459,6 @@ function HomeContent() {
         <a href="/register" className="btn btn-white">Empezar gratis</a>
       </div>
 
-      {/* ─── Overlay flotante de ofertas flash (una a la vez, agrega al carrito) ── */}
       <FlashOfferOverlay products={allProducts} />
     </MainLayout>
   );
