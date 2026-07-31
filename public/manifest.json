@@ -56,7 +56,7 @@
   "shortcuts": [
     {
       "name": "Ver Ofertas",
-      "short_name": "Ofertas",
+      "short_name": "MR",
       "description": "Accede rápidamente a las mejores ofertas",
       "url": "/?utm_source=shortcut",
       "icons": [
