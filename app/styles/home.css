@@ -1434,3 +1434,6 @@
     left: 1rem;
   }
 }
+.flash-overlay-card--full {
+  width: 100%;
+}
