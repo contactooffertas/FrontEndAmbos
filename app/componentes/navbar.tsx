@@ -573,10 +573,14 @@ export default function Navbar() {
         <div className="navbar-inner">
 
           {/* Logo */}
-          <Link href="/" className="navbar-logo">
-            <span className="navbar-logo-badge">Mercado</span>
-            <span>Rosario</span>
-            <span className="navbar-logo-dot" />
+          <Link href="/" className="navbar-logo" aria-label="MercadoRosario — Ir al inicio">
+            <span className="navbar-logo-badge" aria-hidden="true">
+              <span className="navbar-logo-badge-text">MR</span>
+            </span>
+            <span className="navbar-logo-wordmark">
+              <span className="navbar-logo-word-main">Mercado</span>
+              <span className="navbar-logo-word-accent">Rosario</span>
+            </span>
           </Link>
 
           {/* Buscador */}
