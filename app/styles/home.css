@@ -918,3 +918,272 @@
     font-size: 0.8rem;
   }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   OFERTAS FLASH — pegar este bloque al final de app/styles/home.css
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Sección ── */
+.flash-section {
+  position: relative;
+}
+
+.flash-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.flash-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.flash-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+  animation: flashPulseIcon 1.8s ease-in-out infinite;
+}
+
+@keyframes flashPulseIcon {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45); }
+  50% { transform: scale(1.08); box-shadow: 0 4px 20px rgba(245, 158, 11, 0.7); }
+}
+
+/* ── Carrusel horizontal (no es grilla rígida por fila) ── */
+.flash-grid {
+  display: flex;
+  gap: 0.9rem;
+  overflow-x: auto;
+  padding: 0.35rem 0.15rem 1.1rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #f59e0b transparent;
+}
+
+.flash-grid::-webkit-scrollbar {
+  height: 6px;
+}
+.flash-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  border-radius: 999px;
+}
+.flash-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Tarjeta de oferta flash ── */
+.flash-card {
+  position: relative;
+  flex: 0 0 210px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: #fff;
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.12);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.flash-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #fbbf24, #f97316, #fbbf24);
+  background-size: 200% 200%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  animation: flashBorderShift 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes flashBorderShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.flash-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.6);
+}
+
+.flash-card:hover::before {
+  opacity: 1;
+}
+
+.flash-card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.55);
+  animation: flashBadgeBounce 1.6s ease-in-out infinite;
+}
+
+@keyframes flashBadgeBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.flash-card-timer {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(17, 17, 17, 0.72);
+  backdrop-filter: blur(3px);
+  color: #fff;
+  font-size: 0.63rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+.flash-card-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.flash-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.flash-card:hover .flash-card-img {
+  transform: scale(1.06);
+}
+
+.flash-card-body {
+  padding: 0.65rem 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.flash-card-biz {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flash-card-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.1em;
+}
+
+.flash-card-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  flex-wrap: wrap;
+}
+
+.flash-card-price-final {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #ea580c;
+}
+
+.flash-card-price-orig {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+/* ── Badge flash dentro de las tarjetas del grid normal de productos ── */
+.product-flash-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #111;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.55);
+  animation: flashBadgeBounce 1.6s ease-in-out infinite;
+}
+
+.product-flash-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.18), rgba(245, 158, 11, 0.08));
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.product-price--flash {
+  color: #ea580c;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .flash-card {
+    flex-basis: 165px;
+  }
+  .flash-section-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
