@@ -334,7 +334,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
   );
 }
 
-// ─── Flash Offer Card ─────────────────────────────────────────────────────────
+// ─── Flash Offer Card (grid) ───────────────────────────────────────────────
 function FlashOfferCard({ product }: { product: Product }) {
   const bizId = product.business?._id;
   const discount = product.flashOffer?.discount ?? 0;
@@ -375,7 +375,7 @@ function FlashOfferCard({ product }: { product: Product }) {
   );
 }
 
-// ─── Flash Offers Section (aleatorio) ─────────────────────────────────────────
+// ─── Flash Offers Section (aleatorio, grid) ────────────────────────────────
 function FlashOffersSection({ products }: { products: Product[] }) {
   const [randomized, setRandomized] = useState<Product[]>([]);
 
@@ -413,6 +413,152 @@ function FlashOffersSection({ products }: { products: Product[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+// ─── Flash Offer Overlay Card (mini card del carrusel flotante) ───────────
+function FlashOverlayCard({
+  product,
+  onAdd,
+  justAdded,
+}: {
+  product: Product;
+  onAdd: (p: Product) => void;
+  justAdded: boolean;
+}) {
+  const discount = product.flashOffer?.discount ?? 0;
+  const finalPrice = product.price * (1 - discount / 100);
+  const bizId = product.business?._id;
+
+  return (
+    <div className="flash-overlay-card">
+      <Link href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"} className="flash-overlay-card-img-link">
+        <img src={imgUrl(product.image)} alt={product.name} className="flash-overlay-card-img" />
+        <span className="flash-overlay-card-badge">
+          <Zap size={10} fill="#fff" strokeWidth={0} /> -{discount}%
+        </span>
+        {justAdded && <span className="flash-overlay-added-toast">¡Agregado!</span>}
+      </Link>
+      <div className="flash-overlay-card-body">
+        {product.business?.name && <p className="flash-overlay-card-biz">{product.business.name}</p>}
+        <p className="flash-overlay-card-name">{product.name}</p>
+        <div className="flash-overlay-card-prices">
+          <span className="flash-overlay-card-final">
+            ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </span>
+          <span className="flash-overlay-card-orig">${product.price.toLocaleString()}</span>
+        </div>
+        <button
+          className="flash-overlay-card-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAdd(product);
+          }}
+        >
+          <ShoppingCart size={13} /> Agregar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Flash Offer Overlay (carrusel flotante, rota cada 3s, agrega al carrito) ──
+function FlashOfferOverlay({ products }: { products: Product[] }) {
+  const { addToCart } = useCart();
+  const [pool, setPool] = useState<Product[]>([]);
+  const [idx, setIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+  const [visible, setVisible] = useState(true);
+  const [justAddedId, setJustAddedId] = useState<string | null>(null);
+
+  // Se oculta por sesión al cerrarlo (no por siempre): no molesta de nuevo
+  // hasta que recargue la pestaña o abra una nueva.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("flash_overlay_dismissed") === "true") {
+      setVisible(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const flashProducts = products.filter((p) => p.flashOffer?.active === true);
+    setPool(shuffleArray(flashProducts));
+    setIdx(0);
+  }, [products]);
+
+  // Rota de a 3 en 3, cada 3 segundos
+  useEffect(() => {
+    if (pool.length <= 3) return;
+    const t = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIdx((i) => (i + 3) % pool.length);
+        setFade(true);
+      }, 250);
+    }, 3000);
+    return () => clearInterval(t);
+  }, [pool.length]);
+
+  const dismiss = () => {
+    setVisible(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("flash_overlay_dismissed", "true");
+    }
+  };
+
+  // Precio flash calculado acá mismo y "congelado" en el carrito al momento
+  // de agregar. Si el mismo producto se ve luego en la página del negocio,
+  // el precio final sale de la misma lógica (product.flashOffer), así que
+  // coincide mientras la oferta siga activa.
+  const handleAdd = (product: Product) => {
+    const discount = product.flashOffer?.discount ?? 0;
+    const finalPrice = product.price * (1 - discount / 100);
+    addToCart({
+      _id: product._id,
+      productId: product._id,
+      name: product.name,
+      price: Number(finalPrice.toFixed(2)),
+      originalPrice: product.price,
+      discount,
+      image: product.image,
+      businessId: product.business?._id,
+      businessName: product.business?.name,
+      businessPhone: product.business?.phone || "",
+      stock: product.stock || 99,
+    });
+    setJustAddedId(product._id);
+    setTimeout(() => setJustAddedId(null), 1500);
+  };
+
+  if (!visible || pool.length === 0) return null;
+
+  const slice = Array.from(
+    { length: Math.min(3, pool.length) },
+    (_, i) => pool[(idx + i) % pool.length]
+  );
+
+  return (
+    <div className="flash-overlay">
+      <div className="flash-overlay-header">
+        <span className="flash-overlay-title">
+          <Zap size={14} fill="#fff" strokeWidth={0} /> Ofertas Flash
+        </span>
+        <button className="flash-overlay-close" onClick={dismiss} aria-label="Cerrar">
+          ✕
+        </button>
+      </div>
+      <div className="flash-overlay-track" style={{ opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
+        {slice.map((p) => (
+          <FlashOverlayCard
+            key={p._id}
+            product={p}
+            onAdd={handleAdd}
+            justAdded={justAddedId === p._id}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -879,7 +1025,7 @@ function HomeContent() {
         </div>
       )}
 
-      {/* ─── Ofertas Flash (aleatorio) ───────────────────────────────────── */}
+      {/* ─── Ofertas Flash (grid, aleatorio) ───────────────────────────────── */}
       <FlashOffersSection products={allProducts} />
 
       {/* ─── Negocios destacados ───────────────────────────────────────────── */}
@@ -959,6 +1105,9 @@ function HomeContent() {
         </div>
         <a href="/register" className="btn btn-white">Empezar gratis</a>
       </div>
+
+      {/* ─── Overlay flotante de ofertas flash (carrusel, agrega al carrito) ── */}
+      <FlashOfferOverlay products={allProducts} />
     </MainLayout>
   );
 }
