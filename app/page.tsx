@@ -467,7 +467,7 @@ function FlashOffersSection({ products }: { products: Product[] }) {
   );
 }
 
-// ─── Flash Offer Overlay Card (mini card del carrusel flotante) ───────────
+// ─── Flash Offer Overlay Card (card grande, ocupa todo el overlay) ────────
 function FlashOverlayCard({
   product,
   secondsLeft,
@@ -485,7 +485,7 @@ function FlashOverlayCard({
   const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
 
   return (
-    <div className="flash-overlay-card">
+    <div className="flash-overlay-card flash-overlay-card--full">
       <Link href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"} className="flash-overlay-card-img-link">
         <img src={imgUrl(product.image)} alt={product.name} className="flash-overlay-card-img" />
         <span className="flash-overlay-card-badge">
@@ -520,7 +520,7 @@ function FlashOverlayCard({
   );
 }
 
-// ─── Flash Offer Overlay (carrusel flotante, rota cada 3s, agrega al carrito) ──
+// ─── Flash Offer Overlay (una sola oferta a la vez, fade automático + flechas) ──
 function FlashOfferOverlay({ products }: { products: Product[] }) {
   const { addToCart } = useCart();
   const [pool, setPool] = useState<Product[]>([]);
@@ -530,8 +530,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
 
   // Reloj en vivo por producto: un solo interval global que resta 1s a
-  // todos los contadores, en vez de un timer por card. Así la ventana
-  // flotante siempre muestra cuánto falta de verdad, no solo el % off.
+  // todos los contadores, en vez de un timer por card.
   const [countdowns, setCountdowns] = useState<Record<string, number>>({});
 
   // Se oculta solo para la vista actual (memoria del componente): no se
@@ -541,13 +540,24 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     setVisible(false);
   };
 
+  // Arma el pool DEDUPLICADO por _id. Esto es lo que elimina el bug de que
+  // el mismo producto apareciera repetido: antes se armaba el slice con
+  // `% pool.length`, y si había 1 o 2 ofertas flash activas, el módulo
+  // hacía que el mismo producto se mostrara 2 o 3 veces al lado suyo.
+  // Ahora solo mostramos UN producto a la vez, así que ese caso ya no puede
+  // pasar, pero igual dedupeamos por las dudas de que `products` traiga el
+  // mismo _id repetido (ej. viene tanto en "featured" como en "random").
   useEffect(() => {
     const flashProducts = products.filter((p) => p.flashOffer?.active === true);
-    setPool(shuffleArray(flashProducts));
+    const uniqueMap = new Map<string, Product>();
+    flashProducts.forEach((p) => uniqueMap.set(p._id, p));
+    const unique = Array.from(uniqueMap.values());
+
+    setPool(shuffleArray(unique));
     setIdx(0);
     setCountdowns((prev) => {
       const next: Record<string, number> = {};
-      flashProducts.forEach((p) => {
+      unique.forEach((p) => {
         // Si ya lo veníamos contando, seguimos desde ahí; si es nuevo, arranca
         // del valor que trae el producto.
         next[p._id] = prev[p._id] ?? (p.flashOfferSecondsLeft ?? 0);
@@ -570,18 +580,27 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     return () => clearInterval(t);
   }, []);
 
-  // Rota de a 3 en 3, cada 3 segundos
+  // Navega con fade. dir = 1 (siguiente) o -1 (anterior). El índice se
+  // normaliza abajo contra el largo real del pool en cada render, así que
+  // acá simplemente sumamos/restamos sin preocuparnos por el wrap-around.
+  const goTo = useCallback((dir: number) => {
+    setFade(false);
+    setTimeout(() => {
+      setIdx((i) => i + dir);
+      setFade(true);
+    }, 250);
+  }, []);
+
+  const total = pool.length;
+  const safeIdx = total > 0 ? ((idx % total) + total) % total : 0;
+
+  // Auto-avanza cada 4s (mostrando UNA sola oferta con fade); se reinicia
+  // solo si el usuario navega a mano gracias a la dependencia de safeIdx.
   useEffect(() => {
-    if (pool.length <= 3) return;
-    const t = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIdx((i) => (i + 3) % pool.length);
-        setFade(true);
-      }, 250);
-    }, 3000);
+    if (total <= 1) return;
+    const t = setInterval(() => goTo(1), 4000);
     return () => clearInterval(t);
-  }, [pool.length]);
+  }, [total, safeIdx, goTo]);
 
   // Precio flash calculado acá mismo y "congelado" en el carrito al momento
   // de agregar. Si el mismo producto se ve luego en la página del negocio,
@@ -607,12 +626,9 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     setTimeout(() => setJustAddedId(null), 1500);
   };
 
-  if (!visible || pool.length === 0) return null;
+  if (!visible || total === 0) return null;
 
-  const slice = Array.from(
-    { length: Math.min(3, pool.length) },
-    (_, i) => pool[(idx + i) % pool.length]
-  );
+  const current = pool[safeIdx];
 
   return (
     <div className="flash-overlay">
@@ -624,17 +640,79 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
           ✕
         </button>
       </div>
-      <div className="flash-overlay-track" style={{ opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
-        {slice.map((p) => (
+
+      <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+        {total > 1 && (
+          <button
+            onClick={() => goTo(-1)}
+            aria-label="Anterior"
+            style={{
+              flexShrink: 0,
+              width: 26,
+              height: 26,
+              borderRadius: "50%",
+              border: "none",
+              background: "rgba(0,0,0,0.35)",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >
+            <ChevronLeft size={15} />
+          </button>
+        )}
+
+        <div style={{ flex: 1, opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
           <FlashOverlayCard
-            key={p._id}
-            product={p}
-            secondsLeft={countdowns[p._id] ?? p.flashOfferSecondsLeft ?? 0}
+            key={current._id}
+            product={current}
+            secondsLeft={countdowns[current._id] ?? current.flashOfferSecondsLeft ?? 0}
             onAdd={handleAdd}
-            justAdded={justAddedId === p._id}
+            justAdded={justAddedId === current._id}
           />
-        ))}
+        </div>
+
+        {total > 1 && (
+          <button
+            onClick={() => goTo(1)}
+            aria-label="Siguiente"
+            style={{
+              flexShrink: 0,
+              width: 26,
+              height: 26,
+              borderRadius: "50%",
+              border: "none",
+              background: "rgba(0,0,0,0.35)",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >
+            <ChevronRight size={15} />
+          </button>
+        )}
       </div>
+
+      {total > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: "0.4rem" }}>
+          {pool.map((p, i) => (
+            <span
+              key={p._id}
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: i === safeIdx ? "#f97316" : "rgba(255,255,255,0.3)",
+                transition: "background 0.2s",
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1183,7 +1261,7 @@ function HomeContent() {
         <a href="/register" className="btn btn-white">Empezar gratis</a>
       </div>
 
-      {/* ─── Overlay flotante de ofertas flash (carrusel, agrega al carrito) ── */}
+      {/* ─── Overlay flotante de ofertas flash (una a la vez, agrega al carrito) ── */}
       <FlashOfferOverlay products={allProducts} />
     </MainLayout>
   );
