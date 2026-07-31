@@ -1,4 +1,5 @@
 "use client";
+
 // app/page.tsx
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
@@ -116,6 +117,32 @@ function shuffleArray<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// Dedupe por _id: evita que la misma oferta/producto aparezca 2 veces
+// cuando el array trae el mismo _id repetido (ej. llega tanto en
+// "featured" como en "random"). Se usa en TODAS las secciones de ofertas
+// flash (grid + ventana flotante) para que nunca se repita una oferta.
+function dedupeById<T extends { _id: string }>(items: T[]): T[] {
+  const map = new Map<string, T>();
+  items.forEach((it) => map.set(it._id, it));
+  return Array.from(map.values());
+}
+
+// Precio BASE sobre el que se calcula el descuento de la oferta flash.
+// Usamos el precio ORIGINAL del producto (antes de cualquier descuento
+// regular ya aplicado), no el precio ya rebajado. Ejemplo:
+//   - Precio original: $65.000
+//   - Descuento regular: 5%  -> precio "normal" mostrado: $61.750
+//   - Oferta flash: 20% OFF -> debe calcularse sobre el original:
+//       $65.000 * 0.80 = $52.000  (no $61.750 * 0.80 = $49.400)
+function flashBasePrice(product: Product): number {
+  return product.originalPrice ?? product.price;
+}
+
+function computeFlashFinalPrice(product: Product): number {
+  const discount = product.flashOffer?.discount ?? 0;
+  return flashBasePrice(product) * (1 - discount / 100);
 }
 
 // Texto "amigable" tipo "2h 14m" — se usa en la franja informativa del
@@ -351,14 +378,17 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
 }
 
 // ─── Flash Offer Card (grid estático) ──────────────────────────────────────
+// Ya NO navega al hacer click: es solo informativa (imagen, título, negocio,
+// precio y reloj) + botón para agregar al carrito. El precio final se
+// calcula sobre el precio ORIGINAL del producto (ver computeFlashFinalPrice).
 function FlashOfferCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
-  const bizId = product.business?._id;
   const discount = product.flashOffer?.discount ?? 0;
-  const finalPrice = product.price * (1 - discount / 100);
+  const finalPrice = computeFlashFinalPrice(product);
+  const basePrice = flashBasePrice(product);
 
-  // Reloj propio de la card, tickea segundo a segundo (antes era cada
-  // minuto). Se re-sincroniza si el producto trae un nuevo valor del back.
+  // Reloj propio de la card, tickea segundo a segundo. Se re-sincroniza si
+  // el producto trae un nuevo valor del back.
   const [secondsLeft, setSecondsLeft] = useState<number>(product.flashOfferSecondsLeft ?? 0);
   useEffect(() => {
     setSecondsLeft(product.flashOfferSecondsLeft ?? 0);
@@ -371,8 +401,6 @@ function FlashOfferCard({ product }: { product: Product }) {
   }, []);
   const isUrgent = secondsLeft > 0 && secondsLeft <= 300; // últimos 5 min
 
-  // Misma lógica que ProductCard/FlashOverlayCard: precio flash "congelado"
-  // en el carrito al momento de agregar (no cambia si la oferta se actualiza).
   const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -381,7 +409,7 @@ function FlashOfferCard({ product }: { product: Product }) {
       productId: product._id,
       name: product.name,
       price: Number(finalPrice.toFixed(2)),
-      originalPrice: product.price,
+      originalPrice: basePrice,
       discount,
       image: product.image,
       businessId: product.business?._id,
@@ -393,10 +421,7 @@ function FlashOfferCard({ product }: { product: Product }) {
 
   return (
     <div className="flash-card">
-      <Link
-        href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"}
-        className="flash-card-link"
-      >
+      <div className="flash-card-content">
         <span className="flash-card-badge">
           <Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%
         </span>
@@ -413,10 +438,10 @@ function FlashOfferCard({ product }: { product: Product }) {
             <span className="flash-card-price-final">
               ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
-            <span className="flash-card-price-orig">${product.price.toLocaleString()}</span>
+            <span className="flash-card-price-orig">${basePrice.toLocaleString()}</span>
           </div>
         </div>
-      </Link>
+      </div>
       <div className="flash-card-footer">
         <button className="flash-card-cart-btn" onClick={handleCart}>
           <ShoppingCart size={14} /> Agregar al carrito
@@ -431,13 +456,14 @@ function FlashOffersSection({ products }: { products: Product[] }) {
   const [randomized, setRandomized] = useState<Product[]>([]);
 
   useEffect(() => {
-    const flashProducts = products.filter((p) => p.flashOffer?.active === true);
+    // Dedupe por _id ANTES de mezclar: esto es lo que evita que la misma
+    // oferta aparezca 2 veces en la grilla cuando el producto viene
+    // repetido en `products` (ej. featured + random).
+    const flashProducts = dedupeById(products.filter((p) => p.flashOffer?.active === true));
     if (flashProducts.length === 0) {
       setRandomized([]);
       return;
     }
-    // Mezcla real (Fisher-Yates), no solo "los primeros N" -> aunque haya
-    // 150 ofertas activas, cada carga muestra una selección distinta.
     setRandomized(shuffleArray(flashProducts).slice(0, 12));
   }, [products]);
 
@@ -467,7 +493,9 @@ function FlashOffersSection({ products }: { products: Product[] }) {
   );
 }
 
-// ─── Flash Offer Overlay Card (card grande, ocupa todo el overlay) ────────
+// ─── Flash Offer Overlay Card (card de la ventana flotante) ───────────────
+// Tampoco navega al negocio: solo imagen, nombre del negocio, título,
+// precio y reloj + botón de agregar al carrito.
 function FlashOverlayCard({
   product,
   secondsLeft,
@@ -480,30 +508,30 @@ function FlashOverlayCard({
   justAdded: boolean;
 }) {
   const discount = product.flashOffer?.discount ?? 0;
-  const finalPrice = product.price * (1 - discount / 100);
-  const bizId = product.business?._id;
+  const finalPrice = computeFlashFinalPrice(product);
+  const basePrice = flashBasePrice(product);
   const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
 
   return (
-    <div className="flash-overlay-card flash-overlay-card--full">
-      <Link href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"} className="flash-overlay-card-img-link">
+    <div className="flash-overlay-card">
+      <div className="flash-overlay-card-media">
         <img src={imgUrl(product.image)} alt={product.name} className="flash-overlay-card-img" />
         <span className="flash-overlay-card-badge">
           <Zap size={10} fill="#fff" strokeWidth={0} /> -{discount}%
         </span>
         {justAdded && <span className="flash-overlay-added-toast">¡Agregado!</span>}
-      </Link>
+      </div>
       <div className="flash-overlay-card-body">
         {product.business?.name && <p className="flash-overlay-card-biz">{product.business.name}</p>}
         <p className="flash-overlay-card-name">{product.name}</p>
         <span className={`flash-overlay-card-timer ${isUrgent ? "urgent" : ""}`}>
-          <Clock size={9} /> {formatClockCountdown(secondsLeft)}
+          <Clock size={10} /> {formatClockCountdown(secondsLeft)}
         </span>
         <div className="flash-overlay-card-prices">
           <span className="flash-overlay-card-final">
             ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </span>
-          <span className="flash-overlay-card-orig">${product.price.toLocaleString()}</span>
+          <span className="flash-overlay-card-orig">${basePrice.toLocaleString()}</span>
         </div>
         <button
           className="flash-overlay-card-btn"
@@ -513,14 +541,14 @@ function FlashOverlayCard({
             onAdd(product);
           }}
         >
-          <ShoppingCart size={13} /> Agregar
+          <ShoppingCart size={14} /> Agregar al carrito
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Flash Offer Overlay (una sola oferta a la vez, fade automático + flechas) ──
+// ─── Flash Offer Overlay (ventana flotante, una sola oferta a la vez) ─────
 function FlashOfferOverlay({ products }: { products: Product[] }) {
   const { addToCart } = useCart();
   const [pool, setPool] = useState<Product[]>([]);
@@ -540,26 +568,18 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     setVisible(false);
   };
 
-  // Arma el pool DEDUPLICADO por _id. Esto es lo que elimina el bug de que
-  // el mismo producto apareciera repetido: antes se armaba el slice con
-  // `% pool.length`, y si había 1 o 2 ofertas flash activas, el módulo
-  // hacía que el mismo producto se mostrara 2 o 3 veces al lado suyo.
-  // Ahora solo mostramos UN producto a la vez, así que ese caso ya no puede
-  // pasar, pero igual dedupeamos por las dudas de que `products` traiga el
-  // mismo _id repetido (ej. viene tanto en "featured" como en "random").
+  // Arma el pool DEDUPLICADO por _id, así nunca se repite la misma oferta.
   useEffect(() => {
     const flashProducts = products.filter((p) => p.flashOffer?.active === true);
-    const uniqueMap = new Map<string, Product>();
-    flashProducts.forEach((p) => uniqueMap.set(p._id, p));
-    const unique = Array.from(uniqueMap.values());
+    const unique = dedupeById(flashProducts);
 
     setPool(shuffleArray(unique));
     setIdx(0);
     setCountdowns((prev) => {
       const next: Record<string, number> = {};
       unique.forEach((p) => {
-        // Si ya lo veníamos contando, seguimos desde ahí; si es nuevo, arranca
-        // del valor que trae el producto.
+        // Si ya lo veníamos contando, seguimos desde ahí; si es nuevo,
+        // arranca del valor que trae el producto.
         next[p._id] = prev[p._id] ?? (p.flashOfferSecondsLeft ?? 0);
       });
       return next;
@@ -581,8 +601,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   }, []);
 
   // Navega con fade. dir = 1 (siguiente) o -1 (anterior). El índice se
-  // normaliza abajo contra el largo real del pool en cada render, así que
-  // acá simplemente sumamos/restamos sin preocuparnos por el wrap-around.
+  // normaliza abajo contra el largo real del pool en cada render.
   const goTo = useCallback((dir: number) => {
     setFade(false);
     setTimeout(() => {
@@ -602,19 +621,19 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     return () => clearInterval(t);
   }, [total, safeIdx, goTo]);
 
-  // Precio flash calculado acá mismo y "congelado" en el carrito al momento
-  // de agregar. Si el mismo producto se ve luego en la página del negocio,
-  // el precio final sale de la misma lógica (product.flashOffer), así que
-  // coincide mientras la oferta siga activa.
+  // Precio flash calculado sobre el precio ORIGINAL (ver
+  // computeFlashFinalPrice) y "congelado" en el carrito al momento de
+  // agregar.
   const handleAdd = (product: Product) => {
     const discount = product.flashOffer?.discount ?? 0;
-    const finalPrice = product.price * (1 - discount / 100);
+    const finalPrice = computeFlashFinalPrice(product);
+    const basePrice = flashBasePrice(product);
     addToCart({
       _id: product._id,
       productId: product._id,
       name: product.name,
       price: Number(finalPrice.toFixed(2)),
-      originalPrice: product.price,
+      originalPrice: basePrice,
       discount,
       image: product.image,
       businessId: product.business?._id,
@@ -641,30 +660,14 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
         </button>
       </div>
 
-      <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+      <div className="flash-overlay-body">
         {total > 1 && (
-          <button
-            onClick={() => goTo(-1)}
-            aria-label="Anterior"
-            style={{
-              flexShrink: 0,
-              width: 26,
-              height: 26,
-              borderRadius: "50%",
-              border: "none",
-              background: "rgba(0,0,0,0.35)",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            <ChevronLeft size={15} />
+          <button className="flash-overlay-nav-btn" onClick={() => goTo(-1)} aria-label="Anterior">
+            <ChevronLeft size={16} />
           </button>
         )}
 
-        <div style={{ flex: 1, opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
+        <div className="flash-overlay-slide" style={{ opacity: fade ? 1 : 0 }}>
           <FlashOverlayCard
             key={current._id}
             product={current}
@@ -675,41 +678,16 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
         </div>
 
         {total > 1 && (
-          <button
-            onClick={() => goTo(1)}
-            aria-label="Siguiente"
-            style={{
-              flexShrink: 0,
-              width: 26,
-              height: 26,
-              borderRadius: "50%",
-              border: "none",
-              background: "rgba(0,0,0,0.35)",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            <ChevronRight size={15} />
+          <button className="flash-overlay-nav-btn" onClick={() => goTo(1)} aria-label="Siguiente">
+            <ChevronRight size={16} />
           </button>
         )}
       </div>
 
       {total > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: "0.4rem" }}>
+        <div className="flash-overlay-dots">
           {pool.map((p, i) => (
-            <span
-              key={p._id}
-              style={{
-                width: 5,
-                height: 5,
-                borderRadius: "50%",
-                background: i === safeIdx ? "#f97316" : "rgba(255,255,255,0.3)",
-                transition: "background 0.2s",
-              }}
-            />
+            <span key={p._id} className={`flash-overlay-dot ${i === safeIdx ? "active" : ""}`} />
           ))}
         </div>
       )}
@@ -734,7 +712,8 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   const totalRatings = product.business?.totalRatings ?? 0;
 
   const flashDiscount = product.flashOffer?.discount ?? 0;
-  const flashFinalPrice = isFlash ? product.price * (1 - flashDiscount / 100) : product.price;
+  const flashBase = flashBasePrice(product);
+  const flashFinalPrice = isFlash ? computeFlashFinalPrice(product) : product.price;
 
   const handleCart = () => {
     addToCart({
@@ -742,7 +721,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       productId: product._id,
       name: product.name,
       price: isFlash ? Number(flashFinalPrice.toFixed(2)) : product.price,
-      originalPrice: isFlash ? product.price : product.originalPrice,
+      originalPrice: isFlash ? flashBase : product.originalPrice,
       discount: isFlash ? flashDiscount : product.discount,
       image: product.image,
       businessId: bizId,
@@ -882,7 +861,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
               <span className="product-price product-price--flash">
                 ${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </span>
-              <span className="product-original">${product.price.toLocaleString()}</span>
+              <span className="product-original">${flashBase.toLocaleString()}</span>
             </>
           ) : (
             <>
