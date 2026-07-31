@@ -18,6 +18,8 @@ import {
   PawPrint, Gamepad2, Navigation, AlertTriangle, Lock,
   Send, RefreshCw, Clock, ShieldAlert, ShieldCheck,
 } from "lucide-react";
+import Link from "next/link";
+import { BarChart3 } from "lucide-react";
 
 import {
   getMyProducts, createProduct, updateProduct,
