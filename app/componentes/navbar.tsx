@@ -574,8 +574,8 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="navbar-logo">
-            <span className="navbar-logo-badge">Off</span>
-            <span>ertas</span>
+            <span className="navbar-logo-badge">Mercado</span>
+            <span>Rosario</span>
             <span className="navbar-logo-dot" />
           </Link>
 
