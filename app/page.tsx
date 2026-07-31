@@ -118,6 +118,8 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
+// Texto "amigable" tipo "2h 14m" — se usa en la franja informativa del
+// product-card grande, donde no hace falta precisión al segundo.
 function formatFlashTime(seconds?: number): string {
   if (!seconds || seconds <= 0) return "Terminando";
   const h = Math.floor(seconds / 3600);
@@ -125,6 +127,20 @@ function formatFlashTime(seconds?: number): string {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m`;
   return "< 1m";
+}
+
+// Reloj tipo cuenta regresiva real: "04:32" o "1:04:32". Se usa en los
+// badges de las flash cards y en la ventana flotante, actualizado segundo
+// a segundo para que se sienta la urgencia.
+function formatClockCountdown(seconds?: number): string {
+  const s = Math.max(0, Math.floor(seconds ?? 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  }
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
 // ─── Stars ───────────────────────────────────────────────────────────────────
@@ -334,22 +350,26 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
   );
 }
 
-// ─── Flash Offer Card (grid) ───────────────────────────────────────────────
+// ─── Flash Offer Card (grid estático) ──────────────────────────────────────
 function FlashOfferCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const bizId = product.business?._id;
   const discount = product.flashOffer?.discount ?? 0;
   const finalPrice = product.price * (1 - discount / 100);
-  const [timeLabel, setTimeLabel] = useState(formatFlashTime(product.flashOfferSecondsLeft));
 
+  // Reloj propio de la card, tickea segundo a segundo (antes era cada
+  // minuto). Se re-sincroniza si el producto trae un nuevo valor del back.
+  const [secondsLeft, setSecondsLeft] = useState<number>(product.flashOfferSecondsLeft ?? 0);
   useEffect(() => {
-    let secs = product.flashOfferSecondsLeft ?? 0;
-    const t = setInterval(() => {
-      secs -= 60;
-      setTimeLabel(formatFlashTime(secs));
-    }, 60_000);
-    return () => clearInterval(t);
+    setSecondsLeft(product.flashOfferSecondsLeft ?? 0);
   }, [product.flashOfferSecondsLeft]);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSecondsLeft((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+  const isUrgent = secondsLeft > 0 && secondsLeft <= 300; // últimos 5 min
 
   // Misma lógica que ProductCard/FlashOverlayCard: precio flash "congelado"
   // en el carrito al momento de agregar (no cambia si la oferta se actualiza).
@@ -375,13 +395,13 @@ function FlashOfferCard({ product }: { product: Product }) {
     <div className="flash-card">
       <Link
         href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"}
-        style={{ display: "block", color: "inherit", textDecoration: "none" }}
+        className="flash-card-link"
       >
         <span className="flash-card-badge">
           <Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%
         </span>
-        <span className="flash-card-timer">
-          <Clock size={10} /> {timeLabel}
+        <span className={`flash-card-timer ${isUrgent ? "urgent" : ""}`}>
+          <Clock size={10} /> {formatClockCountdown(secondsLeft)}
         </span>
         <div className="flash-card-img-wrap">
           <img src={imgUrl(product.image)} alt={product.name} className="flash-card-img" />
@@ -397,13 +417,11 @@ function FlashOfferCard({ product }: { product: Product }) {
           </div>
         </div>
       </Link>
-      <button
-        className="btn btn-primary"
-        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", margin: "0.5rem 0.6rem 0.6rem", padding: "0.4rem", fontSize: "0.78rem" }}
-        onClick={handleCart}
-      >
-        <ShoppingCart size={14} /> Agregar al carrito
-      </button>
+      <div className="flash-card-footer">
+        <button className="flash-card-cart-btn" onClick={handleCart}>
+          <ShoppingCart size={14} /> Agregar al carrito
+        </button>
+      </div>
     </div>
   );
 }
@@ -452,16 +470,19 @@ function FlashOffersSection({ products }: { products: Product[] }) {
 // ─── Flash Offer Overlay Card (mini card del carrusel flotante) ───────────
 function FlashOverlayCard({
   product,
+  secondsLeft,
   onAdd,
   justAdded,
 }: {
   product: Product;
+  secondsLeft: number;
   onAdd: (p: Product) => void;
   justAdded: boolean;
 }) {
   const discount = product.flashOffer?.discount ?? 0;
   const finalPrice = product.price * (1 - discount / 100);
   const bizId = product.business?._id;
+  const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
 
   return (
     <div className="flash-overlay-card">
@@ -475,6 +496,9 @@ function FlashOverlayCard({
       <div className="flash-overlay-card-body">
         {product.business?.name && <p className="flash-overlay-card-biz">{product.business.name}</p>}
         <p className="flash-overlay-card-name">{product.name}</p>
+        <span className={`flash-overlay-card-timer ${isUrgent ? "urgent" : ""}`}>
+          <Clock size={9} /> {formatClockCountdown(secondsLeft)}
+        </span>
         <div className="flash-overlay-card-prices">
           <span className="flash-overlay-card-final">
             ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -505,6 +529,11 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   const [visible, setVisible] = useState(true);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
 
+  // Reloj en vivo por producto: un solo interval global que resta 1s a
+  // todos los contadores, en vez de un timer por card. Así la ventana
+  // flotante siempre muestra cuánto falta de verdad, no solo el % off.
+  const [countdowns, setCountdowns] = useState<Record<string, number>>({});
+
   // Se oculta solo para la vista actual (memoria del componente): no se
   // guarda en storage, así que al recargar la página vuelve a aparecer
   // mientras la oferta siga activa entre los productos.
@@ -516,7 +545,30 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     const flashProducts = products.filter((p) => p.flashOffer?.active === true);
     setPool(shuffleArray(flashProducts));
     setIdx(0);
+    setCountdowns((prev) => {
+      const next: Record<string, number> = {};
+      flashProducts.forEach((p) => {
+        // Si ya lo veníamos contando, seguimos desde ahí; si es nuevo, arranca
+        // del valor que trae el producto.
+        next[p._id] = prev[p._id] ?? (p.flashOfferSecondsLeft ?? 0);
+      });
+      return next;
+    });
   }, [products]);
+
+  // Tick global cada 1s para todos los contadores activos.
+  useEffect(() => {
+    const t = setInterval(() => {
+      setCountdowns((prev) => {
+        const next: Record<string, number> = {};
+        for (const id in prev) {
+          next[id] = prev[id] > 0 ? prev[id] - 1 : 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // Rota de a 3 en 3, cada 3 segundos
   useEffect(() => {
@@ -577,6 +629,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
           <FlashOverlayCard
             key={p._id}
             product={p}
+            secondsLeft={countdowns[p._id] ?? p.flashOfferSecondsLeft ?? 0}
             onAdd={handleAdd}
             justAdded={justAddedId === p._id}
           />
