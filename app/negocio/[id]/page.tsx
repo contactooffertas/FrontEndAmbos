@@ -6,12 +6,13 @@ import MainLayout from "../../componentes/MainLayout";
 import { useAuth } from "../../context/authContext";
 import { useCart } from "../../context/cartContext";
 import ReportModal from "../../componentes/reportModal";
+import { useTracking } from "../../context/TrackingContext"; // <-- TRACKING
 
 import {
   MapPin, Package, Star, CheckCircle, ShoppingBag,
   UserPlus, MessageCircle, Heart, Tag, ShoppingCart,
   ArrowLeft, Share2, Users, TrendingUp, ChevronLeft, ChevronRight, Navigation,
-  Locate, LocateOff, RefreshCw, Phone, X,
+  Locate, LocateOff, RefreshCw, Phone, X, BarChart3,
 } from "lucide-react";
 import "../../styles/negocioId.css";
 
@@ -54,23 +55,18 @@ function getRankInfo(rating: number, total: number) {
   return { label: "En desarrollo", color: "#6b7280", bg: "#f3f4f6" };
 }
 
-// Formatea un teléfono argentino (o cualquier formato local) al estándar
-// que espera wa.me: código de país + 9 (celular AR) + número, solo dígitos.
 function formatPhoneForWhatsApp(phone?: string): string | null {
   if (!phone) return null;
   let digits = phone.replace(/\D/g, "");
   if (!digits) return null;
-
   if (digits.startsWith("54")) {
     if (!digits.startsWith("549")) {
       digits = "549" + digits.slice(2);
     }
     return digits;
   }
-
   if (digits.startsWith("0")) digits = digits.slice(1);
   if (digits.startsWith("15")) digits = digits.slice(2);
-
   return `549${digits}`;
 }
 
@@ -134,12 +130,9 @@ function useIsMobile(breakpoint = 640) {
   return isMobile;
 }
 
-// ── Config de throttling del GPS ────────────────────────────────────────────
-// Para un marketplace no hace falta precisión "tipo Uber" en tiempo real.
-const GPS_MIN_INTERVAL_MS = 30_000; // no aceptar una nueva posición antes de 30s
-const GPS_MIN_DISTANCE_M  = 100;    // ni aunque haya pasado el tiempo, si no se movió ~100m
+const GPS_MIN_INTERVAL_MS = 30_000;
+const GPS_MIN_DISTANCE_M  = 100;
 
-// Distancia entre dos coords en metros (fórmula haversine)
 function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -152,56 +145,33 @@ function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ── Hook GPS dinámico (throttled) ───────────────────────────────────────────
-/**
- * Usa la geolocalización del browser, pero throttleada:
- * - Al montar: pide GPS automáticamente.
- * - Solo actualiza el estado (y dispara re-fetch de productos) si pasó
- *   GPS_MIN_INTERVAL_MS Y el usuario se movió más de GPS_MIN_DISTANCE_M.
- * - enableHighAccuracy: false → usa red/wifi en vez de GPS puro, más liviano
- *   y no fuerza actualizaciones constantes en mobile.
- * - Retorna: coords actuales, estado y función para refrescar manualmente.
- * - Fallback: si el user rechaza, devuelve status "denied" para que el
- *   componente use la dirección guardada del perfil.
- */
 function useDynamicGps() {
   const [gps, setGps] = useState<GpsState>({
     lat: null, lng: null, status: "idle", updatedAt: null,
   });
-
   const watchRef        = useRef<number | null>(null);
   const lastAcceptedRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
-
   const startWatch = useCallback(() => {
     if (!navigator.geolocation) {
       setGps(prev => ({ ...prev, status: "error" }));
       return;
     }
-
     setGps(prev => ({ ...prev, status: "loading" }));
-
     watchRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
         const now  = Date.now();
         const last = lastAcceptedRef.current;
-
-        // Primera lectura: siempre se acepta
         if (!last) {
           lastAcceptedRef.current = { lat, lng, time: now };
           setGps({ lat, lng, status: "ok", updatedAt: new Date() });
           return;
         }
-
         const elapsed = now - last.time;
         const moved   = distanceMeters(last.lat, last.lng, lat, lng);
-
-        // Throttle: ignora la lectura si no pasó el tiempo mínimo,
-        // o si pasó el tiempo pero no se movió lo suficiente
         if (elapsed < GPS_MIN_INTERVAL_MS || moved < GPS_MIN_DISTANCE_M) {
           return;
         }
-
         lastAcceptedRef.current = { lat, lng, time: now };
         setGps({ lat, lng, status: "ok", updatedAt: new Date() });
       },
@@ -210,14 +180,12 @@ function useDynamicGps() {
         setGps(prev => ({ ...prev, status, lat: null, lng: null }));
       },
       {
-        enableHighAccuracy: false,    // red/wifi, no GPS de alta precisión
-        maximumAge:         30_000,   // acepta coords cacheadas hasta 30s
+        enableHighAccuracy: false,
+        maximumAge:         30_000,
         timeout:            15_000,
       }
     );
   }, []);
-
-  // Pedir GPS al montar
   useEffect(() => {
     startWatch();
     return () => {
@@ -225,19 +193,15 @@ function useDynamicGps() {
         navigator.geolocation.clearWatch(watchRef.current);
     };
   }, [startWatch]);
-
-  // Refresh manual: resetea el throttle para que la próxima lectura entre sí o sí
   const refresh = useCallback(() => {
     if (watchRef.current !== null)
       navigator.geolocation.clearWatch(watchRef.current);
     lastAcceptedRef.current = null;
     startWatch();
   }, [startWatch]);
-
   return { gps, refresh };
 }
 
-// ── Componente badge GPS ─────────────────────────────────────────────────────
 function GpsBadge({ gps, onRefresh, profileHasLoc }: {
   gps: GpsState;
   onRefresh: () => void;
@@ -246,7 +210,6 @@ function GpsBadge({ gps, onRefresh, profileHasLoc }: {
   const timeStr = gps.updatedAt
     ? gps.updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     : null;
-
   if (gps.status === "loading")
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#6b7280", background: "#f3f4f6", padding: "3px 10px", borderRadius: 20 }}>
@@ -254,7 +217,6 @@ function GpsBadge({ gps, onRefresh, profileHasLoc }: {
         Obteniendo ubicación…
       </span>
     );
-
   if (gps.status === "ok")
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#059669", background: "#d1fae5", padding: "3px 10px", borderRadius: 20 }}>
@@ -265,7 +227,6 @@ function GpsBadge({ gps, onRefresh, profileHasLoc }: {
         </button>
       </span>
     );
-
   if (gps.status === "denied")
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#b45309", background: "#fef3c7", padding: "3px 10px", borderRadius: 20 }}>
@@ -276,8 +237,7 @@ function GpsBadge({ gps, onRefresh, profileHasLoc }: {
         </button>
       </span>
     );
-
-  return null; // status idle/error no muestra nada hasta que se resuelve
+  return null;
 }
 
 // ── Página principal ─────────────────────────────────────────────────────────
@@ -288,51 +248,39 @@ export default function NegocioPublicoPage() {
   const router        = useRouter();
   const isMobile      = useIsMobile();
   const searchParams  = useSearchParams();
+  const { track } = useTracking(); // <-- TRACKING
+  const productViewStartRef = useRef<Record<string, number>>({}); // <-- TRACKING
+  const pageEnterRef = useRef<number>(Date.now()); // <-- TRACKING
 
-  // Id del producto que originó la visita (link compartido: /negocio/:id?p=<productId>)
   const highlightProductId = searchParams.get("p");
-
-  // GPS dinámico (reemplaza las coords fijas del perfil)
   const { gps, refresh: refreshGps } = useDynamicGps();
-
   const [business,        setBusiness]        = useState<Business | null>(null);
   const [products,        setProducts]        = useState<Product[]>([]);
   const [loading,         setLoading]         = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
   const [contactLoading,  setContactLoading]  = useState(false);
   const [currentPage,     setCurrentPage]     = useState(1);
-
-  // ── Spotlight del producto compartido ────────────────────────────────────
   const [spotlightProduct, setSpotlightProduct] = useState<Product | null>(null);
   const [spotlightVisible, setSpotlightVisible] = useState(false);
   const [highlightActive,  setHighlightActive]  = useState(false);
-
   const [social, setSocial] = useState<SocialStatus>({
     following: false, saved: false, myRating: 0,
     followersCount: 0, rating: 0, totalRatings: 0,
   });
-
   const token         = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
   const currentUserId = (user as any)?._id || (user as any)?.id;
-
-  // Coords del perfil (fallback si GPS está denegado)
   const profileLat    = (user as any)?.lat;
   const profileLng    = (user as any)?.lng;
   const profileHasLoc = !!(user?.locationEnabled && profileLat && profileLng);
-
-  // ── Resolución de coordenadas: GPS dinámico > perfil guardado > ninguna ──
   const activeLat: number | null =
     gps.status === "ok"     ? gps.lat :
     gps.status === "denied" && profileHasLoc ? profileLat :
     null;
-
   const activeLng: number | null =
     gps.status === "ok"     ? gps.lng :
     gps.status === "denied" && profileHasLoc ? profileLng :
     null;
-
   const hasActiveLoc = activeLat !== null && activeLng !== null;
-
   const ITEMS_PER_PAGE = isMobile ? 4 : 12;
   const totalPages     = Math.ceil(products.length / ITEMS_PER_PAGE);
   const paginatedProds = products.slice(
@@ -340,9 +288,37 @@ export default function NegocioPublicoPage() {
     currentPage * ITEMS_PER_PAGE,
   );
 
+  // <-- TRACKING: helpers de tracking
+  const isOwner = !!(business && currentUserId && (typeof business.owner === 'object' ? (business.owner as any)?._id : business.owner) === currentUserId);
+
+  const handleProductView = (p: Product) => {
+    if (isOwner) return;
+    productViewStartRef.current[p._id] = Date.now();
+    track('product_view', {
+      businessId: id,
+      product_id: p._id,
+      product_name: p.name,
+      category: p.category,
+    });
+  };
+
+  const handleProductLeave = (p: Product) => {
+    if (isOwner) return;
+    const start = productViewStartRef.current[p._id];
+    if (!start) return;
+    const seconds = Math.round((Date.now() - start) / 1000);
+    if (seconds > 2) {
+      track('dwell_time', {
+        businessId: id,
+        product_id: p._id,
+        seconds
+      });
+    }
+    delete productViewStartRef.current[p._id];
+  };
+
   useEffect(() => { setCurrentPage(1); }, [isMobile]);
 
-  // ── Fetch negocio ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
     fetch(`${API}/business/${id}`)
@@ -361,51 +337,57 @@ export default function NegocioPublicoPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // ── Fetch productos — se re-ejecuta cada vez que cambian las coords GPS ──
+  // <-- TRACKING: page_enter cuando carga el negocio
+  useEffect(() => {
+    if (!business || !id || isOwner) return;
+    pageEnterRef.current = Date.now();
+    track('page_enter', { businessId: id, business_name: business.name });
+
+    return () => {
+      const seconds = Math.round((Date.now() - pageEnterRef.current) / 1000);
+      if (seconds > 3) {
+        track('page_leave', { businessId: id, total_seconds: seconds });
+      }
+    };
+  }, [business, id, isOwner]);
+
   useEffect(() => {
     if (!id) return;
-    // Esperar a que GPS se resuelva (ok o denied) antes de buscar
     if (gps.status === "idle" || gps.status === "loading") return;
-
     const params = new URLSearchParams({ businessId: id, limit: "40" });
-
     if (hasActiveLoc) {
       params.set("lat", activeLat!.toString());
       params.set("lng", activeLng!.toString());
     }
     if (currentUserId) params.set("userId", currentUserId);
-
     setProductsLoading(true);
     fetch(`${API}/products?${params}`)
       .then(r => r.json())
       .then(data => setProducts(data.products || []))
       .catch(() => setProducts([]))
       .finally(() => setProductsLoading(false));
-
-  // activeLat y activeLng cambian cada vez que el GPS actualiza → re-fetch automático
   }, [id, activeLat, activeLng, currentUserId, gps.status]);
 
-  // ── Spotlight: cuando llegan los productos, si hay ?p= mostramos la card ──
   useEffect(() => {
     if (!highlightProductId || products.length === 0) return;
-
     const idx = products.findIndex(p => p._id === highlightProductId);
-    if (idx === -1) return; // el producto no está en esta lista (bloqueado, fuera de zona, etc.)
-
+    if (idx === -1) return;
     setSpotlightProduct(products[idx]);
     setSpotlightVisible(true);
     setHighlightActive(true);
     setCurrentPage(Math.floor(idx / ITEMS_PER_PAGE) + 1);
+    // <-- TRACKING: vista desde link compartido
+    if (!isOwner) {
+      track('product_view_shared', { businessId: id, product_id: highlightProductId });
+    }
   }, [products, highlightProductId, ITEMS_PER_PAGE]);
 
-  // El resalte pulsante de la grilla se apaga solo a los pocos segundos
   useEffect(() => {
     if (!highlightActive) return;
     const t = setTimeout(() => setHighlightActive(false), 4500);
     return () => clearTimeout(t);
   }, [highlightActive]);
 
-  // ── Social status ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!id || !token) return;
     fetch(`${API}/business/${id}/social`, { headers: { Authorization: `Bearer ${token}` } })
@@ -425,7 +407,6 @@ export default function NegocioPublicoPage() {
       .catch(console.error);
   }, [id, token]);
 
-  // ── Redirigir si es el dueño ─────────────────────────────────────────────
   useEffect(() => {
     if (!business || !user) return;
     const userId  = (user as any)._id || (user as any).id;
@@ -460,6 +441,7 @@ export default function NegocioPublicoPage() {
         const data = await res.json();
         setSocial(prev => ({ ...prev, following: !isFollowing, followersCount: data.followersCount }));
         toast("success", !isFollowing ? `✅ Siguiendo a ${business?.name}` : "Dejaste de seguir");
+        if (!isOwner && !isFollowing) track('lead_interaction', { businessId: id, action: 'follow' }); // <-- TRACKING
       }
     } catch { toast("error", "Error al seguir"); }
   };
@@ -473,7 +455,8 @@ export default function NegocioPublicoPage() {
       });
       if (res.ok) {
         setSocial(prev => ({ ...prev, saved: !isSaved }));
-        toast("success", !isSaved ? "❤️ Guardado en favoritos" : "Quitado de favoritos");
+        toast("success", !isSaved ? "❤ Guardado en favoritos" : "Quitado de favoritos");
+        if (!isOwner && !isSaved) track('lead_interaction', { businessId: id, action: 'favorite' }); // <-- TRACKING
       }
     } catch { toast("error", "Error al guardar"); }
   };
@@ -490,6 +473,7 @@ export default function NegocioPublicoPage() {
         const data = await res.json();
         setSocial(prev => ({ ...prev, myRating: rating, rating: data.rating, totalRatings: data.totalRatings }));
         toast("success", `⭐ Votaste con ${rating} estrellas`);
+        if (!isOwner) track('lead_interaction', { businessId: id, action: 'rate', value: rating }); // <-- TRACKING
       }
     } catch { toast("error", "Error al calificar"); }
   };
@@ -497,6 +481,7 @@ export default function NegocioPublicoPage() {
   const handleContact = async () => {
     if (!user) { requireAuth(); return; }
     setContactLoading(true);
+    if (!isOwner) track('lead_conversion', { businessId: id, action: 'chat_click' }); // <-- TRACKING
     try {
       const convRes = await fetch(`${API}/chat/start`, {
         method: "POST",
@@ -517,13 +502,13 @@ export default function NegocioPublicoPage() {
     }
   };
 
-  // ── Contacto directo por WhatsApp ─────────────────────────────────────────
   const handleWhatsapp = () => {
     const waPhone = formatPhoneForWhatsApp(business?.phone);
     if (!waPhone) {
       toast("error", "Este negocio no tiene WhatsApp cargado");
       return;
     }
+    if (!isOwner) track('lead_conversion', { businessId: id, action: 'whatsapp_click' }); // <-- TRACKING
     const message = "Vi tu negocio en MercadoRosario, la web de Rosario, quiero saber qué otros productos tenés, gracias";
     const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -544,11 +529,13 @@ export default function NegocioPublicoPage() {
       stock:         product.stock   ?? 99,
     });
     toast("success", `🛒 ${product.name} agregado al carrito`);
+    if (!isOwner) track('lead_conversion', { businessId: id, action: 'add_to_cart', product_id: product._id }); // <-- TRACKING
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast("info", "🔗 Enlace copiado");
+    if (!isOwner) track('product_share', { businessId: id }); // <-- TRACKING
   };
 
   const handlePageChange = (page: number) => {
@@ -556,13 +543,11 @@ export default function NegocioPublicoPage() {
     document.querySelector(".nid-products")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Cierra el spotlight y limpia el ?p= de la URL sin recargar la página
   const closeSpotlight = () => {
     setSpotlightVisible(false);
     router.replace(`/negocio/${id}`, { scroll: false });
   };
 
-  // Cierra el spotlight y lleva al usuario hasta la card real en la grilla
   const goToProductInGrid = () => {
     const targetId = highlightProductId;
     setSpotlightVisible(false);
@@ -601,14 +586,12 @@ export default function NegocioPublicoPage() {
 
   return (
     <MainLayout>
-      {/* ── Spotlight del producto compartido (llega desde /p/:id → ?p=) ── */}
       {spotlightProduct && spotlightVisible && (
         <div className="nid-spotlight-overlay" onClick={closeSpotlight}>
           <div className="nid-spotlight-card" onClick={(e) => e.stopPropagation()}>
             <button className="nid-spotlight-close" onClick={closeSpotlight} aria-label="Cerrar">
               <X size={18} />
             </button>
-
             <div className="nid-spotlight-img-wrap">
               <img
                 src={spotlightProduct.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(spotlightProduct.name)}&size=400&background=f97316&color=fff`}
@@ -622,14 +605,12 @@ export default function NegocioPublicoPage() {
                 </div>
               )}
             </div>
-
             <div className="nid-spotlight-body">
               <span className="nid-spotlight-tag">El producto que buscabas</span>
               <h3 className="nid-spotlight-name">{spotlightProduct.name}</h3>
               {spotlightProduct.description && (
                 <p className="nid-spotlight-desc">{spotlightProduct.description}</p>
               )}
-
               <div className="nid-spotlight-footer">
                 <ProductPrice price={spotlightProduct.price} discount={spotlightProduct.discount} />
                 <button
@@ -645,7 +626,6 @@ export default function NegocioPublicoPage() {
                   <ShoppingCart size={13} /> Agregar
                 </button>
               </div>
-
               <button className="nid-spotlight-viewgrid" onClick={goToProductInGrid}>
                 Ver en el catálogo del negocio
               </button>
@@ -659,7 +639,12 @@ export default function NegocioPublicoPage() {
           <ArrowLeft size={16} /> Volver
         </button>
         <div className="nid-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Badge GPS visible en el topbar */}
+          {/* BOTÓN ESTADÍSTICAS - solo dueño antes del redirect */}
+          {isOwner && (
+            <Link href={`/negocio/${id}/estadisticas`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#111827', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none' }}>
+              <BarChart3 size={14} /> Mis estadísticas
+            </Link>
+          )}
           <GpsBadge gps={gps} onRefresh={refreshGps} profileHasLoc={profileHasLoc} />
           <button className="nid-share-btn" onClick={handleShare}>
             <Share2 size={15} /> Compartir
@@ -680,7 +665,6 @@ export default function NegocioPublicoPage() {
               <span className="nid-verified-dot" title="Verificado"><CheckCircle size={14} /></span>
             )}
           </div>
-
           <div className="nid-info">
             <div className="nid-name-row">
               <h1 className="nid-name">{business.name}</h1>
@@ -693,15 +677,12 @@ export default function NegocioPublicoPage() {
                 <TrendingUp size={11} /> {rankInfo.label}
               </span>
             </div>
-
             {business.description && <p className="nid-desc">{business.description}</p>}
-
             <div className="nid-meta">
               <span className="nid-meta-item">
                 <MapPin size={13} />
                 {businessAddress}
               </span>
-
               {hasVerifiedLocation && (
                 <a
                   href={`https://www.google.com/maps?q=${business?.location?.coordinates[1]},${business?.location?.coordinates[0]}`}
@@ -713,18 +694,15 @@ export default function NegocioPublicoPage() {
                   <Navigation size={11} /> Ubicación verificada
                 </a>
               )}
-
               <span className="nid-meta-item nid-meta-item--bold">
                 <Users size={13} />
                 {social.followersCount} {social.followersCount === 1 ? "seguidor" : "seguidores"}
               </span>
-
               <span className="nid-meta-item">
                 <Package size={13} /> {products.length} productos
               </span>
             </div>
           </div>
-
           <div className="nid-actions-col">
             <div className="nid-actions-row">
               <button
@@ -738,7 +716,6 @@ export default function NegocioPublicoPage() {
               >
                 <UserPlus size={15} /> {social.following ? "Siguiendo" : "Seguir"}
               </button>
-
               <button
                 className="nid-social-btn"
                 onClick={handleLike}
@@ -751,14 +728,12 @@ export default function NegocioPublicoPage() {
                 <Heart size={15} fill={social.saved ? "#ef4444" : "none"} />
                 {social.saved ? "Guardado" : "Favorito"}
               </button>
-
               <button className="nid-contact-btn" onClick={handleContact} disabled={contactLoading}>
                 {contactLoading
                   ? <><div className="nid-spinner" /> Enviando...</>
                   : <><MessageCircle size={15} /> Msj en la web</>
                 }
               </button>
-
               {hasWhatsapp && (
                 <button
                   className="nid-social-btn"
@@ -774,7 +749,6 @@ export default function NegocioPublicoPage() {
                 </button>
               )}
             </div>
-
             <div className="nid-star-wrap">
               <StarRating
                 current={social.rating}
@@ -793,7 +767,6 @@ export default function NegocioPublicoPage() {
         </div>
       </div>
 
-      {/* ── Sección productos ── */}
       <div className="nid-products">
         <div className="nid-products-header">
           <h2 className="nid-products-title">
@@ -805,16 +778,12 @@ export default function NegocioPublicoPage() {
             </span>
           )}
         </div>
-
-        {/* Aviso si GPS está resolviendo */}
         {(gps.status === "idle" || gps.status === "loading") && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fef9f0", border: "1px solid #fed7aa", borderRadius: 8, marginBottom: 12, fontSize: "0.8rem", color: "#92400e" }}>
             <div style={{ width: 14, height: 14, border: "2px solid #f97316", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
             Obteniendo tu ubicación actual para mostrarte los productos disponibles en tu zona…
           </div>
         )}
-
-        {/* Aviso si GPS denegado y sin perfil de ubicación */}
         {gps.status === "denied" && !profileHasLoc && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 8, marginBottom: 12, fontSize: "0.8rem", color: "#92400e" }}>
             <LocateOff size={14} style={{ flexShrink: 0 }} />
@@ -824,7 +793,6 @@ export default function NegocioPublicoPage() {
             </button>
           </div>
         )}
-
         {productsLoading ? (
           <div className="nid-products-grid">
             {[...Array(isMobile ? 4 : 12)].map((_, i) => (
@@ -849,6 +817,9 @@ export default function NegocioPublicoPage() {
                   id={`product-${p._id}`}
                   className={`nid-product-card${highlightActive && p._id === highlightProductId ? " nid-product-card--highlight" : ""}`}
                   style={{ animationDelay: `${i * 0.04}s` }}
+                  onMouseEnter={() => handleProductView(p)} // <-- TRACKING
+                  onMouseLeave={() => handleProductLeave(p)} // <-- TRACKING
+                  onClick={() => { if (!isOwner) track('product_click', { businessId: id, product_id: p._id }); }} // <-- TRACKING
                 >
                   <div className="nid-product-img-wrap">
                     <img
@@ -894,7 +865,6 @@ export default function NegocioPublicoPage() {
                 </div>
               ))}
             </div>
-
             {totalPages > 1 && (
               <div className="nid-pagination">
                 <button
@@ -905,7 +875,6 @@ export default function NegocioPublicoPage() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
                   const show = page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
                   const showEllipsisBefore = page === currentPage - 2 && currentPage > 3;
@@ -926,7 +895,6 @@ export default function NegocioPublicoPage() {
                     </span>
                   );
                 })}
-
                 <button
                   className="nid-page-btn nid-page-btn--arrow"
                   onClick={() => handlePageChange(currentPage + 1)}
@@ -940,7 +908,6 @@ export default function NegocioPublicoPage() {
           </>
         )}
       </div>
-
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </MainLayout>
   );
