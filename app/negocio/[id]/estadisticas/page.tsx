@@ -8,6 +8,7 @@ import { ArrowLeft, Eye, Users, Flame, Clock, ShoppingBag, TrendingUp, MousePoin
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+
 export default function EstadisticasPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
