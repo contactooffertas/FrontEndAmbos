@@ -2,8 +2,7 @@
 // app/componentes/cateroryicon.tsx
 import React, { memo } from "react";
 import {
-  ShoppingBag,
-  BookOpen, PawPrint, Tag, MapPin, CheckCircle, Package, Star,
+  ShoppingBag,PawPrint, Tag, MapPin, CheckCircle, Package, Star,
   Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
   type LucideProps,
@@ -19,6 +18,7 @@ import DumbbellWebp from "./icons/Dumbbell.png";
 import HeartWebp from "./icons/Heart.png";
 import GiftWebp from "./icons/Gift.png";
 import CartWebp from "./icons/Cart.png";
+import BookOpenWebp from "./icons/BookOpen.png";
 
 type LucideIcon = React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
@@ -34,8 +34,7 @@ interface CategoryIconProps {
 }
 
 const LUCIDE_ICONS = {
-  ShoppingBag,
-  BookOpen, PawPrint, Tag, MapPin, CheckCircle, Package, Star,
+  ShoppingBag,PawPrint, Tag, MapPin, CheckCircle, Package, Star,
   Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
 } as const satisfies Record<string, LucideIcon>;
@@ -50,6 +49,7 @@ const CUSTOM_ICONS = {
   Heart: HeartWebp,
   Cart: CartWebp,
   Gift: GiftWebp,
+  BookOpen: BookOpenWebp,
 } as const;
 
 const WebpIcon = ({ src, size = 24, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
