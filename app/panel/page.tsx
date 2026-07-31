@@ -127,7 +127,7 @@ function buildWhatsappUrl(group: BusinessGroup): string {
     return `- ${item.quantity}x ${item.name}: $${unitPrice.toLocaleString("es-AR")} c/u = $${(unitPrice * item.quantity).toLocaleString("es-AR")}`;
   });
   const mensaje =
-    `Hola! Realize un pedido en tu tienda desde Offerton:\n\n` +
+    `Hola! Realize un pedido en tu tienda desde Mercado Rosario:\n\n` +
     lines.join("\n") +
     `\n\nTotal: $${group.subtotal.toLocaleString("es-AR")}\n\n` +
     `Quedo a la espera para coordinar pago y envio.`;
@@ -829,7 +829,7 @@ function PanelContent() {
                             href={`https://wa.me/${p.businessPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
                               `Hola! Te escribo sobre mi pedido #${p._id
                                .slice(-8)
-                               .toUpperCase()} realizado en Offerton.\n\n` +
+                               .toUpperCase()} realizado en Mercado Rosario.\n\n` +
                                 p.items
                                  .map((i) => `- ${i.quantity}x ${i.name}`)
                                  .join("\n") +
