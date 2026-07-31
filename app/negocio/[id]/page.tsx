@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "../../componentes/MainLayout";
 import { useAuth } from "../../context/authContext";
@@ -11,7 +11,7 @@ import {
   MapPin, Package, Star, CheckCircle, ShoppingBag,
   UserPlus, MessageCircle, Heart, Tag, ShoppingCart,
   ArrowLeft, Share2, Users, TrendingUp, ChevronLeft, ChevronRight, Navigation,
-  Locate, LocateOff, RefreshCw, Phone,
+  Locate, LocateOff, RefreshCw, Phone, X,
 } from "lucide-react";
 import "../../styles/negocioId.css";
 
@@ -287,6 +287,10 @@ export default function NegocioPublicoPage() {
   const { addToCart } = useCart();
   const router        = useRouter();
   const isMobile      = useIsMobile();
+  const searchParams  = useSearchParams();
+
+  // Id del producto que originó la visita (link compartido: /negocio/:id?p=<productId>)
+  const highlightProductId = searchParams.get("p");
 
   // GPS dinámico (reemplaza las coords fijas del perfil)
   const { gps, refresh: refreshGps } = useDynamicGps();
@@ -297,6 +301,11 @@ export default function NegocioPublicoPage() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [contactLoading,  setContactLoading]  = useState(false);
   const [currentPage,     setCurrentPage]     = useState(1);
+
+  // ── Spotlight del producto compartido ────────────────────────────────────
+  const [spotlightProduct, setSpotlightProduct] = useState<Product | null>(null);
+  const [spotlightVisible, setSpotlightVisible] = useState(false);
+  const [highlightActive,  setHighlightActive]  = useState(false);
 
   const [social, setSocial] = useState<SocialStatus>({
     following: false, saved: false, myRating: 0,
@@ -375,6 +384,26 @@ export default function NegocioPublicoPage() {
 
   // activeLat y activeLng cambian cada vez que el GPS actualiza → re-fetch automático
   }, [id, activeLat, activeLng, currentUserId, gps.status]);
+
+  // ── Spotlight: cuando llegan los productos, si hay ?p= mostramos la card ──
+  useEffect(() => {
+    if (!highlightProductId || products.length === 0) return;
+
+    const idx = products.findIndex(p => p._id === highlightProductId);
+    if (idx === -1) return; // el producto no está en esta lista (bloqueado, fuera de zona, etc.)
+
+    setSpotlightProduct(products[idx]);
+    setSpotlightVisible(true);
+    setHighlightActive(true);
+    setCurrentPage(Math.floor(idx / ITEMS_PER_PAGE) + 1);
+  }, [products, highlightProductId, ITEMS_PER_PAGE]);
+
+  // El resalte pulsante de la grilla se apaga solo a los pocos segundos
+  useEffect(() => {
+    if (!highlightActive) return;
+    const t = setTimeout(() => setHighlightActive(false), 4500);
+    return () => clearTimeout(t);
+  }, [highlightActive]);
 
   // ── Social status ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -527,6 +556,22 @@ export default function NegocioPublicoPage() {
     document.querySelector(".nid-products")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Cierra el spotlight y limpia el ?p= de la URL sin recargar la página
+  const closeSpotlight = () => {
+    setSpotlightVisible(false);
+    router.replace(`/negocio/${id}`, { scroll: false });
+  };
+
+  // Cierra el spotlight y lleva al usuario hasta la card real en la grilla
+  const goToProductInGrid = () => {
+    const targetId = highlightProductId;
+    setSpotlightVisible(false);
+    router.replace(`/negocio/${id}`, { scroll: false });
+    setTimeout(() => {
+      document.getElementById(`product-${targetId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+  };
+
   const rankInfo            = getRankInfo(social.rating, social.totalRatings);
   const businessAddress     = business?.address || business?.city || "Dirección no disponible";
   const hasVerifiedLocation = !!(business?.location?.coordinates?.length);
@@ -556,6 +601,59 @@ export default function NegocioPublicoPage() {
 
   return (
     <MainLayout>
+      {/* ── Spotlight del producto compartido (llega desde /p/:id → ?p=) ── */}
+      {spotlightProduct && spotlightVisible && (
+        <div className="nid-spotlight-overlay" onClick={closeSpotlight}>
+          <div className="nid-spotlight-card" onClick={(e) => e.stopPropagation()}>
+            <button className="nid-spotlight-close" onClick={closeSpotlight} aria-label="Cerrar">
+              <X size={18} />
+            </button>
+
+            <div className="nid-spotlight-img-wrap">
+              <img
+                src={spotlightProduct.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(spotlightProduct.name)}&size=400&background=f97316&color=fff`}
+                alt={spotlightProduct.name}
+                className="nid-spotlight-img"
+              />
+              <DiscountBadge discount={spotlightProduct.discount} />
+              {(spotlightProduct.stock ?? 0) === 0 && (
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem" }}>Sin stock</span>
+                </div>
+              )}
+            </div>
+
+            <div className="nid-spotlight-body">
+              <span className="nid-spotlight-tag">El producto que buscabas</span>
+              <h3 className="nid-spotlight-name">{spotlightProduct.name}</h3>
+              {spotlightProduct.description && (
+                <p className="nid-spotlight-desc">{spotlightProduct.description}</p>
+              )}
+
+              <div className="nid-spotlight-footer">
+                <ProductPrice price={spotlightProduct.price} discount={spotlightProduct.discount} />
+                <button
+                  onClick={() => handleAddToCart(spotlightProduct)}
+                  disabled={(spotlightProduct.stock ?? 0) === 0}
+                  className="nid-add-btn"
+                  style={{
+                    background: (spotlightProduct.stock ?? 0) === 0 ? "#e5e7eb" : "#f97316",
+                    color:      (spotlightProduct.stock ?? 0) === 0 ? "#9ca3af" : "#fff",
+                    cursor:     (spotlightProduct.stock ?? 0) === 0 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <ShoppingCart size={13} /> Agregar
+                </button>
+              </div>
+
+              <button className="nid-spotlight-viewgrid" onClick={goToProductInGrid}>
+                Ver en el catálogo del negocio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="nid-topbar">
         <button className="nid-back-btn" onClick={() => router.back()}>
           <ArrowLeft size={16} /> Volver
@@ -746,7 +844,12 @@ export default function NegocioPublicoPage() {
           <>
             <div className="nid-products-grid">
               {paginatedProds.map((p, i) => (
-                <div key={p._id} className="nid-product-card" style={{ animationDelay: `${i * 0.04}s` }}>
+                <div
+                  key={p._id}
+                  id={`product-${p._id}`}
+                  className={`nid-product-card${highlightActive && p._id === highlightProductId ? " nid-product-card--highlight" : ""}`}
+                  style={{ animationDelay: `${i * 0.04}s` }}
+                >
                   <div className="nid-product-img-wrap">
                     <img
                       src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=400&background=f97316&color=fff`}
