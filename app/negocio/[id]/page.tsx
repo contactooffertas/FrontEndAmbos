@@ -657,7 +657,7 @@ export default function NegocioPublicoPage() {
               <button className="nid-contact-btn" onClick={handleContact} disabled={contactLoading}>
                 {contactLoading
                   ? <><div className="nid-spinner" /> Enviando...</>
-                  : <><MessageCircle size={15} /> Contactar</>
+                  : <><MessageCircle size={15} /> Msj en la web</>
                 }
               </button>
 
