@@ -2,7 +2,7 @@
 // app/componentes/cateroryicon.tsx
 import React, { memo } from "react";
 import {
-  ShoppingBag,PawPrint, Tag, MapPin, CheckCircle, Package, Star,
+  Tag, MapPin, CheckCircle, Star,
   Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
   type LucideProps,
@@ -19,6 +19,8 @@ import HeartWebp from "./icons/Heart.png";
 import GiftWebp from "./icons/Gift.png";
 import CartWebp from "./icons/Cart.png";
 import BookOpenWebp from "./icons/BookOpen.png";
+import PawPrintWebp from "./icons/PawPrint.png";
+import ShoppingBagWebp from "./icons/Plate.png";
 
 type LucideIcon = React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
