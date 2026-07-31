@@ -21,7 +21,7 @@ const NAV_CATEGORIES = [
   { id: "4",  name: "Deportes",        iconName: "Dumbbell",    slug: "deportes"      },
   { id: "5",  name: "Alimentos",       iconName: "ShoppingBag", slug: "alimentos"     },
   { id: "6",  name: "Salud y Belleza", iconName: "Heart",       slug: "salud-belleza" },
-  { id: "7",  name: "Automotriz",      iconName: "Cart",         slug: "automotriz"    },
+  { id: "7",  name: "Automotriz",      iconName: "Car",         slug: "automotriz"    },
   { id: "8",  name: "Juguetes",        iconName: "Gift",        slug: "juguetes"      },
   { id: "9",  name: "Libros",          iconName: "BookOpen",    slug: "libros"        },
   { id: "10", name: "Mascotas",        iconName: "PawPrint",    slug: "mascotas"      },
