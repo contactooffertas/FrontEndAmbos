@@ -27,12 +27,19 @@ import {
   ChevronRight,
   ArrowRight,
   Share2,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import "../app/styles/home.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 const BACKEND_ORIGIN = "https://new-backend-lovat.vercel.app";
+
+interface FlashOffer {
+  active: boolean;
+  discount: number;
+  endDate?: string;
+}
 
 interface Product {
   _id: string;
@@ -48,6 +55,8 @@ interface Product {
   _isFeatured?: boolean;
   _featuredSource?: "product" | "business";
   cuotaSuscriptor?: boolean;
+  flashOffer?: FlashOffer;
+  flashOfferSecondsLeft?: number;
   business?: {
     _id: string;
     name: string;
@@ -97,6 +106,26 @@ const logoUrl = (name: string, url?: string) =>
 // El backend arma ahí la preview (imagen + nombre + precio) y redirige
 // automáticamente a /negocio/<id>?p=<productId> resaltando el producto.
 const shareUrlFor = (productId: string) => `${BACKEND_ORIGIN}/p/${productId}`;
+
+// ─── Utils ─────────────────────────────────────────────────────────────────
+// Fisher-Yates: mezcla de verdad, no solo "los primeros N del array".
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function formatFlashTime(seconds?: number): string {
+  if (!seconds || seconds <= 0) return "Terminando";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return "< 1m";
+}
 
 // ─── Stars ───────────────────────────────────────────────────────────────────
 function PartialStar({ fill, size = 14 }: { fill: number; size?: number }) {
@@ -305,6 +334,88 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
   );
 }
 
+// ─── Flash Offer Card ─────────────────────────────────────────────────────────
+function FlashOfferCard({ product }: { product: Product }) {
+  const bizId = product.business?._id;
+  const discount = product.flashOffer?.discount ?? 0;
+  const finalPrice = product.price * (1 - discount / 100);
+  const [timeLabel, setTimeLabel] = useState(formatFlashTime(product.flashOfferSecondsLeft));
+
+  useEffect(() => {
+    let secs = product.flashOfferSecondsLeft ?? 0;
+    const t = setInterval(() => {
+      secs -= 60;
+      setTimeLabel(formatFlashTime(secs));
+    }, 60_000);
+    return () => clearInterval(t);
+  }, [product.flashOfferSecondsLeft]);
+
+  return (
+    <Link href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"} className="flash-card">
+      <span className="flash-card-badge">
+        <Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%
+      </span>
+      <span className="flash-card-timer">
+        <Clock size={10} /> {timeLabel}
+      </span>
+      <div className="flash-card-img-wrap">
+        <img src={imgUrl(product.image)} alt={product.name} className="flash-card-img" />
+      </div>
+      <div className="flash-card-body">
+        {product.business?.name && <p className="flash-card-biz">{product.business.name}</p>}
+        <p className="flash-card-name">{product.name}</p>
+        <div className="flash-card-prices">
+          <span className="flash-card-price-final">
+            ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </span>
+          <span className="flash-card-price-orig">${product.price.toLocaleString()}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─── Flash Offers Section (aleatorio) ─────────────────────────────────────────
+function FlashOffersSection({ products }: { products: Product[] }) {
+  const [randomized, setRandomized] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const flashProducts = products.filter((p) => p.flashOffer?.active === true);
+    if (flashProducts.length === 0) {
+      setRandomized([]);
+      return;
+    }
+    // Mezcla real (Fisher-Yates), no solo "los primeros N" -> aunque haya
+    // 150 ofertas activas, cada carga muestra una selección distinta.
+    setRandomized(shuffleArray(flashProducts).slice(0, 12));
+  }, [products]);
+
+  if (randomized.length === 0) return null;
+
+  return (
+    <section className="section flash-section">
+      <div className="flash-section-header">
+        <div>
+          <h2 className="section-title flash-section-title">
+            <span className="flash-section-icon">
+              <Zap size={20} strokeWidth={0} fill="#fff" />
+            </span>
+            Ofertas Flash
+          </h2>
+          <p className="section-subtitle">
+            {randomized.length} oferta{randomized.length !== 1 ? "s" : ""} por tiempo limitado
+          </p>
+        </div>
+      </div>
+      <div className="flash-grid">
+        {randomized.map((p) => (
+          <FlashOfferCard key={p._id} product={p} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── Product Card ─────────────────────────────────────────────────────────────
 function ProductCard({ product, currentUserId }: { product: Product; currentUserId?: string }) {
   const { addToCart } = useCart();
@@ -313,6 +424,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
 
   const isFeatured = product._isFeatured === true;
   const isOutOfRange = product._outOfRange === true;
+  const isFlash = product.flashOffer?.active === true;
   const bizId = product.business?._id;
   const bizName = product.business?.name;
   const bizCity = product.business?.city;
@@ -320,14 +432,17 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   const rating = product.business?.rating ?? 0;
   const totalRatings = product.business?.totalRatings ?? 0;
 
+  const flashDiscount = product.flashOffer?.discount ?? 0;
+  const flashFinalPrice = isFlash ? product.price * (1 - flashDiscount / 100) : product.price;
+
   const handleCart = () => {
     addToCart({
       _id: product._id,
       productId: product._id,
       name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      discount: product.discount,
+      price: isFlash ? Number(flashFinalPrice.toFixed(2)) : product.price,
+      originalPrice: isFlash ? product.price : product.originalPrice,
+      discount: isFlash ? flashDiscount : product.discount,
       image: product.image,
       businessId: bizId,
       businessName: bizName,
@@ -380,16 +495,30 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   return (
     <div
       className="product-card"
-      style={isFeatured ? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" } : undefined}
+      style={
+        isFlash
+          ? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" }
+          : isFeatured
+          ? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" }
+          : undefined
+      }
     >
       <div className="product-image-wrap">
         <img src={imgUrl(product.image)} alt={product.name} loading="lazy" />
-        {product.discount ? <span className="product-discount-badge">-{product.discount}%</span> : null}
-        {isFeatured && (
+        {!isFlash && product.discount ? <span className="product-discount-badge">-{product.discount}%</span> : null}
+
+        {isFlash && (
+          <span className="product-flash-badge">
+            <Zap size={10} fill="#111" strokeWidth={0} /> FLASH -{flashDiscount}%
+          </span>
+        )}
+
+        {!isFlash && isFeatured && (
           <span style={{ position: "absolute", top: 8, left: 8, background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontSize: "0.65rem", fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "flex", alignItems: "center", gap: 4, boxShadow: "0 2px 8px rgba(249,115,22,0.5)", zIndex: 2 }}>
             <Crown size={9} /> Destacado
           </span>
         )}
+
         <button className="product-fav-btn product-fav-btn--always" onClick={handleLike}>
           <span style={{ fontSize: "1.05rem", color: liked ? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>
             {liked ? "♥" : "♡"}
@@ -411,7 +540,14 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         )}
       </div>
 
-      {isFeatured && isOutOfRange && (
+      {isFlash && (
+        <div className="product-flash-strip">
+          <Zap size={10} fill="#f59e0b" strokeWidth={0} />
+          <span>Oferta por tiempo limitado · {formatFlashTime(product.flashOfferSecondsLeft)} restantes</span>
+        </div>
+      )}
+
+      {!isFlash && isFeatured && isOutOfRange && (
         <div style={{ background: "linear-gradient(90deg,rgba(249,115,22,0.13),rgba(249,115,22,0.07))", borderBottom: "1px solid rgba(249,115,22,0.2)", padding: "0.3rem 0.65rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
           <Sparkles size={10} style={{ color: "#f97316", flexShrink: 0 }} />
           <span style={{ fontSize: "0.65rem", color: "#fdba74", fontWeight: 700, lineHeight: 1.3 }}>No está cerca, pero te lo acercamos</span>
@@ -440,8 +576,19 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         </div>
         <div className="product-name">{product.name}</div>
         <div className="product-prices">
-          <span className="product-price">${product.price.toLocaleString()}</span>
-          {product.originalPrice && <span className="product-original">${product.originalPrice.toLocaleString()}</span>}
+          {isFlash ? (
+            <>
+              <span className="product-price product-price--flash">
+                ${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
+              <span className="product-original">${product.price.toLocaleString()}</span>
+            </>
+          ) : (
+            <>
+              <span className="product-price">${product.price.toLocaleString()}</span>
+              {product.originalPrice && <span className="product-original">${product.originalPrice.toLocaleString()}</span>}
+            </>
+          )}
         </div>
       </div>
 
@@ -731,6 +878,9 @@ function HomeContent() {
           </div>
         </div>
       )}
+
+      {/* ─── Ofertas Flash (aleatorio) ───────────────────────────────────── */}
+      <FlashOffersSection products={allProducts} />
 
       {/* ─── Negocios destacados ───────────────────────────────────────────── */}
       {featuredBusinesses.length > 0 && (
