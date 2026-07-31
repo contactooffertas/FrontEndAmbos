@@ -36,7 +36,7 @@ interface CategoryIconProps {
 }
 
 const LUCIDE_ICONS = {
- Tag, MapPin, CheckCircle, Star,
+ Package,Tag, MapPin, CheckCircle, Star,
   Search, User, LogOut, Store, ChevronDown, ArrowRight,
   Trash2, Pencil, Plus, X,
 } as const satisfies Record<string, LucideIcon>;
