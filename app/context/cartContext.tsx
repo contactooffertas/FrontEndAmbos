@@ -22,6 +22,7 @@ interface CartItem {
   businessId?: string;
   businessName?: string;
   businessPhone?: string;
+  isFlashOffer?: boolean;
 }
 
 interface CartContextType {
@@ -47,7 +48,7 @@ function authHeaders() {
   const token = getToken();
   return {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+   ...(token? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -83,7 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           title: "🛒 Tenés productos en tu carrito",
           html: `
             <p style="color:#6b7280;margin-bottom:1rem">
-              Dejaste <strong>${items.length} producto${items.length !== 1 ? "s" : ""}</strong> guardado${items.length !== 1 ? "s" : ""} la última vez.
+              Dejaste <strong>${items.length} producto${items.length!== 1? "s" : ""}</strong> guardado${items.length!== 1? "s" : ""} la última vez.
             </p>
             <div style="text-align:left;max-height:160px;overflow-y:auto;font-size:.85rem">
               ${items.map(i => `
@@ -107,7 +108,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, [user?.id]);
 
-  // ── Add to cart ──────────────────────────────────────────────────────────
+  // ── Add to cart - CON PRIORIDAD FLASH ──────────────────────────────────
   const addToCart = async (item: Omit<CartItem, "quantity">) => {
     if (!user) {
       const Swal = (await import("sweetalert2")).default;
@@ -119,7 +120,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`${API}/cart/add`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ productId: item.productId, quantity: 1 }),
+        body: JSON.stringify({
+          productId: item.productId,
+          quantity: 1,
+          price: item.price,
+          originalPrice: item.originalPrice,
+          discount: item.discount,
+          isFlashOffer: item.isFlashOffer || false,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -196,9 +204,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+
+  // FIX: Si el precio ya viene con descuento flash (52k), no volver a descontar
   const cartTotal = cart.reduce((acc, item) => {
-    const price = item.discount ? item.price * (1 - item.discount / 100) : item.price;
-    return acc + price * item.quantity;
+    return acc + item.price * item.quantity;
   }, 0);
 
   return (
