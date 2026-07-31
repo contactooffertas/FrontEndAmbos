@@ -886,6 +886,9 @@ export default function NegocioPage() {
           </div>
           {isOwner && !isBusinessBlocked && (
             <div className="ng-header-actions">
+              <Link href={`/negocio/${business._id}/estadisticas`} style={{ background: '#111827', color: '#fff', padding: '8px 14px', borderRadius: 10, fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+                      <BarChart3 size={16} /> Mis estadísticas
+              </Link>
               <button className="ng-btn-manage" onClick={() => router.push("/mis-productos")}>
                 <LayoutList size={15} /> Gestionar productos <ArrowRight size={14} />
               </button>
