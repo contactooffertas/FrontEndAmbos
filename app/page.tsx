@@ -302,6 +302,7 @@ function BusinessCard({ featured }: { featured: FeaturedBusiness }) {
             {followers > 0 && <span className="biz-card-meta-item"><Users size={12} />{followers} seguidores</span>}
             {(b.totalProducts?? 0) > 0 && <span className="biz-card-meta-item"><Package size={12} />{b.totalProducts} productos</span>}
           </div>
+        </div>
         <div className="biz-card-actions">
           <Link href={`/negocio/${b._id}`} className="biz-card-visit-btn"><Store size={13} /> Visitar tienda</Link>
         </div>
