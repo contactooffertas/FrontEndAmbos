@@ -1,6 +1,6 @@
 {
   "name": "Mercado Rosario - Las Mejores Ofertas",
-  "short_name": "MR",
+  "short_name": "Mercado Rosario",
   "description": "Encuentra las mejores ofertas cerca tuyo en tiempo real",
   "start_url": "/",
   "scope": "/",
@@ -56,7 +56,7 @@
   "shortcuts": [
     {
       "name": "Ver Ofertas",
-      "short_name": "MR",
+      "short_name": "Mercado Rosario",
       "description": "Accede rápidamente a las mejores ofertas",
       "url": "/?utm_source=shortcut",
       "icons": [
