@@ -4,7 +4,7 @@ import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Offertas - Las mejores ofertas',
+  title: 'Mercado Rosario - Las mejores ofertas',
   description: 'Encuentra las mejores ofertas cerca tuyo',
   viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
   authors: [{ name: 'Mercado Rosario' }],
