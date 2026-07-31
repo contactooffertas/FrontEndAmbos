@@ -336,6 +336,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
 
 // ─── Flash Offer Card (grid) ───────────────────────────────────────────────
 function FlashOfferCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
   const bizId = product.business?._id;
   const discount = product.flashOffer?.discount ?? 0;
   const finalPrice = product.price * (1 - discount / 100);
@@ -350,28 +351,60 @@ function FlashOfferCard({ product }: { product: Product }) {
     return () => clearInterval(t);
   }, [product.flashOfferSecondsLeft]);
 
+  // Misma lógica que ProductCard/FlashOverlayCard: precio flash "congelado"
+  // en el carrito al momento de agregar (no cambia si la oferta se actualiza).
+  const handleCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({
+      _id: product._id,
+      productId: product._id,
+      name: product.name,
+      price: Number(finalPrice.toFixed(2)),
+      originalPrice: product.price,
+      discount,
+      image: product.image,
+      businessId: product.business?._id,
+      businessName: product.business?.name,
+      businessPhone: product.business?.phone || "",
+      stock: product.stock || 99,
+    });
+  };
+
   return (
-    <Link href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"} className="flash-card">
-      <span className="flash-card-badge">
-        <Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%
-      </span>
-      <span className="flash-card-timer">
-        <Clock size={10} /> {timeLabel}
-      </span>
-      <div className="flash-card-img-wrap">
-        <img src={imgUrl(product.image)} alt={product.name} className="flash-card-img" />
-      </div>
-      <div className="flash-card-body">
-        {product.business?.name && <p className="flash-card-biz">{product.business.name}</p>}
-        <p className="flash-card-name">{product.name}</p>
-        <div className="flash-card-prices">
-          <span className="flash-card-price-final">
-            ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-          </span>
-          <span className="flash-card-price-orig">${product.price.toLocaleString()}</span>
+    <div className="flash-card">
+      <Link
+        href={bizId ? `/negocio/${bizId}?p=${product._id}` : "#"}
+        style={{ display: "block", color: "inherit", textDecoration: "none" }}
+      >
+        <span className="flash-card-badge">
+          <Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%
+        </span>
+        <span className="flash-card-timer">
+          <Clock size={10} /> {timeLabel}
+        </span>
+        <div className="flash-card-img-wrap">
+          <img src={imgUrl(product.image)} alt={product.name} className="flash-card-img" />
         </div>
-      </div>
-    </Link>
+        <div className="flash-card-body">
+          {product.business?.name && <p className="flash-card-biz">{product.business.name}</p>}
+          <p className="flash-card-name">{product.name}</p>
+          <div className="flash-card-prices">
+            <span className="flash-card-price-final">
+              ${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </span>
+            <span className="flash-card-price-orig">${product.price.toLocaleString()}</span>
+          </div>
+        </div>
+      </Link>
+      <button
+        className="btn btn-primary"
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", margin: "0.5rem 0.6rem 0.6rem", padding: "0.4rem", fontSize: "0.78rem" }}
+        onClick={handleCart}
+      >
+        <ShoppingCart size={14} /> Agregar al carrito
+      </button>
+    </div>
   );
 }
 
@@ -412,9 +445,6 @@ function FlashOffersSection({ products }: { products: Product[] }) {
           <FlashOfferCard key={p._id} product={p} />
         ))}
       </div>
-       <button className="btn btn-primary" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }} onClick={handleCart}>
-          <ShoppingCart size={15} /> Agregar al carrito
-        </button>
     </section>
   );
 }
@@ -475,14 +505,12 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   const [visible, setVisible] = useState(true);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
 
-  // Se oculta por sesión al cerrarlo (no por siempre): no molesta de nuevo
-  // hasta que recargue la pestaña o abra una nueva.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (sessionStorage.getItem("flash_overlay_dismissed") === "true") {
-      setVisible(false);
-    }
-  }, []);
+  // Se oculta solo para la vista actual (memoria del componente): no se
+  // guarda en storage, así que al recargar la página vuelve a aparecer
+  // mientras la oferta siga activa entre los productos.
+  const dismiss = () => {
+    setVisible(false);
+  };
 
   useEffect(() => {
     const flashProducts = products.filter((p) => p.flashOffer?.active === true);
@@ -502,13 +530,6 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     }, 3000);
     return () => clearInterval(t);
   }, [pool.length]);
-
-  const dismiss = () => {
-    setVisible(false);
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("flash_overlay_dismissed", "true");
-    }
-  };
 
   // Precio flash calculado acá mismo y "congelado" en el carrito al momento
   // de agregar. Si el mismo producto se ve luego en la página del negocio,
