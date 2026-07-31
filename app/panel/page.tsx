@@ -35,6 +35,7 @@ interface CartItem {
   productId: string;
   name: string;
   price: number;
+  originalPrice?: number;
   discount?: number;
   quantity: number;
   stock: number;
@@ -42,6 +43,7 @@ interface CartItem {
   businessId?: string;
   businessName?: string;
   businessPhone?: string;
+  isFlashOffer?: boolean;
 }
 
 interface RatingData {
@@ -93,6 +95,12 @@ interface BusinessGroup {
   subtotal: number;
 }
 
+function getFinalPrice(item: CartItem): number {
+  if (item.isFlashOffer) return item.price;
+  if (item.discount) return item.price * (1 - item.discount / 100);
+  return item.price;
+}
+
 function buildBusinessGroups(items: CartItem[]): BusinessGroup[] {
   const map: Record<string, BusinessGroup> = {};
   for (const item of items) {
@@ -106,9 +114,7 @@ function buildBusinessGroups(items: CartItem[]): BusinessGroup[] {
         subtotal: 0,
       };
     }
-    const unitPrice = item.discount
-      ? item.price * (1 - item.discount / 100)
-      : item.price;
+    const unitPrice = getFinalPrice(item);
     map[bizId].items.push(item);
     map[bizId].subtotal += unitPrice * item.quantity;
   }
@@ -117,9 +123,7 @@ function buildBusinessGroups(items: CartItem[]): BusinessGroup[] {
 
 function buildWhatsappUrl(group: BusinessGroup): string {
   const lines = group.items.map((item) => {
-    const unitPrice = item.discount
-      ? item.price * (1 - item.discount / 100)
-      : item.price;
+    const unitPrice = getFinalPrice(item);
     return `- ${item.quantity}x ${item.name}: $${unitPrice.toLocaleString("es-AR")} c/u = $${(unitPrice * item.quantity).toLocaleString("es-AR")}`;
   });
   const mensaje =
@@ -153,11 +157,11 @@ function StarPicker({
             borderColor: "#f59e0b",
             cursor: "pointer",
             padding: 2,
-            color: n <= (hover || value) ? "#f59e0b" : "rgba(255,255,255,0.2)",
+            color: n <= (hover || value)? "#f59e0b" : "rgba(255,255,255,0.2)",
             transition: "color 0.15s",
           }}
         >
-          <Star size={22} fill={n <= (hover || value) ? "#f59e0b" : "#656565"} />
+          <Star size={22} fill={n <= (hover || value)? "#f59e0b" : "#656565"} />
         </button>
       ))}
     </div>
@@ -277,18 +281,18 @@ function RateSellerBlock({
         disabled={!rating || loading}
         style={{
           marginTop: "0.5rem",
-          background: rating ? "#f97316" : "rgba(21, 20, 20, 0.53)",
+          background: rating? "#f97316" : "rgba(21, 20, 20, 0.53)",
           color: "#050c5b",
           border: "none",
           borderRadius: 8,
           padding: "0.45rem 1.2rem",
           fontWeight: 700,
           fontSize: "0.82rem",
-          cursor: rating ? "pointer" : "not-allowed",
+          cursor: rating? "pointer" : "not-allowed",
           transition: "background 0.2s",
         }}
       >
-        {loading ? "Enviando..." : "Calificar negocio"}
+        {loading? "Enviando..." : "Calificar negocio"}
       </button>
     </div>
   );
@@ -296,7 +300,7 @@ function RateSellerBlock({
 
 // ── Vista del panel del comprador ─────────────────────────────────────────────
 function BusinessGroupCard({ group }: { group: BusinessGroup }) {
-  const hasPhone = group.phone.trim() !== "";
+  const hasPhone = group.phone.trim()!== "";
   return (
     <div
       style={{
@@ -319,9 +323,7 @@ function BusinessGroupCard({ group }: { group: BusinessGroup }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
         {group.items.map((item) => {
-          const unitPrice = item.discount
-            ? item.price * (1 - item.discount / 100)
-            : item.price;
+          const unitPrice = getFinalPrice(item);
           return (
             <div
               key={item._id}
@@ -336,7 +338,7 @@ function BusinessGroupCard({ group }: { group: BusinessGroup }) {
                 {item.quantity}x {item.name}
               </span>
               <span style={{ color: "#fff", fontWeight: 600 }}>
-                ${(unitPrice * item.quantity).toLocaleString()}
+                ${(unitPrice * item.quantity).toLocaleString("es-AR")}
               </span>
             </div>
           );
@@ -356,10 +358,10 @@ function BusinessGroupCard({ group }: { group: BusinessGroup }) {
         <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.82rem" }}>
           Subtotal:{" "}
           <strong style={{ color: "#fff" }}>
-            ${group.subtotal.toLocaleString()}
+            ${group.subtotal.toLocaleString("es-AR")}
           </strong>
         </span>
-        {hasPhone ? (
+        {hasPhone? (
           <a
             href={buildWhatsappUrl(group)}
             target="_blank"
@@ -391,8 +393,6 @@ function BusinessGroupCard({ group }: { group: BusinessGroup }) {
   );
 }
 
-
-
 // ─── Componente principal ─────────────────────────────────────────────────────
 function PanelContent() {
   const { user, loading } = useAuth();
@@ -415,29 +415,30 @@ function PanelContent() {
   const [checkoutGroups, setCheckoutGroups] = useState<BusinessGroup[]>([]);
   const [checkoutDone, setCheckoutDone] = useState(false);
 
+  const cartTotalFinal = (cart as CartItem[]).reduce((acc, item) => acc + getFinalPrice(item) * item.quantity, 0);
+
   useEffect(() => {
-    if (!loading && !user) router.push("/login");
+    if (!loading &&!user) router.push("/login");
   }, [user, loading]);
 
   const loadPurchases = () => {
     if (!user) return;
     const token = localStorage.getItem("marketplace_token");
     fetch(`${API}/orders/my`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((data) => setPurchases(Array.isArray(data) ? data : []))
-      .catch(() => {});
+     .then((r) => r.json())
+     .then((data) => setPurchases(Array.isArray(data)? data : []))
+     .catch(() => {});
   };
 
   useEffect(() => {
     loadPurchases();
   }, [user]);
 
-  if (loading || !user) return null;
+  if (loading ||!user) return null;
 
-  // Actualiza sellerRating localmente tras calificar
   const handleSellerRated = (orderId: string, data: RatingData) => {
     setPurchases((prev) =>
-      prev.map((o) => (o._id === orderId ? { ...o, sellerRating: data } : o)),
+      prev.map((o) => (o._id === orderId? {...o, sellerRating: data } : o)),
     );
   };
 
@@ -450,19 +451,19 @@ function PanelContent() {
 
     const groups = buildBusinessGroups(cart as CartItem[]);
     const businessListHtml = groups
-      .map(
+     .map(
         (g) =>
           `<div style="text-align:left;margin-bottom:0.5rem">
         <strong style="color:#f97316">${g.businessName}</strong><br/>
         ${g.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}<br/>
-        <span style="color:#6b7280;font-size:.82rem">Subtotal: $${g.subtotal.toLocaleString()}</span>
+        <span style="color:#6b7280;font-size:.82rem">Subtotal: $${g.subtotal.toLocaleString("es-AR")}</span>
       </div>`,
       )
-      .join("");
+     .join("");
 
     const { isConfirmed } = await Swal.fire({
       title: "Confirmar pedido",
-      html: `<p style="margin-bottom:1rem">Total: <strong>$${cartTotal.toLocaleString()}</strong></p>${businessListHtml}
+      html: `<p style="margin-bottom:1rem">Total: <strong>$${cartTotalFinal.toLocaleString("es-AR")}</strong></p>${businessListHtml}
              <p style="color:#6b7280;font-size:.82rem;margin-top:1rem">Vas a poder contactar a cada negocio por WhatsApp.</p>`,
       icon: "question",
       showCancelButton: true,
@@ -513,7 +514,7 @@ function PanelContent() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
-      setPurchases((prev) => prev.filter((o) => o._id !== orderId));
+      setPurchases((prev) => prev.filter((o) => o._id!== orderId));
       Swal.fire({
         icon: "success",
         title: "Orden eliminada",
@@ -532,7 +533,7 @@ function PanelContent() {
     if (res.ok)
       setPurchases((prev) =>
         prev.map((o) =>
-          o._id === orderId ? { ...o, status: "delivered" as const } : o,
+          o._id === orderId? {...o, status: "delivered" as const } : o,
         ),
       );
   };
@@ -546,7 +547,7 @@ function PanelContent() {
     if (res.ok)
       setPurchases((prev) =>
         prev.map((o) =>
-          o._id === orderId ? { ...o, status: "returned" as const } : o,
+          o._id === orderId? {...o, status: "returned" as const } : o,
         ),
       );
   };
@@ -569,7 +570,6 @@ function PanelContent() {
   return (
     <MainLayout>
       <div className="panel-wrapper">
-        {/* Header */}
         <div className="panel-header">
           <h1>Mi panel</h1>
           <p>
@@ -577,30 +577,28 @@ function PanelContent() {
           </p>
         </div>
 
-        {/* Tabs */}
         <div className="panel-tabs">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`panel-tab-btn${tab === t.id ? " active" : ""}`}
+              className={`panel-tab-btn${tab === t.id? " active" : ""}`}
             >
               {t.icon} {t.label}
-              {t.badge !== undefined && (
+              {t.badge!== undefined && (
                 <span className="panel-tab-badge">{t.badge}</span>
               )}
             </button>
           ))}
         </div>
 
-        {/* ── CART ── */}
         {tab === "cart" && (
           <div className="panel-anim">
-            {cartLoading ? (
+            {cartLoading? (
               <div className="panel-loading">
                 <p>Cargando carrito...</p>
               </div>
-            ) : cart.length === 0 ? (
+            ) : cart.length === 0? (
               <div className="panel-empty">
                 <ShoppingCart size={56} strokeWidth={1} />
                 <h3>Tu carrito esta vacio</h3>
@@ -613,9 +611,8 @@ function PanelContent() {
               <div className="cart-grid">
                 <div className="cart-items">
                   {(cart as CartItem[]).map((item) => {
-                    const finalPrice = item.discount
-                      ? item.price * (1 - item.discount / 100)
-                      : item.price;
+                    const finalPrice = getFinalPrice(item);
+                    const originalPrice = item.originalPrice || (item.discount? item.price : 0);
                     return (
                       <div key={item._id} className="cart-item">
                         <img
@@ -664,11 +661,11 @@ function PanelContent() {
                               </button>
                             </div>
                             <span className="cart-item-price">
-                              ${(finalPrice * item.quantity).toLocaleString()}
+                              ${(finalPrice * item.quantity).toLocaleString("es-AR")}
                             </span>
-                            {item.discount && (
+                            {originalPrice > finalPrice && (
                               <span className="cart-item-original">
-                                ${(item.price * item.quantity).toLocaleString()}
+                                ${(originalPrice * item.quantity).toLocaleString("es-AR")}
                               </span>
                             )}
                           </div>
@@ -709,7 +706,7 @@ function PanelContent() {
                       >
                         <Store size={11} color="#f97316" /> {g.businessName}
                       </span>
-                      <span>${g.subtotal.toLocaleString()}</span>
+                      <span>${g.subtotal.toLocaleString("es-AR")}</span>
                     </div>
                   ))}
                   <div
@@ -719,9 +716,9 @@ function PanelContent() {
                     <div className="cart-summary-row">
                       <span>
                         Subtotal ({cartCount} articulo
-                        {cartCount !== 1 ? "s" : ""})
+                        {cartCount!== 1? "s" : ""})
                       </span>
-                      <span>${cartTotal.toFixed(2)}</span>
+                      <span>${cartTotalFinal.toLocaleString("es-AR")}</span>
                     </div>
                     <div className="cart-summary-row green">
                       <span>Envio</span>
@@ -730,7 +727,7 @@ function PanelContent() {
                   </div>
                   <div className="cart-summary-total">
                     <span>Total</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>${cartTotalFinal.toLocaleString("es-AR")}</span>
                   </div>
                   <button
                     className="cart-checkout-btn"
@@ -747,10 +744,9 @@ function PanelContent() {
           </div>
         )}
 
-        {/* ── PURCHASES ── */}
         {tab === "purchases" && (
           <div className="panel-anim">
-            {purchases.length === 0 ? (
+            {purchases.length === 0? (
               <div className="panel-empty">
                 <Package size={52} strokeWidth={1} />
                 <h3>No tenes compras aun</h3>
@@ -768,7 +764,6 @@ function PanelContent() {
                   };
                   return (
                     <div key={p._id} className="purchase-card">
-                      {/* Header */}
                       <div className="purchase-card-header">
                         <div>
                           <span className="purchase-card-id">
@@ -793,7 +788,6 @@ function PanelContent() {
                         </div>
                       </div>
 
-                      {/* Items */}
                       <div className="purchase-card-body">
                         {p.items.map((item, i) => (
                           <div key={i} className="purchase-item-row">
@@ -801,18 +795,17 @@ function PanelContent() {
                               {item.name} x {item.quantity}
                             </span>
                             <span>
-                              ${(item.price * item.quantity).toLocaleString()}
+                              ${(item.price * item.quantity).toLocaleString("es-AR")}
                             </span>
                           </div>
                         ))}
                         <div className="purchase-total">
                           <span>Total</span>
-                          <span>${p.total.toLocaleString()}</span>
+                          <span>${p.total.toLocaleString("es-AR")}</span>
                         </div>
                       </div>
 
-                      {/* WhatsApp */}
-                      {p.businessPhone && p.status !== "returned" && (
+                      {p.businessPhone && p.status!== "returned" && (
                         <>
                           <p
                             style={{
@@ -835,12 +828,12 @@ function PanelContent() {
                           <a
                             href={`https://wa.me/${p.businessPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
                               `Hola! Te escribo sobre mi pedido #${p._id
-                                .slice(-8)
-                                .toUpperCase()} realizado en Offerton.\n\n` +
+                               .slice(-8)
+                               .toUpperCase()} realizado en Offerton.\n\n` +
                                 p.items
-                                  .map((i) => `- ${i.quantity}x ${i.name}`)
-                                  .join("\n") +
-                                `\n\nTotal: $${p.total.toLocaleString()}`,
+                                 .map((i) => `- ${i.quantity}x ${i.name}`)
+                                 .join("\n") +
+                                `\n\nTotal: $${p.total.toLocaleString("es-AR")}`,
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -863,8 +856,8 @@ function PanelContent() {
                           </a>
                         </>
                       )}
-                  
-{p.businessId && p.status !== "returned" && (
+
+{p.businessId && p.status!== "returned" && (
   <ReportModal
     targetType="business"
     targetId={p.businessId}
@@ -874,7 +867,6 @@ function PanelContent() {
   />
 )}
 
-                      {/* Shipped → quedarme / devolver */}
                       {p.status === "shipped" && (
                         <div
                           style={{
@@ -924,15 +916,12 @@ function PanelContent() {
                         </div>
                       )}
 
-                      {/* Delivered → calificar negocio + borrar */}
                       {p.status === "delivered" && (
                         <div style={{ marginTop: "0.75rem" }}>
-                          {/* Bloque calificación al negocio */}
                           <RateSellerBlock
                             order={p}
                             onRated={handleSellerRated}
                           />
-
                           <div
                             style={{
                               display: "flex",
@@ -974,7 +963,6 @@ function PanelContent() {
                         </div>
                       )}
 
-                      {/* Returned → borrar */}
                       {p.status === "returned" && (
                         <div
                           style={{
@@ -1023,7 +1011,6 @@ function PanelContent() {
           </div>
         )}
 
-        {/* ── FAVORITES ── */}
         {tab === "favorites" && (
           <div className="panel-anim panel-empty">
             <Heart size={52} strokeWidth={1} />
@@ -1052,4 +1039,3 @@ export default function PanelPage() {
     </Suspense>
   );
 }
-
