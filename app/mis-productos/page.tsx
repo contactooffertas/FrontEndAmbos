@@ -2,15 +2,17 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Pencil, 
-  Trash2, 
-  Plus, 
-  PackageOpen, 
-  Tag, 
-  MapPin, 
-  ArrowRight, 
-  LayoutList 
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  PackageOpen,
+  Tag,
+  MapPin,
+  ArrowRight,
+  LayoutList,
+  Zap,
+  ZapOff,
 } from "lucide-react";
 import MainLayout from "../componentes/MainLayout";
 import ProductModal from "../componentes/ProductModal";
@@ -20,22 +22,66 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  setFlashOffer,
+  cancelFlashOffer,
   CATEGORIES,
   type Product,
 } from "../lib/productService";
 import "../styles/misproductos.css";
 
 // ── Celda de precio (reutilizable) ──────────────────────────
-function PriceDisplay({ price, discount }: { price: number; discount?: number }) {
-  if (!discount || discount === 0) {
+// Si hay oferta flash vigente, esa es la que manda sobre el descuento normal.
+function PriceDisplay({ product }: { product: Product }) {
+  const { price, discount } = product;
+  const flashActive = product.flashOffer?.active;
+  const effectiveDiscount = flashActive ? product.flashOffer!.discount : discount;
+
+  if (!effectiveDiscount || effectiveDiscount === 0) {
     return <span className="mp-price">${price.toLocaleString()}</span>;
   }
-  const final = (price * (1 - discount / 100)).toFixed(2);
+
+  const final = (price * (1 - effectiveDiscount / 100)).toFixed(2);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
       <span className="mp-price-final">${Number(final).toLocaleString()}</span>
       <span className="mp-price-original-strike">${price.toLocaleString()}</span>
-      <span className="mp-discount-pill">-{discount}%</span>
+      <span
+        className="mp-discount-pill"
+        style={flashActive ? { background: "#facc15", color: "#111" } : undefined}
+      >
+        -{effectiveDiscount}%
+      </span>
+    </span>
+  );
+}
+
+// ── Badge de oferta flash con tiempo restante ───────────────
+function formatRestante(seconds?: number): string {
+  if (!seconds || seconds <= 0) return "";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function FlashBadge({ product }: { product: Product }) {
+  if (!product.flashOffer?.active) return null;
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "3px",
+        fontSize: "0.7rem",
+        fontWeight: 700,
+        color: "#b45309",
+        background: "#fef3c7",
+        padding: "2px 6px",
+        borderRadius: "999px",
+        marginTop: "2px",
+      }}
+    >
+      <Zap size={11} /> Flash · {formatRestante(product.flashOfferSecondsLeft)} restantes
     </span>
   );
 }
@@ -78,12 +124,10 @@ export default function MisProductosPage() {
     try {
       setSaving(true);
 
-      // --- LÓGICA DE GEOLOCALIZACIÓN ---
-      // Obtenemos la ubicación actual del vendedor al momento de guardar
       const position: any = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { 
-            enableHighAccuracy: true, 
-            timeout: 5000 
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000
         });
       }).catch((err) => {
         console.warn("No se pudo obtener la ubicación:", err);
@@ -94,7 +138,6 @@ export default function MisProductosPage() {
         formData.append("lat", position.coords.latitude.toString());
         formData.append("lng", position.coords.longitude.toString());
       } else if (!editTarget) {
-        // Si es un producto nuevo y no hay GPS, podrías alertar o dejarlo nacional
         console.log("Creando producto sin coordenadas específicas.");
       }
 
@@ -107,13 +150,13 @@ export default function MisProductosPage() {
       }
 
       setModalOpen(false);
-      Swal.fire({ 
-        icon: "success", 
-        title: editTarget ? "Producto actualizado" : "¡Producto agregado!", 
-        timer: 1800, 
-        showConfirmButton: false, 
-        toast: true, 
-        position: "top-end" 
+      Swal.fire({
+        icon: "success",
+        title: editTarget ? "Producto actualizado" : "¡Producto agregado!",
+        timer: 1800,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end"
       });
     } catch (e: any) {
       Swal.fire({ icon: "error", title: e.message || "Error al guardar" });
@@ -140,6 +183,85 @@ export default function MisProductosPage() {
       Swal.fire({ icon: "success", title: "Eliminado", timer: 1500, showConfirmButton: false, toast: true, position: "top-end" });
     } catch (e: any) {
       Swal.fire({ icon: "error", title: e.message || "Error al eliminar" });
+    }
+  };
+
+  // ── Oferta Flash: activar / cancelar ───────────────────────
+  const handleFlashOffer = async (product: Product) => {
+    const Swal = (await import("sweetalert2")).default;
+
+    if (product.flashOffer?.active) {
+      const { isConfirmed } = await Swal.fire({
+        title: "¿Cancelar oferta flash?",
+        text: `"${product.name}" volverá a su precio normal.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Cancelar oferta",
+        cancelButtonText: "Volver",
+        confirmButtonColor: "#ef4444",
+      });
+      if (!isConfirmed) return;
+      try {
+        const updated = await cancelFlashOffer(product._id);
+        setProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
+        Swal.fire({ icon: "success", title: "Oferta flash cancelada", timer: 1500, showConfirmButton: false, toast: true, position: "top-end" });
+      } catch (e: any) {
+        Swal.fire({ icon: "error", title: e.message || "Error al cancelar la oferta" });
+      }
+      return;
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: "Oferta flash ⚡",
+      html: `
+        <div style="text-align:left; display:flex; flex-direction:column; gap:0.75rem; margin-top:0.5rem;">
+          <label style="font-size:0.85rem; font-weight:600;">
+            Duración (1 a 24 horas)
+            <input id="flash-hours" type="number" min="1" max="24" value="6"
+              style="width:100%; padding:0.5rem; border-radius:8px; border:1px solid #ddd; margin-top:4px;" />
+          </label>
+          <label style="font-size:0.85rem; font-weight:600;">
+            Descuento (%)
+            <input id="flash-discount" type="number" min="1" max="90" value="20"
+              style="width:100%; padding:0.5rem; border-radius:8px; border:1px solid #ddd; margin-top:4px;" />
+          </label>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Activar oferta",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#f97316",
+      preConfirm: () => {
+        const hours = parseFloat((document.getElementById("flash-hours") as HTMLInputElement).value);
+        const discount = parseFloat((document.getElementById("flash-discount") as HTMLInputElement).value);
+        if (!hours || hours < 1 || hours > 24) {
+          Swal.showValidationMessage("La duración debe ser entre 1 y 24 horas");
+          return;
+        }
+        if (!discount || discount < 1 || discount > 90) {
+          Swal.showValidationMessage("El descuento debe ser entre 1% y 90%");
+          return;
+        }
+        return { hours, discount };
+      },
+    });
+
+    if (!formValues) return;
+
+    try {
+      const updated = await setFlashOffer(product._id, formValues.hours, formValues.discount);
+      setProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
+      Swal.fire({
+        icon: "success",
+        title: `¡Oferta flash activada por ${formValues.hours}hs!`,
+        timer: 1800,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end",
+      });
+    } catch (e: any) {
+      Swal.fire({ icon: "error", title: e.message || "Error al activar la oferta" });
     }
   };
 
@@ -206,10 +328,10 @@ export default function MisProductosPage() {
                     {products.map((p) => (
                       <tr key={p._id}>
                         <td>
-                          <img 
-                            src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`} 
-                            alt={p.name} 
-                            className="mp-table-img" 
+                          <img
+                            src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`}
+                            alt={p.name}
+                            className="mp-table-img"
                           />
                         </td>
                         <td>
@@ -223,9 +345,10 @@ export default function MisProductosPage() {
                               <span style={{ fontSize: '0.7rem', color: '#666' }}>Alcance: Nacional</span>
                             )}
                           </div>
+                          <FlashBadge product={p} />
                         </td>
                         <td><span className="mp-badge">{getCategoryLabel(p.category)}</span></td>
-                        <td><PriceDisplay price={p.price} discount={p.discount} /></td>
+                        <td><PriceDisplay product={p} /></td>
                         <td>
                           <span className={`mp-stock ${(p.stock || 0) < 5 ? "low" : "ok"}`}>
                             {p.stock ?? "—"}
@@ -233,6 +356,14 @@ export default function MisProductosPage() {
                         </td>
                         <td>
                           <div className="mp-actions">
+                            <button
+                              className="mp-action-btn"
+                              title={p.flashOffer?.active ? "Cancelar oferta flash" : "Activar oferta flash"}
+                              style={p.flashOffer?.active ? { color: "#f59e0b" } : undefined}
+                              onClick={() => handleFlashOffer(p)}
+                            >
+                              {p.flashOffer?.active ? <ZapOff size={15} /> : <Zap size={15} />}
+                            </button>
                             <button className="mp-action-btn" onClick={() => openEdit(p)}><Pencil size={15} /></button>
                             <button className="mp-action-btn danger" onClick={() => handleDelete(p)}><Trash2 size={15} /></button>
                           </div>
@@ -247,15 +378,16 @@ export default function MisProductosPage() {
               <div className="mp-mobile-list">
                 {products.map((p) => (
                   <div key={p._id} className="mp-card-item">
-                    <img 
-                       src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`} 
-                       alt={p.name} 
-                       className="mp-card-img" 
+                    <img
+                       src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`}
+                       alt={p.name}
+                       className="mp-card-img"
                     />
                     <div className="mp-card-body">
                       <div className="mp-card-name">{p.name}</div>
+                      <FlashBadge product={p} />
                       <div className="mp-card-meta">
-                        <PriceDisplay price={p.price} discount={p.discount} />
+                        <PriceDisplay product={p} />
                       </div>
                       <div className="mp-card-meta">
                          <span className="mp-badge">{getCategoryLabel(p.category)}</span>
@@ -266,6 +398,14 @@ export default function MisProductosPage() {
                          )}
                       </div>
                       <div className="mp-card-actions">
+                        <button
+                          className="mp-action-btn"
+                          title={p.flashOffer?.active ? "Cancelar oferta flash" : "Activar oferta flash"}
+                          style={p.flashOffer?.active ? { color: "#f59e0b" } : undefined}
+                          onClick={() => handleFlashOffer(p)}
+                        >
+                          {p.flashOffer?.active ? <ZapOff size={15} /> : <Zap size={15} />}
+                        </button>
                         <button className="mp-action-btn" onClick={() => openEdit(p)}><Pencil size={15} /></button>
                         <button className="mp-action-btn danger" onClick={() => handleDelete(p)}><Trash2 size={15} /></button>
                       </div>
