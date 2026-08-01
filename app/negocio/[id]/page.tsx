@@ -7,7 +7,6 @@ import { useAuth } from "../../context/authContext";
 import { useCart } from "../../context/cartContext";
 import ReportModal from "../../componentes/reportModal";
 import { useTracking } from "../../context/TrackingContext";
-
 import {
   MapPin, Package, Star, CheckCircle, ShoppingBag,
   UserPlus, MessageCircle, Heart, Tag, ShoppingCart,
