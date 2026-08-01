@@ -12,7 +12,7 @@ import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
 import "../styles/afiliados.css";
 
-const API = "https://new-backend-lovat.vercel.app/api";
+const API = "/api";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
