@@ -6,7 +6,7 @@ import MainLayout from "../../componentes/MainLayout";
 import { useAuth } from "../../context/authContext";
 import { useCart } from "../../context/cartContext";
 import ReportModal from "../../componentes/reportModal";
-import { useTracking } from "../../context/TrackingContext"; // <-- TRACKING
+import { useTracking } from "../../context/TrackingContext";
 
 import {
   MapPin, Package, Star, CheckCircle, ShoppingBag,
