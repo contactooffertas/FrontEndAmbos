@@ -8,7 +8,6 @@ import "../styles/negocio.css";
 import "../styles/negocio-products.css";
 import { useRouter, useParams } from "next/navigation";
 
-
 import {
   MapPin, Package, Star, CheckCircle, Edit, Save,
   Camera, Plus, Pencil, Trash2, ShoppingBag, X,
