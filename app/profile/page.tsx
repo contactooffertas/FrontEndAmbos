@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Mail, Store, ShoppingBag, LogOut, Bell, MapPin, Package, Save, KeyRound,
+  Mail, Store,Handshake,ShoppingBag, LogOut, Bell, MapPin, Package, Save, KeyRound,
   User, Pin, Camera, TrendingUp, Heart, LayoutGrid, MessageCircle, ChevronRight,
   Clock, ExternalLink, X, Star, Navigation, CheckCircle2, RefreshCw, Flag,
   AlertTriangle, CheckCircle, XCircle, Shield, ShieldCheck, ChevronLeft, Locate, LocateOff,
@@ -653,6 +653,12 @@ export default function ProfilePage() {
             </span>
             <div style={{ marginTop:10 }}>
               <ProfileBannerTrigger hasUnseen={hasUnseenAnn} glowActive={glowActive} onClick={openBanner}/>
+
+
+<Link href="/programa-afiliados">
+    <Handshake size={14} />
+    Programa de Afiliados
+</Link>
             </div>
           </div>
           <div className="profile-stats">
