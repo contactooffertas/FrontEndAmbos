@@ -2,7 +2,7 @@
 "use client";
 import { AuthProvider } from "./authContext";
 import { CartProvider } from "./cartContext";
-import { TrackingProvider } from "./TrackingContext"; // <- nuevo
+import { TrackingProvider } from "./TrackingContext"; 
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
