@@ -2,7 +2,10 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./authContext";
+
 type TrackFn = (event: string, props?: Record<string, any>) => void;
+
+const API = "https://new-backend-lovat.vercel.app/api";
 
 // Generador de ID sin librerías externas
 const genId = (prefix = "") => {
@@ -31,7 +34,6 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
       document.cookie = `_mr_anon=${anon}; path=/; max-age=31536000; SameSite=Lax`;
     }
     setAnonymousId(anon);
-
     // Crea session si no existe
     if (!sessionStorage.getItem("_mr_sess")) {
       sessionStorage.setItem("_mr_sess", genId("sess_"));
@@ -40,7 +42,6 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
 
   const track: TrackFn = (event, props = {}) => {
     if (!anonymousId) return;
-
     const payload = {
       business_id: props.businessId || "global",
       anonymous_id: anonymousId,
@@ -51,12 +52,32 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
       session_id: typeof window !== 'undefined' ? sessionStorage.getItem("_mr_sess") : '',
     };
 
+    const url = `${API}/tracking/event`;
+    const body = JSON.stringify(payload);
+
     try {
-      const body = JSON.stringify(payload);
       if (navigator.sendBeacon) {
-        navigator.sendBeacon("/api/track", body);
+        // OJO: sendBeacon con un string manda Content-Type: text/plain
+        // y express.json() no lo parsea. Hay que forzar un Blob con
+        // el mimetype correcto para que el backend reciba el body.
+        const blob = new Blob([body], { type: "application/json" });
+        const ok = navigator.sendBeacon(url, blob);
+        if (!ok) {
+          // Si sendBeacon falla (payload muy grande, etc.), fallback a fetch
+          fetch(url, {
+            method: "POST",
+            body,
+            keepalive: true,
+            headers: { "Content-Type": "application/json" },
+          }).catch(() => {});
+        }
       } else {
-        fetch("/api/track", { method: "POST", body, keepalive: true, headers: { 'Content-Type': 'application/json' } });
+        fetch(url, {
+          method: "POST",
+          body,
+          keepalive: true,
+          headers: { "Content-Type": "application/json" },
+        }).catch(() => {});
       }
     } catch (e) {
       console.error("track error", e);
