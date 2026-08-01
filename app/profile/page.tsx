@@ -1,5 +1,6 @@
 "use client";
 // app/profile/page.tsx
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -14,11 +15,6 @@ import { useAuth } from "../context/authContext";
 import { io, Socket } from "socket.io-client";
 import ReportModal from "../componentes/reportModal";
 import "../styles/profile.css";
-
-import { Handshake } from "lucide-react";
-import { useRouter } from "next/navigation";
-
-const router = useRouter();
 
 const API     = "https://new-backend-lovat.vercel.app/api";
 const WS_URL  = "https://renderbackendconsocket.onrender.com";
@@ -657,17 +653,6 @@ export default function ProfilePage() {
             </span>
             <div style={{ marginTop:10 }}>
               <ProfileBannerTrigger hasUnseen={hasUnseenAnn} glowActive={glowActive} onClick={openBanner}/>
-              <button onClick={() => router.push("/programa-afiliados")} className="flex items-center gap-3 w-full rounded-xl border border-orange-200 bg-white hover:bg-orange-50 transition-all duration-200 p-4 shadow-sm hover:shadow-md">
-                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-                    <Handshake size={24} className="text-orange-600" />
-                 </div>
-
-                <div className="flex flex-col text-left flex-1">
-                <span className="font-semibold text-gray-900"> Programa de Afiliados</span>
-                <span className="text-sm text-gray-500">Ganá dinero o hacé crecer tu negocio.</span>
-               </div>
-                <span className="text-orange-600 font-semibold"> →</span>
-              </button>
             </div>
           </div>
           <div className="profile-stats">
