@@ -2,7 +2,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./authContext";
-
 type TrackFn = (event: string, props?: Record<string, any>) => void;
 
 // Generador de ID sin librerías externas
