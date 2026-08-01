@@ -604,31 +604,42 @@ export default function NegocioPublicoPage() {
                 </div>
               )}
             </div>
-            <div className="nid-spotlight-body">
-              <span className="nid-spotlight-tag">El producto que buscabas</span>
-              <h3 className="nid-spotlight-name">{spotlightProduct.name}</h3>
-              {spotlightProduct.description && (
-                <p className="nid-spotlight-desc">{spotlightProduct.description}</p>
-              )}
-              <div className="nid-spotlight-footer">
-                <ProductPrice price={spotlightProduct.price} discount={spotlightProduct.discount} />
-                <button
-                  onClick={() => handleAddToCart(spotlightProduct)}
-                  disabled={(spotlightProduct.stock ?? 0) === 0}
-                  className="nid-add-btn"
-                  style={{
-                    background: (spotlightProduct.stock ?? 0) === 0 ? "#e5e7eb" : "#f97316",
-                    color:      (spotlightProduct.stock ?? 0) === 0 ? "#9ca3af" : "#fff",
-                    cursor:     (spotlightProduct.stock ?? 0) === 0 ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <ShoppingCart size={13} /> Agregar
-                </button>
-              </div>
-              <button className="nid-spotlight-viewgrid" onClick={goToProductInGrid}>
-                Ver en el catálogo del negocio
-              </button>
-            </div>
+           <div className="nid-spotlight-body">
+  <span className="nid-spotlight-tag">El producto que buscabas</span>
+  <h3 className="nid-spotlight-name">{spotlightProduct.name}</h3>
+  {spotlightProduct.description && (
+    <p
+      className="nid-spotlight-desc"
+      style={{
+        display: "-webkit-box",
+        WebkitLineClamp: 4, // Cambiá este número si querés mostrar más o menos líneas
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {spotlightProduct.description}
+    </p>
+  )}
+  <div className="nid-spotlight-footer">
+    <ProductPrice price={spotlightProduct.price} discount={spotlightProduct.discount} />
+    <button
+      onClick={() => handleAddToCart(spotlightProduct)}
+      disabled={(spotlightProduct.stock ?? 0) === 0}
+      className="nid-add-btn"
+      style={{
+        background: (spotlightProduct.stock ?? 0) === 0 ? "#e5e7eb" : "#f97316",
+        color: (spotlightProduct.stock ?? 0) === 0 ? "#9ca3af" : "#fff",
+        cursor: (spotlightProduct.stock ?? 0) === 0 ? "not-allowed" : "pointer",
+      }}
+    >
+      <ShoppingCart size={13} /> Agregar
+    </button>
+  </div>
+  <button className="nid-spotlight-viewgrid" onClick={goToProductInGrid}>
+    Ver en el catálogo del negocio
+  </button>
+</div>
           </div>
         </div>
       )}
