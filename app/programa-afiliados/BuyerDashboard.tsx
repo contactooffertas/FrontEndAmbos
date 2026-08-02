@@ -1,6 +1,5 @@
 "use client";
 // app/programa-afiliados/BuyerDashboard.tsx
-//
 
 import { useCallback, useEffect, useState } from "react";
 import {
