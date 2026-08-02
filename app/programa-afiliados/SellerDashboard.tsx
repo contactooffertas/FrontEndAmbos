@@ -59,6 +59,25 @@ function formatMoney(value: number): string {
   });
 }
 
+/** Calcula los días restantes a partir de la fecha de vencimiento,
+ *  para usar como fallback cuando el backend no manda daysRemaining. */
+function daysRemainingFromDue(dueDate: string | null): number {
+  if (!dueDate) return 0;
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffMs = due.getTime() - today.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/** Devuelve daysRemaining si vino como número válido; si no, lo calcula desde dueDate. */
+function getDaysRemaining(item: { daysRemaining: number | null; dueDate: string | null }): number {
+  return typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)
+    ? item.daysRemaining
+    : daysRemainingFromDue(item.dueDate);
+}
+
 function daysLabel(daysRemaining: number): string {
   if (daysRemaining < 0) return `Vencido hace ${Math.abs(daysRemaining)} día${Math.abs(daysRemaining) === 1 ? "" : "s"}`;
   if (daysRemaining === 0) return "Vence hoy";
@@ -136,8 +155,8 @@ interface PendingSaleItem {
   productName: string;
   affiliate: ApplicantBuyerData | null;
   date: string;
-  dueDate: string;
-  daysRemaining: number;
+  dueDate: string | null;
+  daysRemaining: number | null;
   quantity: number;
   unitPrice: number;
   totalAmount: number;
@@ -249,7 +268,7 @@ function BuyerCarnet({
           </p>
         )}
       </div>
-      <a
+      
         href={buildWhatsAppLink(buyer.phone, businessName)}
         target="_blank"
         rel="noopener noreferrer"
@@ -684,6 +703,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
 
     const totalUrgent = payables.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
     const soonest = payables.urgentSales[0];
+    const soonestDays = getDaysRemaining(soonest);
     const affiliateName = soonest.affiliate ? `${soonest.affiliate.firstName} ${soonest.affiliate.lastName}` : "un afiliado";
 
     void Swal.fire({
@@ -691,7 +711,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
       title: "Tenés un pago por vencer",
       html: `
         <p>Tenés que pagar <strong>${formatMoney(totalUrgent)}</strong> a tus afiliados.</p>
-        <p>${daysLabel(soonest.daysRemaining)} el pago a <strong>${affiliateName}</strong> por <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
+        <p>${daysLabel(soonestDays)} el pago a <strong>${affiliateName}</strong> por <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
       `,
       confirmButtonText: "Ver pagos pendientes",
       confirmButtonColor: "#6d28d9",
@@ -1056,40 +1076,43 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
                       </div>
 
                       <div className="affseller-sales-list">
-                        {group.sales.map((sale) => (
-                          <div
-                            key={sale.saleId}
-                            className={`affseller-sale-row ${sale.daysRemaining <= 5 ? "affseller-sale-row-urgent" : ""}`}
-                          >
-                            <div>
-                              <p className="affseller-sale-product">{sale.productName}</p>
-                              <p className="affseller-sale-date">{formatDate(sale.date)}</p>
-                            </div>
-                            <div className="affseller-sale-amounts">
-                              <p className="affseller-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
-                              <p className="affseller-sale-commission">A pagar: {formatMoney(sale.commissionAmount)}</p>
-                            </div>
-                            <div className="affseller-sale-due">
-                              <span className={`affseller-due-badge ${sale.daysRemaining <= 5 ? "affseller-due-badge-urgent" : ""}`}>
-                                {daysLabel(sale.daysRemaining)}
-                              </span>
-                              <span className="affseller-due-date">Vence: {formatDate(sale.dueDate)}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="affseller-pay-btn"
-                              disabled={payingId === sale.saleId}
-                              onClick={() => void handleMarkPaid(sale.saleId)}
+                        {group.sales.map((sale) => {
+                          const saleDays = getDaysRemaining(sale);
+                          return (
+                            <div
+                              key={sale.saleId}
+                              className={`affseller-sale-row ${saleDays <= 5 ? "affseller-sale-row-urgent" : ""}`}
                             >
-                              {payingId === sale.saleId ? (
-                                <Loader2 size={14} className="affseller-spin" />
-                              ) : (
-                                <DollarSign size={14} />
-                              )}
-                              Marcar pagado
-                            </button>
-                          </div>
-                        ))}
+                              <div>
+                                <p className="affseller-sale-product">{sale.productName}</p>
+                                <p className="affseller-sale-date">{formatDate(sale.date)}</p>
+                              </div>
+                              <div className="affseller-sale-amounts">
+                                <p className="affseller-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                                <p className="affseller-sale-commission">A pagar: {formatMoney(sale.commissionAmount)}</p>
+                              </div>
+                              <div className="affseller-sale-due">
+                                <span className={`affseller-due-badge ${saleDays <= 5 ? "affseller-due-badge-urgent" : ""}`}>
+                                  {daysLabel(saleDays)}
+                                </span>
+                                <span className="affseller-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="affseller-pay-btn"
+                                disabled={payingId === sale.saleId}
+                                onClick={() => void handleMarkPaid(sale.saleId)}
+                              >
+                                {payingId === sale.saleId ? (
+                                  <Loader2 size={14} className="affseller-spin" />
+                                ) : (
+                                  <DollarSign size={14} />
+                                )}
+                                Marcar pagado
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
