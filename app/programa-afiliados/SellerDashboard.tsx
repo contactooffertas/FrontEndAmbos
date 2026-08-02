@@ -2,7 +2,7 @@
 // app/programa-afiliados/SellerDashboard.tsx
 
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type JSX } from "react";
 import {
   Package, Users, IdCard, Star, Ban, Trash2, CheckCircle2, XCircle,
   MessageCircle, Copy, Loader2, ChevronLeft, ChevronRight, Search, Check,
