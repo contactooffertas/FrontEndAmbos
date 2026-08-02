@@ -11,6 +11,7 @@
   gap: 8px;
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .affseller-tab {
@@ -36,6 +37,14 @@
 .affseller-tab-active {
   background: #ede9fe;
   color: #6d28d9;
+}
+
+.affseller-tab-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+  margin-left: 2px;
 }
 
 .affseller-panel {
@@ -96,6 +105,7 @@
   flex: 1;
   font-size: 14px;
   color: #111827;
+  background: transparent;
 }
 
 /* --- Lista de productos / ofertas --- */
@@ -129,6 +139,7 @@
   border-radius: 8px;
   object-fit: cover;
   background: #f3f4f6;
+  flex-shrink: 0;
 }
 
 .affseller-product-thumb-empty {
@@ -144,6 +155,7 @@
 .affseller-product-price {
   font-size: 13px;
   color: #6b7280;
+  font-variant-numeric: tabular-nums;
 }
 
 .affseller-product-actions {
@@ -166,6 +178,7 @@
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 .affseller-toggle-btn {
@@ -402,9 +415,9 @@
 .affseller-status-badge {
   display: inline-block;
   width: fit-content;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -449,8 +462,9 @@
   color: #374151;
   cursor: pointer;
 }
+
 /* ============================================================
-   Agregado: perfil editable, montos claros y panel de pagos
+   Perfil editable, montos claros y panel de pagos
    ============================================================ */
 
 /* --- Mi perfil (editable) --- */
@@ -476,85 +490,286 @@
   color: #111827;
 }
 
-.affseller-profile-actions { display: flex; gap: 8px; }
-
-.affseller-edit-btn, .affseller-cancel-btn, .affseller-save-btn {
-  display: flex; align-items: center; gap: 6px;
-  border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600;
-  cursor: pointer; border: 1px solid #d1d5db; background: #fff; color: #374151;
+.affseller-profile-actions {
+  display: flex;
+  gap: 8px;
 }
-.affseller-save-btn { background: #6d28d9; color: #fff; border-color: #6d28d9; }
-.affseller-edit-btn:disabled, .affseller-cancel-btn:disabled, .affseller-save-btn:disabled {
-  opacity: 0.6; cursor: not-allowed;
+
+.affseller-edit-btn,
+.affseller-cancel-btn,
+.affseller-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.affseller-save-btn {
+  background: #6d28d9;
+  color: #fff;
+  border-color: #6d28d9;
+}
+
+.affseller-edit-btn:disabled,
+.affseller-cancel-btn:disabled,
+.affseller-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .affseller-profile-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
 }
-.affseller-profile-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #6b7280; }
-.affseller-profile-grid-full { grid-column: 1 / -1; }
+
+.affseller-profile-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affseller-profile-grid-full {
+  grid-column: 1 / -1;
+}
+
 .affseller-profile-grid input {
-  border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; font-size: 14px; color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #111827;
   background: #fff;
 }
-.affseller-profile-grid input:disabled { background: #f3f4f6; color: #4b5563; cursor: default; }
 
-/* --- Montos claros dentro del carnet (reemplaza el gris de "ventas: N") --- */
-.affseller-amount-box {
-  display: flex; flex-direction: column; gap: 3px;
-  border: 1px dashed #d1d5db; border-radius: 10px; padding: 8px 10px; margin: 2px 0;
+.affseller-profile-grid input:disabled {
+  background: #f3f4f6;
+  color: #4b5563;
+  cursor: default;
 }
-.affseller-amount-line { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #6b7280; }
-.affseller-amount-value { font-size: 14px; font-weight: 700; color: #111827; }
-.affseller-amount-positive { color: #059669; }
-.affseller-amount-pending { color: #b45309; }
 
-/* --- Tab dot (indicador de urgencia) --- */
-.affseller-tab-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: #dc2626; margin-left: 2px;
+/* --- Montos claros dentro del carnet --- */
+.affseller-amount-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 2px 0;
+  background: #faf9ff;
+}
+
+.affseller-amount-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affseller-amount-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+.affseller-amount-positive {
+  color: #059669;
+}
+
+.affseller-amount-pending {
+  color: #b45309;
 }
 
 /* --- Panel de pagos --- */
 .affseller-payables-summary {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
 }
+
 .affseller-payables-card {
-  border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  background: #f9fafb;
 }
-.affseller-payables-card-pending { background: #fff7ed; border-color: #fdba74; }
-.affseller-payables-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
-.affseller-payables-value { font-size: 20px; font-weight: 800; color: #111827; }
 
-.affseller-payables-groups { display: flex; flex-direction: column; gap: 16px; }
-.affseller-payables-group { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; }
+.affseller-payables-card-pending {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.affseller-payables-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.affseller-payables-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+}
+
+.affseller-payables-card-pending .affseller-payables-value {
+  color: #b45309;
+}
+
+.affseller-payables-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.affseller-payables-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+}
+
 .affseller-payables-group-header {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
 }
-.affseller-payables-group-name { font-size: 14px; font-weight: 700; color: #111827; }
-.affseller-payables-group-sub { font-size: 12px; color: #6b7280; }
-.affseller-payables-group-total { font-size: 16px; font-weight: 800; color: #b45309; }
 
-.affseller-sales-list { display: flex; flex-direction: column; gap: 10px; }
+.affseller-payables-group-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.affseller-payables-group-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affseller-payables-group-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #b45309;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+/* --- Lista de ventas pendientes de pago --- */
+.affseller-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .affseller-sale-row {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
-  border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
 }
-.affseller-sale-row-urgent { border-color: #fca5a5; background: #fef2f2; }
-.affseller-sale-product { font-size: 14px; font-weight: 600; color: #111827; }
-.affseller-sale-date { font-size: 12px; color: #6b7280; }
-.affseller-sale-amounts { display: flex; flex-direction: column; gap: 2px; text-align: right; }
-.affseller-sale-total { font-size: 12px; color: #6b7280; }
-.affseller-sale-commission { font-size: 14px; font-weight: 700; color: #b45309; }
-.affseller-sale-due { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.affseller-sale-row-urgent {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.affseller-sale-product {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.affseller-sale-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affseller-sale-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.affseller-sale-total {
+  font-size: 12px;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.affseller-sale-commission {
+  font-size: 17px;
+  font-weight: 800;
+  color: #b45309;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+.affseller-sale-due {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
 .affseller-due-badge {
-  font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
-  background: #e5e7eb; color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  white-space: nowrap;
 }
-.affseller-due-badge-urgent { background: #fee2e2; color: #b91c1c; }
-.affseller-due-date { font-size: 11px; color: #9ca3af; }
+
+.affseller-due-badge-urgent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.affseller-due-date {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
 .affseller-pay-btn {
-  display: flex; align-items: center; gap: 6px;
-  border: 1px solid #6d28d9; background: #ede9fe; color: #6d28d9;
-  border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #6d28d9;
+  background: #ede9fe;
+  color: #6d28d9;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
-.affseller-pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.affseller-pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
