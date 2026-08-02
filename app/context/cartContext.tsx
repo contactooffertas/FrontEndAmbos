@@ -23,6 +23,11 @@ interface CartItem {
   businessName?: string;
   businessPhone?: string;
   isFlashOffer?: boolean;
+  // Código de afiliado (Programa de Afiliados). Solo se envía cuando el
+  // producto se agrega desde un link ?ref=xxxx del producto compartido;
+  // el backend lo revalida contra AffiliateOfferApplication antes de
+  // guardarlo en el carrito, así que acá solo lo propagamos tal cual.
+  affiliateCode?: string;
 }
 
 interface CartContextType {
@@ -48,7 +53,7 @@ function authHeaders() {
   const token = getToken();
   return {
     "Content-Type": "application/json",
-   ...(token? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -84,7 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           title: "🛒 Tenés productos en tu carrito",
           html: `
             <p style="color:#6b7280;margin-bottom:1rem">
-              Dejaste <strong>${items.length} producto${items.length!== 1? "s" : ""}</strong> guardado${items.length!== 1? "s" : ""} la última vez.
+              Dejaste <strong>${items.length} producto${items.length !== 1 ? "s" : ""}</strong> guardado${items.length !== 1 ? "s" : ""} la última vez.
             </p>
             <div style="text-align:left;max-height:160px;overflow-y:auto;font-size:.85rem">
               ${items.map(i => `
@@ -108,7 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, [user?.id]);
 
-  // ── Add to cart - CON PRIORIDAD FLASH ──────────────────────────────────
+  // ── Add to cart - CON PRIORIDAD FLASH + AFILIADO ────────────────────────
   const addToCart = async (item: Omit<CartItem, "quantity">) => {
     if (!user) {
       const Swal = (await import("sweetalert2")).default;
@@ -127,6 +132,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           originalPrice: item.originalPrice,
           discount: item.discount,
           isFlashOffer: item.isFlashOffer || false,
+          // El backend revalida esto contra una afiliación aceptada para
+          // este producto puntual; si no es válido, simplemente lo ignora
+          // y el item se agrega como venta normal.
+          affiliateCode: item.affiliateCode || undefined,
         }),
       });
       if (res.ok) {
@@ -205,7 +214,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const cartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
 
-  // FIX: Si el precio ya viene con descuento flash (52k), no volver a descontar
+  // Si el precio ya viene con descuento flash aplicado, no volver a descontar
   const cartTotal = cart.reduce((acc, item) => {
     return acc + item.price * item.quantity;
   }, 0);
