@@ -147,6 +147,7 @@ function SellerCarnet({
         rel="noopener noreferrer"
         className="affbuyer-whatsapp-btn"
       >
+         <a>
         <MessageCircle size={15} /> Contactar por WhatsApp
       </a>
       {footer}
