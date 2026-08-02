@@ -669,7 +669,8 @@ export default function ProfilePage() {
              fontWeight: "700",
              textDecoration: "none",
              boxShadow: "0 6px 18px rgba(249,115,22,.35)",
-             transition: "0.25s",}}><Handshake size={18} color="#f59e0b" /> Programa de Afiliados</Link>
+             transition: "0.25s",}}>
+              <Handshake size={18} color="#f59e0b" /> Programa de Afiliados</Link>
             </div>
           </div>
           <div className="profile-stats">
