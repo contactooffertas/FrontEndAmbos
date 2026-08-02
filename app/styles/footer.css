@@ -4,13 +4,11 @@
   color: rgba(255,255,255,0.85);
   margin-top: 4rem;
 }
-
-/* ══ LOGO / TÍTULO DEL FOOTER — mismo diseño que el navbar (isotipo "MR" +
-   wordmark "Mercado"/"Rosario"), pero con clases propias (footer-logo-*)
-   para no chocar con .navbar-logo-* que vive en navbar.css. Como el footer
-   tiene fondo oscuro, "Mercado" va en blanco en vez de negro. ══ */
+/* ══ LOGO / TÍTULO DEL FOOTER — mismo diseño que el navbar (isotipo en
+   imagen + wordmark "Mercado"/"Rosario"), pero con clases propias
+   (footer-logo-*) para no chocar con .navbar-logo-* que vive en navbar.css.
+   Como el footer tiene fondo oscuro, "Mercado" va en blanco en vez de negro. ══ */
 .footer-logo { margin-bottom: 0.75rem; }
-
 .footer-logo-link {
   display: inline-flex;
   align-items: center;
@@ -18,30 +16,30 @@
   text-decoration: none;
   font-family: var(--font-display);
 }
-
+/* Círculo blanco con borde naranja que envuelve la imagen del isotipo */
 .footer-logo-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fb923c, #ea580c);
-  color: #fff;
-  font-size: 1.05rem;
-  font-weight: 900;
-  letter-spacing: -0.5px;
-  line-height: 1;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #f97316;
+  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.2);
+  overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.35);
 }
-
+.footer-logo-badge-img {
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
+}
 .footer-logo-wordmark {
   display: flex;
   flex-direction: column;
   line-height: 1.05;
 }
-
 /* "Mercado" → blanco, se lee sobre el fondo oscuro del footer */
 .footer-logo-word-main {
   font-size: 1.05rem;
@@ -49,7 +47,6 @@
   color: #fff;
   letter-spacing: -0.3px;
 }
-
 /* "Rosario" → color primario, mismo acento que en el navbar */
 .footer-logo-word-accent {
   font-size: 1.05rem;
@@ -58,7 +55,6 @@
   letter-spacing: -0.3px;
   margin-top: -2px;
 }
-
 .footer-top {
   max-width: 1280px;
   margin: 0 auto;
@@ -144,8 +140,7 @@
 @media (max-width: 540px) {
   .footer-top { grid-template-columns: 1fr; }
   .footer-bottom-inner { flex-direction: column; text-align: center; }
-
-  .footer-logo-badge { width: 2.2rem; height: 2.2rem; border-radius: 10px; font-size: 0.92rem; }
+  .footer-logo-badge { width: 2.2rem; height: 2.2rem; }
   .footer-logo-word-main,
   .footer-logo-word-accent { font-size: 0.92rem; }
 }
