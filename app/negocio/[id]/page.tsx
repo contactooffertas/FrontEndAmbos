@@ -252,6 +252,11 @@ export default function NegocioPublicoPage() {
   const pageEnterRef = useRef<number>(Date.now()); // <-- TRACKING
 
   const highlightProductId = searchParams.get("p");
+  // Código de afiliado del Programa de Afiliados: viaja en el link
+  // compartido (?ref=xxxx) y solo debe acreditarse al producto que fue
+  // efectivamente compartido (highlightProductId), no a cualquier otro
+  // producto que el usuario agregue de paso mientras navega la tienda.
+  const affiliateRef = (searchParams.get("ref") || "").trim() || null;
   const { gps, refresh: refreshGps } = useDynamicGps();
   const [business,        setBusiness]        = useState<Business | null>(null);
   const [products,        setProducts]        = useState<Product[]>([]);
@@ -513,8 +518,13 @@ export default function NegocioPublicoPage() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  // Solo se manda affiliateCode cuando el producto agregado es exactamente
+  // el que vino en el link compartido (?p=...&ref=...). Cualquier otro
+  // producto que el usuario agregue navegando la tienda entra como venta
+  // normal, sin afiliado.
   const handleAddToCart = (product: Product) => {
     if (!user) { requireAuth(); return; }
+    const isReferredProduct = !!affiliateRef && product._id === highlightProductId;
     addToCart({
       _id:           product._id,
       productId:     product._id,
@@ -526,6 +536,7 @@ export default function NegocioPublicoPage() {
       businessName:  business?.name,
       businessPhone: business?.phone || "",
       stock:         product.stock   ?? 99,
+      ...(isReferredProduct ? { affiliateCode: affiliateRef } : {}),
     });
     toast("success", `🛒 ${product.name} agregado al carrito`);
     if (!isOwner) track('lead_conversion', { businessId: id, action: 'add_to_cart', product_id: product._id }); // <-- TRACKING
