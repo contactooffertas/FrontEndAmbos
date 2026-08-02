@@ -14,6 +14,7 @@ function getToken(): string | null {
   return localStorage.getItem("marketplace_token");
 }
 
+
 async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const res = await fetch(`${API}${path}`, {
