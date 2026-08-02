@@ -655,10 +655,21 @@ export default function ProfilePage() {
             </span>
             <div style={{ marginTop:10 }}>
               <ProfileBannerTrigger hasUnseen={hasUnseenAnn} glowActive={glowActive} onClick={openBanner}/>
-            <Link href="/programa-afiliados">
-    <Handshake size={14} />
-    Programa de Afiliados
-</Link>
+            <Link
+             href="/programa-afiliados"
+             style={{
+             display: "inline-flex",
+             alignItems: "center",
+             gap: "8px",
+             padding: "12px 18px",
+             backgroundColor: "#111827",
+             color: "#f59e0b",
+             border: "2px solid #f97316",
+             borderRadius: "12px",
+             fontWeight: "700",
+             textDecoration: "none",
+             boxShadow: "0 6px 18px rgba(249,115,22,.35)",
+             transition: "0.25s",}}><Handshake size={18} color="#f59e0b" /> Programa de Afiliados</Link>
             </div>
           </div>
           <div className="profile-stats">
