@@ -18,7 +18,7 @@
   margin: 0 auto;
 }
 
-/* ══ LOGO / TÍTULO — isotipo "MR" + wordmark bicolor ══ */
+/* ══ LOGO / TÍTULO — isotipo (imagen) + wordmark bicolor ══ */
 .navbar-logo {
   display: flex;
   align-items: center;
@@ -29,24 +29,25 @@
   text-decoration: none;
 }
 
+/* Círculo blanco con borde naranja que envuelve la imagen del isotipo */
 .navbar-logo-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fb923c, #ea580c);
-  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.35);
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #f97316;
+  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.2);
+  overflow: hidden;
   flex-shrink: 0;
 }
 
-.navbar-logo-badge-text {
-  color: #fff;
-  font-size: 1.05rem;
-  font-weight: 900;
-  letter-spacing: -0.5px;
-  line-height: 1;
+.navbar-logo-badge-img {
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
 }
 
 .navbar-logo-wordmark {
@@ -272,8 +273,7 @@
 
   /* Logo un poco más compacto en mobile, siempre legible */
   .navbar-logo { gap: 0.5rem; }
-  .navbar-logo-badge { width: 2.2rem; height: 2.2rem; border-radius: 10px; }
-  .navbar-logo-badge-text { font-size: 0.92rem; }
+  .navbar-logo-badge { width: 2.2rem; height: 2.2rem; }
   .navbar-logo-word-main,
   .navbar-logo-word-accent { font-size: 0.92rem; }
 }
@@ -285,8 +285,7 @@
   }
 
   .navbar-logo { gap: 0.4rem; }
-  .navbar-logo-badge { width: 2rem; height: 2rem; border-radius: 9px; }
-  .navbar-logo-badge-text { font-size: 0.82rem; }
+  .navbar-logo-badge { width: 2rem; height: 2rem; }
   .navbar-logo-word-main,
   .navbar-logo-word-accent { font-size: 0.82rem; }
 }
