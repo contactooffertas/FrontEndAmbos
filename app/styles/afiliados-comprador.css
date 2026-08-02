@@ -1,5 +1,390 @@
+/* app/styles/afiliados-comprador.css */
+
+.affbuyer-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.affbuyer-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.affbuyer-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.affbuyer-tab:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.affbuyer-tab-active {
+  background: #111827;
+  color: #fff;
+}
+
+.affbuyer-tab-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+  margin-left: 2px;
+}
+
+.affbuyer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.affbuyer-error {
+  color: #dc2626;
+  font-size: 13px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.affbuyer-empty {
+  color: #6b7280;
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.affbuyer-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 14px;
+  padding: 24px 0;
+  justify-content: center;
+}
+
+.affbuyer-spin {
+  animation: affbuyer-spin 0.8s linear infinite;
+}
+
+@keyframes affbuyer-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Búsqueda --- */
+
+.affbuyer-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #6b7280;
+}
+
+.affbuyer-search input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 14px;
+  color: #111827;
+  background: transparent;
+}
+
+/* --- Lista de ofertas disponibles --- */
+
+.affbuyer-offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.affbuyer-offer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+
+.affbuyer-offer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.affbuyer-offer-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f3f4f6;
+  flex-shrink: 0;
+}
+
+.affbuyer-offer-thumb-empty {
+  background: #f3f4f6;
+}
+
+.affbuyer-offer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.affbuyer-offer-seller {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affbuyer-offer-commission {
+  font-size: 13px;
+  font-weight: 700;
+  color: #059669;
+  font-variant-numeric: tabular-nums;
+}
+
+.affbuyer-apply-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.affbuyer-apply-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.affbuyer-status-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.affbuyer-status-pending {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.affbuyer-status-accepted {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.affbuyer-status-rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.affbuyer-status-blocked {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* --- Paginación --- */
+
+.affbuyer-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.affbuyer-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  color: #374151;
+}
+
+.affbuyer-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.affbuyer-page-info {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* --- Carnet de vendedor (dentro de solicitudes / mis ofertas) --- */
+
+.affbuyer-carnet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.affbuyer-carnet {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  background: linear-gradient(180deg, #fafafa 0%, #ffffff 45%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.affbuyer-carnet-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.affbuyer-carnet-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #111827;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.affbuyer-carnet-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.affbuyer-carnet-contact {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affbuyer-carnet-divider {
+  border-top: 1px dashed #d1d5db;
+}
+
+.affbuyer-carnet-description {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.affbuyer-carnet-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.affbuyer-carnet-details span {
+  color: #9ca3af;
+  margin-right: 4px;
+}
+
+.affbuyer-whatsapp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* --- Solicitudes / Mis ofertas: metadatos, link de afiliado --- */
+
+.affbuyer-application-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.affbuyer-application-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.affbuyer-application-meta span {
+  color: #9ca3af;
+  margin-right: 4px;
+}
+
+.affbuyer-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.affbuyer-star {
+  color: #d1d5db;
+}
+
+.affbuyer-star-filled {
+  color: #f59e0b;
+}
+
+.affbuyer-copy-link-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+
 /* ============================================================
-   Agregado: perfil editable, montos claros y panel de ganancias
+   Perfil editable, montos claros y panel de ganancias
    ============================================================ */
 
 /* --- Mi perfil (editable) --- */
@@ -25,71 +410,237 @@
   color: #111827;
 }
 
-.affbuyer-profile-actions { display: flex; gap: 8px; }
-
-.affbuyer-edit-btn, .affbuyer-cancel-btn, .affbuyer-save-btn {
-  display: flex; align-items: center; gap: 6px;
-  border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600;
-  cursor: pointer; border: 1px solid #d1d5db; background: #fff; color: #374151;
+.affbuyer-profile-actions {
+  display: flex;
+  gap: 8px;
 }
-.affbuyer-save-btn { background: #111827; color: #fff; border-color: #111827; }
-.affbuyer-edit-btn:disabled, .affbuyer-cancel-btn:disabled, .affbuyer-save-btn:disabled {
-  opacity: 0.6; cursor: not-allowed;
+
+.affbuyer-edit-btn,
+.affbuyer-cancel-btn,
+.affbuyer-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.affbuyer-save-btn {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.affbuyer-edit-btn:disabled,
+.affbuyer-cancel-btn:disabled,
+.affbuyer-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .affbuyer-profile-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
 }
-.affbuyer-profile-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #6b7280; }
-.affbuyer-profile-grid-full { grid-column: 1 / -1; }
+
+.affbuyer-profile-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affbuyer-profile-grid-full {
+  grid-column: 1 / -1;
+}
+
 .affbuyer-profile-grid input {
-  border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; font-size: 14px; color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #111827;
   background: #fff;
 }
-.affbuyer-profile-grid input:disabled { background: #f3f4f6; color: #4b5563; cursor: default; }
 
-/* --- Montos claros dentro del carnet (reemplaza el gris de "ventas: N") --- */
-.affbuyer-amount-box {
-  display: flex; flex-direction: column; gap: 3px;
-  border: 1px dashed #d1d5db; border-radius: 10px; padding: 8px 10px; margin: 2px 0;
+.affbuyer-profile-grid input:disabled {
+  background: #f3f4f6;
+  color: #4b5563;
+  cursor: default;
 }
-.affbuyer-amount-line { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #6b7280; }
-.affbuyer-amount-value { font-size: 14px; font-weight: 700; color: #111827; }
-.affbuyer-amount-positive { color: #059669; }
-.affbuyer-amount-pending { color: #b45309; }
 
-/* --- Tab dot (indicador de urgencia) --- */
-.affbuyer-tab-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: #dc2626; margin-left: 2px;
+/* --- Montos claros dentro del carnet --- */
+.affbuyer-amount-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 2px 0;
+  background: #fafafa;
+}
+
+.affbuyer-amount-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affbuyer-amount-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+.affbuyer-amount-positive {
+  color: #059669;
+}
+
+.affbuyer-amount-pending {
+  color: #b45309;
 }
 
 /* --- Panel de ganancias --- */
 .affbuyer-earnings-summary {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
 }
-.affbuyer-earnings-card {
-  border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; background: #f9fafb;
-}
-.affbuyer-earnings-card-pending { background: #fffbeb; border-color: #fde68a; }
-.affbuyer-earnings-card-collected { background: #ecfdf5; border-color: #6ee7b7; }
-.affbuyer-earnings-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
-.affbuyer-earnings-value { font-size: 20px; font-weight: 800; color: #111827; }
 
-.affbuyer-sales-list { display: flex; flex-direction: column; gap: 10px; }
+.affbuyer-earnings-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.affbuyer-earnings-card-pending {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.affbuyer-earnings-card-collected {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
+
+.affbuyer-earnings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.affbuyer-earnings-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+}
+
+.affbuyer-earnings-card-pending .affbuyer-earnings-value {
+  color: #b45309;
+}
+
+.affbuyer-earnings-card-collected .affbuyer-earnings-value {
+  color: #059669;
+}
+
+/* --- Lista de ventas pendientes de cobro --- */
+.affbuyer-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .affbuyer-sale-row {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
-  border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
 }
-.affbuyer-sale-row-urgent { border-color: #fca5a5; background: #fef2f2; }
-.affbuyer-sale-product { font-size: 14px; font-weight: 600; color: #111827; }
-.affbuyer-sale-seller { font-size: 12px; color: #6b7280; }
-.affbuyer-sale-amounts { display: flex; flex-direction: column; gap: 2px; text-align: right; }
-.affbuyer-sale-total { font-size: 12px; color: #6b7280; }
-.affbuyer-sale-commission { font-size: 14px; font-weight: 700; color: #059669; }
-.affbuyer-sale-due { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.affbuyer-sale-row-urgent {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.affbuyer-sale-product {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.affbuyer-sale-seller {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.affbuyer-sale-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.affbuyer-sale-total {
+  font-size: 12px;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.affbuyer-sale-commission {
+  font-size: 17px;
+  font-weight: 800;
+  color: #059669;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+.affbuyer-sale-due {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
 .affbuyer-due-badge {
-  font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
-  background: #e5e7eb; color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  white-space: nowrap;
 }
-.affbuyer-due-badge-urgent { background: #fee2e2; color: #b91c1c; }
-.affbuyer-due-date { font-size: 11px; color: #9ca3af; }
+
+.affbuyer-due-badge-urgent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.affbuyer-due-date {
+  font-size: 11px;
+  color: #9ca3af;
+}
