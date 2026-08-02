@@ -1400,3 +1400,41 @@
     height: 46px !important;
   }
 }
+/* ── Botones secundarios de la tarjeta de producto (Visitar negocio / Compartir) ── */
+.product-secondary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  border: 1.5px solid rgba(6, 182, 212, 0.45);
+  background: rgba(6, 182, 212, 0.07);
+  color: #0e7490;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.product-secondary-btn:hover {
+  background: rgba(6, 182, 212, 0.16);
+  border-color: rgba(6, 182, 212, 0.75);
+  color: #0891b2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+}
+.product-secondary-btn.is-flex { flex: 1; }
+
+/* ── Botones circulares (favorito / compartir) sobre la imagen ── */
+.product-fav-btn {
+  border: 1.5px solid rgba(249, 115, 22, 0.4);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);
+}
+.product-fav-btn:hover {
+  border-color: rgba(249, 115, 22, 0.7);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+}
