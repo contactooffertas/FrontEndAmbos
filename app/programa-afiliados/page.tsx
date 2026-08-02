@@ -15,6 +15,7 @@ import "../styles/afiliados.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("marketplace_token");
