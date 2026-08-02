@@ -10,7 +10,6 @@ import {
 import "../styles/afiliados-comprador.css";
 
 const API = "https://new-backend-lovat.vercel.app/api/affiliates/buyer";
-
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("marketplace_token");
