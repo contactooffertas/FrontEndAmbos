@@ -58,8 +58,16 @@ function formatMoney(value: number): string {
   });
 }
 
-/** Calcula los días restantes a partir de la fecha de vencimiento,
- *  para usar como fallback cuando el backend no manda daysRemaining. */
+/** Suma `days` días a una fecha ISO. Devuelve null si no hay fecha base. */
+function addDays(dateStr: string | null | undefined, days: number): string | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
+
+/** Calcula los días restantes hasta una fecha de vencimiento dada. */
 function daysRemainingFromDue(dueDate: string | null): number {
   if (!dueDate) return 0;
   const due = new Date(dueDate);
@@ -70,11 +78,26 @@ function daysRemainingFromDue(dueDate: string | null): number {
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
-/** Devuelve daysRemaining si vino como número válido; si no, lo calcula desde dueDate. */
-function getDaysRemaining(item: { daysRemaining: number | null; dueDate: string | null }): number {
-  return typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)
-    ? item.daysRemaining
-    : daysRemainingFromDue(item.dueDate);
+/** Devuelve la fecha de vencimiento efectiva: la del backend si vino,
+ *  o venta + ciclo de pago (termDays) del vendedor si no vino.
+ *  Por defecto usa 30 días si el vendedor no tiene ciclo configurado. */
+function getEffectiveDueDate(
+  item: { dueDate: string | null; date?: string | null },
+  termDays: number = 30
+): string | null {
+  return item.dueDate ?? addDays(item.date ?? null, termDays);
+}
+
+/** Devuelve daysRemaining: el que vino del backend si es un número válido,
+ *  o lo calcula a partir de la fecha efectiva de vencimiento. */
+function getDaysRemaining(
+  item: { daysRemaining: number | null; dueDate: string | null; date?: string | null },
+  termDays: number = 30
+): number {
+  if (typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)) {
+    return item.daysRemaining;
+  }
+  return daysRemainingFromDue(getEffectiveDueDate(item, termDays));
 }
 
 function daysLabel(daysRemaining: number): string {
@@ -97,6 +120,7 @@ interface SellerCardData {
   email: string;
   phone: string;
   description: string;
+  paymentTermDays?: number | null;
 }
 
 interface ProductData {
@@ -212,7 +236,7 @@ function SellerCarnet({
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
       
-      <a  href={buildWhatsAppLink(seller.phone, buyerName)}
+        href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
         className="affbuyer-whatsapp-btn"
@@ -473,7 +497,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
     const totalUrgent = earnings.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
     const soonest = earnings.urgentSales[0];
-    const soonestDays = getDaysRemaining(soonest);
+    const soonestDays = getDaysRemaining(soonest, soonest.seller?.paymentTermDays ?? 30);
 
     void Swal.fire({
       icon: "info",
@@ -696,7 +720,9 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
               ) : (
                 <div className="affbuyer-sales-list">
                   {earnings.pendingSales.map((sale) => {
-                    const saleDays = getDaysRemaining(sale);
+                    const termDays = sale.seller?.paymentTermDays ?? 30;
+                    const saleDays = getDaysRemaining(sale, termDays);
+                    const effectiveDueDate = getEffectiveDueDate(sale, termDays);
                     return (
                       <div
                         key={sale.saleId}
@@ -714,7 +740,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                           <span className={`affbuyer-due-badge ${saleDays <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
                             {daysLabel(saleDays)}
                           </span>
-                          <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                          <span className="affbuyer-due-date">Vence: {formatDate(effectiveDueDate)}</span>
                         </div>
                       </div>
                     );
