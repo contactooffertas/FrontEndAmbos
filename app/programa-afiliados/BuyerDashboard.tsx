@@ -141,13 +141,12 @@ function SellerCarnet({
         <p><span>Email</span> {seller.email}</p>
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
-      
+      <a
         href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
         className="affbuyer-whatsapp-btn"
       >
-         <a>
         <MessageCircle size={15} /> Contactar por WhatsApp
       </a>
       {footer}
