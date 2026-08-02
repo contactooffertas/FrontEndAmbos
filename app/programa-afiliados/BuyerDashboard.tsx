@@ -1,9 +1,6 @@
 "use client";
 // app/programa-afiliados/BuyerDashboard.tsx
 //
-// Panel de comprador (afiliado): buscar ofertas activas de vendedores,
-// aplicar, y seguir el estado de solicitudes / afiliaciones aceptadas
-// con el link de afiliado y los datos del vendedor en carnet.
 
 import { useCallback, useEffect, useState } from "react";
 import {
