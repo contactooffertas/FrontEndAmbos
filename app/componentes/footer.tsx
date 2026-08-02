@@ -9,10 +9,12 @@ export default function Footer() {
         <div className="footer-brand">
           <div className="footer-logo">
             <Link href="/" className="footer-logo-link" aria-label="MercadoRosario — Ir al inicio">
-              {/* Isotipo "MR" en cuadrado redondeado — mismo diseño que el
-                  navbar, pero con clase propia (footer-logo-*) para que
-                  ningún CSS se pise entre sí */}
-              <span className="footer-logo-badge">MR</span>
+              {/* Isotipo — antes era el círculo "MR", ahora es la imagen
+                  navbarbolsa.png dentro de un círculo blanco con borde
+                  naranja, mismo criterio que el navbar */}
+              <span className="footer-logo-badge">
+                <img src="/assets/navbarbolsa.png" alt="" className="footer-logo-badge-img" />
+              </span>
               {/* Wordmark en dos líneas: "Mercado" (blanco, fondo oscuro del
                   footer) + "Rosario" (color primario) */}
               <span className="footer-logo-wordmark">
