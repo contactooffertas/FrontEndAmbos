@@ -58,6 +58,25 @@ function formatMoney(value: number): string {
   });
 }
 
+/** Calcula los días restantes a partir de la fecha de vencimiento,
+ *  para usar como fallback cuando el backend no manda daysRemaining. */
+function daysRemainingFromDue(dueDate: string | null): number {
+  if (!dueDate) return 0;
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffMs = due.getTime() - today.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/** Devuelve daysRemaining si vino como número válido; si no, lo calcula desde dueDate. */
+function getDaysRemaining(item: { daysRemaining: number | null; dueDate: string | null }): number {
+  return typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)
+    ? item.daysRemaining
+    : daysRemainingFromDue(item.dueDate);
+}
+
 function daysLabel(daysRemaining: number): string {
   if (daysRemaining < 0) return `Vencido hace ${Math.abs(daysRemaining)} día${Math.abs(daysRemaining) === 1 ? "" : "s"}`;
   if (daysRemaining === 0) return "Vence hoy";
@@ -118,8 +137,8 @@ interface PendingSaleItem {
   productName: string;
   seller: SellerCardData | null;
   date: string;
-  dueDate: string;
-  daysRemaining: number;
+  dueDate: string | null;
+  daysRemaining: number | null;
   quantity: number;
   unitPrice: number;
   totalAmount: number;
@@ -192,7 +211,7 @@ function SellerCarnet({
         <p><span>Email</span> {seller.email}</p>
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
-      <a
+      
         href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
@@ -454,13 +473,14 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
     const totalUrgent = earnings.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
     const soonest = earnings.urgentSales[0];
+    const soonestDays = getDaysRemaining(soonest);
 
     void Swal.fire({
       icon: "info",
       title: "Tenés un cobro por vencer",
       html: `
         <p>Tenés <strong>${formatMoney(totalUrgent)}</strong> por cobrar de tus últimas ventas.</p>
-        <p>${daysLabel(soonest.daysRemaining)} el pago de <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
+        <p>${daysLabel(soonestDays)} el pago de <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
       `,
       confirmButtonText: "Ver mis ganancias",
       confirmButtonColor: "#111827",
@@ -675,27 +695,30 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                 <p className="affbuyer-empty">No tenés cobros pendientes.</p>
               ) : (
                 <div className="affbuyer-sales-list">
-                  {earnings.pendingSales.map((sale) => (
-                    <div
-                      key={sale.saleId}
-                      className={`affbuyer-sale-row ${sale.daysRemaining <= 5 ? "affbuyer-sale-row-urgent" : ""}`}
-                    >
-                      <div>
-                        <p className="affbuyer-sale-product">{sale.productName}</p>
-                        <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · {formatDate(sale.date)}</p>
+                  {earnings.pendingSales.map((sale) => {
+                    const saleDays = getDaysRemaining(sale);
+                    return (
+                      <div
+                        key={sale.saleId}
+                        className={`affbuyer-sale-row ${saleDays <= 5 ? "affbuyer-sale-row-urgent" : ""}`}
+                      >
+                        <div>
+                          <p className="affbuyer-sale-product">{sale.productName}</p>
+                          <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · {formatDate(sale.date)}</p>
+                        </div>
+                        <div className="affbuyer-sale-amounts">
+                          <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                          <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
+                        </div>
+                        <div className="affbuyer-sale-due">
+                          <span className={`affbuyer-due-badge ${saleDays <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
+                            {daysLabel(saleDays)}
+                          </span>
+                          <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                        </div>
                       </div>
-                      <div className="affbuyer-sale-amounts">
-                        <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
-                        <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
-                      </div>
-                      <div className="affbuyer-sale-due">
-                        <span className={`affbuyer-due-badge ${sale.daysRemaining <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
-                          {daysLabel(sale.daysRemaining)}
-                        </span>
-                        <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>
