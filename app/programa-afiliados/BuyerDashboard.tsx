@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import {
   Package, Send, Clock, CheckCircle2, Search,
   MessageCircle, Copy, Loader2, ChevronLeft, ChevronRight, Check, Star,
-  Wallet, Pencil, X, Save,
+  Wallet, Pencil, X, Save, FileText, XOctagon, History,
 } from "lucide-react";
 import "../styles/afiliados-comprador.css";
 
@@ -56,48 +56,6 @@ function formatMoney(value: number): string {
     currency: "ARS",
     maximumFractionDigits: 0,
   });
-}
-
-/** Suma `days` días a una fecha ISO. Devuelve null si no hay fecha base. */
-function addDays(dateStr: string | null | undefined, days: number): string | null {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return null;
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
-}
-
-/** Calcula los días restantes hasta una fecha de vencimiento dada. */
-function daysRemainingFromDue(dueDate: string | null): number {
-  if (!dueDate) return 0;
-  const due = new Date(dueDate);
-  due.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diffMs = due.getTime() - today.getTime();
-  return Math.round(diffMs / (1000 * 60 * 60 * 24));
-}
-
-/** Devuelve la fecha de vencimiento efectiva: la del backend si vino,
- *  o venta + ciclo de pago (termDays) del vendedor si no vino.
- *  Por defecto usa 30 días si el vendedor no tiene ciclo configurado. */
-function getEffectiveDueDate(
-  item: { dueDate: string | null; date?: string | null },
-  termDays: number = 30
-): string | null {
-  return item.dueDate ?? addDays(item.date ?? null, termDays);
-}
-
-/** Devuelve daysRemaining: el que vino del backend si es un número válido,
- *  o lo calcula a partir de la fecha efectiva de vencimiento. */
-function getDaysRemaining(
-  item: { daysRemaining: number | null; dueDate: string | null; date?: string | null },
-  termDays: number = 30
-): number {
-  if (typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)) {
-    return item.daysRemaining;
-  }
-  return daysRemainingFromDue(getEffectiveDueDate(item, termDays));
 }
 
 function daysLabel(daysRemaining: number): string {
@@ -156,17 +114,35 @@ interface MyApplicationItem {
   affiliateLink: string | null;
 }
 
+// El backend ya calcula dueDate/daysRemaining siempre a partir del ciclo de
+// pago del vendedor, así que estos valores nunca deberían llegar en null;
+// se dejan como nullable únicamente por seguridad ante datos muy viejos.
 interface PendingSaleItem {
   saleId: string;
   productName: string;
   seller: SellerCardData | null;
   date: string;
   dueDate: string | null;
-  daysRemaining: number | null;
+  daysRemaining: number;
   quantity: number;
   unitPrice: number;
   totalAmount: number;
   commissionAmount: number;
+  paymentDisputed: boolean;
+  disputeReason: string | null;
+}
+
+interface PaidSaleItem {
+  saleId: string;
+  productName: string;
+  seller: SellerCardData | null;
+  date: string;
+  paidAt: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  commissionAmount: number;
+  proofUrl: string | null;
 }
 
 interface EarningsSummary {
@@ -175,6 +151,7 @@ interface EarningsSummary {
   totalCollected: number;
   pendingSales: PendingSaleItem[];
   urgentSales: PendingSaleItem[];
+  paidSales: PaidSaleItem[];
 }
 
 interface BuyerProfile {
@@ -235,7 +212,7 @@ function SellerCarnet({
         <p><span>Email</span> {seller.email}</p>
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
-      
+      <a
         href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
@@ -469,6 +446,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
   const [earningsError, setEarningsError] = useState("");
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const alertShownRef = useRef(false);
 
   const loadEarnings = useCallback(async () => {
@@ -497,14 +475,13 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
     const totalUrgent = earnings.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
     const soonest = earnings.urgentSales[0];
-    const soonestDays = getDaysRemaining(soonest, soonest.seller?.paymentTermDays ?? 30);
 
     void Swal.fire({
       icon: "info",
       title: "Tenés un cobro por vencer",
       html: `
         <p>Tenés <strong>${formatMoney(totalUrgent)}</strong> por cobrar de tus últimas ventas.</p>
-        <p>${daysLabel(soonestDays)} el pago de <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
+        <p>${daysLabel(soonest.daysRemaining)} el pago de <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
       `,
       confirmButtonText: "Ver mis ganancias",
       confirmButtonColor: "#111827",
@@ -512,6 +489,36 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
       if (result.isConfirmed) setTab("ganancias");
     });
   }, [earnings]);
+
+  const handleRejectPayment = async (saleId: string) => {
+    const { value: reason, isDismissed } = await Swal.fire({
+      title: "¿No recibiste este pago?",
+      html: "Recordá que los pagos se hacen por fuera de la plataforma. Si el vendedor lo marcó como pagado pero no lo cobraste, contanos brevemente qué pasó.",
+      input: "text",
+      inputLabel: "Motivo",
+      inputPlaceholder: "Ej: nunca recibí la transferencia",
+      showCancelButton: true,
+      confirmButtonText: "Rechazar pago",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc2626",
+      inputValidator: (value) => (!value ? "Contanos brevemente el motivo" : undefined),
+    });
+    if (isDismissed || !reason) return;
+
+    setRejectingId(saleId);
+    setEarningsError("");
+    try {
+      await authFetch(`/sales/${saleId}/reject-payment`, {
+        method: "PATCH",
+        body: JSON.stringify({ reason }),
+      });
+      await loadEarnings();
+    } catch (err) {
+      setEarningsError(errorMessage(err));
+    } finally {
+      setRejectingId(null);
+    }
+  };
 
   return (
     <div className="affbuyer-dashboard">
@@ -719,34 +726,87 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                 <p className="affbuyer-empty">No tenés cobros pendientes.</p>
               ) : (
                 <div className="affbuyer-sales-list">
-                  {earnings.pendingSales.map((sale) => {
-                    const termDays = sale.seller?.paymentTermDays ?? 30;
-                    const saleDays = getDaysRemaining(sale, termDays);
-                    const effectiveDueDate = getEffectiveDueDate(sale, termDays);
-                    return (
-                      <div
-                        key={sale.saleId}
-                        className={`affbuyer-sale-row ${saleDays <= 5 ? "affbuyer-sale-row-urgent" : ""}`}
-                      >
+                  {earnings.pendingSales.map((sale) => (
+                    <div
+                      key={sale.saleId}
+                      className={`affbuyer-sale-row ${sale.daysRemaining <= 5 ? "affbuyer-sale-row-urgent" : ""} ${
+                        sale.paymentDisputed ? "affbuyer-sale-row-disputed" : ""
+                      }`}
+                    >
+                      <div>
+                        <p className="affbuyer-sale-product">{sale.productName}</p>
+                        <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · {formatDate(sale.date)}</p>
+                        {sale.paymentDisputed && (
+                          <p className="affbuyer-dispute-note">Ya avisaste que no cobraste este pago.</p>
+                        )}
+                      </div>
+                      <div className="affbuyer-sale-amounts">
+                        <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                        <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
+                      </div>
+                      <div className="affbuyer-sale-due">
+                        <span className={`affbuyer-due-badge ${sale.daysRemaining <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
+                          {daysLabel(sale.daysRemaining)}
+                        </span>
+                        <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="affbuyer-history-section">
+                <p className="affbuyer-history-title">
+                  <History size={16} /> Cobros recibidos
+                </p>
+                {earnings.paidSales.length === 0 ? (
+                  <p className="affbuyer-empty">Todavía no cobraste ninguna comisión.</p>
+                ) : (
+                  <div className="affbuyer-sales-list">
+                    {earnings.paidSales.map((sale) => (
+                      <div key={sale.saleId} className="affbuyer-sale-row affbuyer-sale-row-paid">
                         <div>
                           <p className="affbuyer-sale-product">{sale.productName}</p>
-                          <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · {formatDate(sale.date)}</p>
+                          <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · Vendido: {formatDate(sale.date)}</p>
                         </div>
                         <div className="affbuyer-sale-amounts">
                           <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
-                          <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
+                          <p className="affbuyer-sale-commission">Cobrado: {formatMoney(sale.commissionAmount)}</p>
                         </div>
                         <div className="affbuyer-sale-due">
-                          <span className={`affbuyer-due-badge ${saleDays <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
-                            {daysLabel(saleDays)}
-                          </span>
-                          <span className="affbuyer-due-date">Vence: {formatDate(effectiveDueDate)}</span>
+                          <span className="affbuyer-due-badge affbuyer-due-badge-paid">Pagado</span>
+                          <span className="affbuyer-due-date">El {formatDate(sale.paidAt)}</span>
+                        </div>
+                        <div className="affbuyer-paid-actions">
+                          {sale.proofUrl && (
+                            <a
+                              href={sale.proofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="affbuyer-proof-link"
+                            >
+                              <FileText size={14} /> Ver comprobante
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            className="affbuyer-reject-payment-btn"
+                            disabled={rejectingId === sale.saleId}
+                            onClick={() => void handleRejectPayment(sale.saleId)}
+                          >
+                            {rejectingId === sale.saleId ? (
+                              <Loader2 size={14} className="affbuyer-spin" />
+                            ) : (
+                              <XOctagon size={14} />
+                            )}
+                            No recibí este pago
+                          </button>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           ) : null}
         </div>
