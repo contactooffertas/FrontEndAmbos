@@ -650,10 +650,16 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       </div>
       <div className="product-card-footer" style={{ flexDirection: "column", gap: "0.45rem" }}>
         <button className="btn btn-primary" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }} onClick={handleCart}><ShoppingCart size={15} /> Agregar al carrito</button>
-        <div style={{ display: "flex", gap: "0.4rem", width: "100%" }}>
-          {bizId && (<Link href={`/negocio/${bizId}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.38rem", borderRadius: "8px", border: "1.5px solid var(--border)", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, textDecoration: "none", transition: "all 0.2s" }}><Store size={13} style={{ marginRight: "0.25rem" }} /> Visitar negocio</Link>)}
-          <button onClick={handleShare} style={{ flex: bizId? undefined : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem", padding: "0.38rem 0.7rem", borderRadius: "8px", border: "1.5px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: "0.74rem", fontWeight: 600, cursor: "pointer" }}><Share2 size={13} /> Compartir</button>
-        </div>
+       <div style={{ display: "flex", gap: "0.4rem", width: "100%" }}>
+            {bizId && (
+        <Link href={`/negocio/${bizId}`} className="product-secondary-btn is-flex">
+      <Store size={13} /> Visitar negocio
+    </Link>
+  )}
+  <button onClick={handleShare} className={`product-secondary-btn ${bizId ? "" : "is-flex"}`}>
+    <Share2 size={13} /> Compartir
+  </button>
+</div>
         <ReportModal targetType="product" targetId={product._id} targetName={product.name} token={typeof window!== "undefined"? localStorage.getItem("marketplace_token") || "" : ""} onRequireAuth={async () => { const Swal = (await import("sweetalert2")).default; Swal.fire({ icon: "info", title: "Iniciá sesión para reportar", timer: 2000, showConfirmButton: false }); }} />
       </div>
     </div>
