@@ -1,6 +1,6 @@
 "use client";
 // app/programa-afiliados/BuyerDashboard.tsx
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type JSX } from "react";
 import {
   Package, Send, Clock, CheckCircle2, Search,
   MessageCircle, Copy, Loader2, ChevronLeft, ChevronRight, Check, Star,
