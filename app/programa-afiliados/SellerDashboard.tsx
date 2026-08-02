@@ -1,5 +1,6 @@
 "use client";
 // app/programa-afiliados/SellerDashboard.tsx
+
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import Swal from "sweetalert2";
 import {
@@ -58,8 +59,16 @@ function formatMoney(value: number): string {
   });
 }
 
-/** Calcula los días restantes a partir de la fecha de vencimiento,
- *  para usar como fallback cuando el backend no manda daysRemaining. */
+/** Suma `days` días a una fecha ISO. Devuelve null si no hay fecha base. */
+function addDays(dateStr: string | null | undefined, days: number): string | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
+
+/** Calcula los días restantes hasta una fecha de vencimiento dada. */
 function daysRemainingFromDue(dueDate: string | null): number {
   if (!dueDate) return 0;
   const due = new Date(dueDate);
@@ -70,11 +79,25 @@ function daysRemainingFromDue(dueDate: string | null): number {
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
-/** Devuelve daysRemaining si vino como número válido; si no, lo calcula desde dueDate. */
-function getDaysRemaining(item: { daysRemaining: number | null; dueDate: string | null }): number {
-  return typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)
-    ? item.daysRemaining
-    : daysRemainingFromDue(item.dueDate);
+/** Devuelve la fecha de vencimiento efectiva: la del backend si vino,
+ *  o venta + ciclo de pago (termDays) del vendedor si no vino. */
+function getEffectiveDueDate(
+  item: { dueDate: string | null; date?: string | null },
+  termDays: number
+): string | null {
+  return item.dueDate ?? addDays(item.date ?? null, termDays);
+}
+
+/** Devuelve daysRemaining: el que vino del backend si es un número válido,
+ *  o lo calcula a partir de la fecha efectiva de vencimiento. */
+function getDaysRemaining(
+  item: { daysRemaining: number | null; dueDate: string | null; date?: string | null },
+  termDays: number
+): number {
+  if (typeof item.daysRemaining === "number" && !Number.isNaN(item.daysRemaining)) {
+    return item.daysRemaining;
+  }
+  return daysRemainingFromDue(getEffectiveDueDate(item, termDays));
 }
 
 function daysLabel(daysRemaining: number): string {
@@ -184,6 +207,7 @@ interface SellerProfile {
   description: string;
   defaultPercentage: number;
   maxAffiliates: number;
+  paymentTermDays: number;
 }
 
 type TabKey = "ofertas" | "solicitudes" | "afiliados" | "pagos";
@@ -268,7 +292,7 @@ function BuyerCarnet({
         )}
       </div>
       
-     <a   href={buildWhatsAppLink(buyer.phone, businessName)}
+        href={buildWhatsAppLink(buyer.phone, businessName)}
         target="_blank"
         rel="noopener noreferrer"
         className="affseller-whatsapp-btn"
@@ -280,8 +304,14 @@ function BuyerCarnet({
   );
 }
 
-/** Card de perfil propio del vendedor, editable in-place. */
-function ProfileEditCard(): JSX.Element {
+/** Card de perfil propio del vendedor, editable in-place.
+ *  Avisa al padre (onPaymentTermChange) el ciclo de pago elegido,
+ *  para que el resto del dashboard calcule los vencimientos con ese valor. */
+function ProfileEditCard({
+  onPaymentTermChange,
+}: {
+  onPaymentTermChange?: (days: 15 | 30) => void;
+}): JSX.Element {
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [draft, setDraft] = useState<SellerProfile | null>(null);
   const [editing, setEditing] = useState(false);
@@ -289,19 +319,29 @@ function ProfileEditCard(): JSX.Element {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const notifyTerm = useCallback(
+    (value: number) => {
+      const normalized: 15 | 30 = value === 15 ? 15 : 30;
+      onPaymentTermChange?.(normalized);
+    },
+    [onPaymentTermChange]
+  );
+
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const data = await authFetch<{ profile: SellerProfile }>("/perfil");
-      setProfile(data.profile);
-      setDraft(data.profile);
+      const loaded = { ...data.profile, paymentTermDays: data.profile.paymentTermDays ?? 30 };
+      setProfile(loaded);
+      setDraft(loaded);
+      notifyTerm(loaded.paymentTermDays);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [notifyTerm]);
 
   useEffect(() => {
     void loadProfile();
@@ -309,6 +349,10 @@ function ProfileEditCard(): JSX.Element {
 
   const handleField = (field: keyof SellerProfile, value: string) => {
     setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
+  const handleTermChange = (value: string) => {
+    setDraft((prev) => (prev ? { ...prev, paymentTermDays: Number(value) } : prev));
   };
 
   const handleCancel = () => {
@@ -328,11 +372,14 @@ function ProfileEditCard(): JSX.Element {
           ...draft,
           defaultPercentage: Number(draft.defaultPercentage),
           maxAffiliates: Number(draft.maxAffiliates),
+          paymentTermDays: Number(draft.paymentTermDays),
         }),
       });
-      setProfile(data.profile);
-      setDraft(data.profile);
+      const saved = { ...data.profile, paymentTermDays: data.profile.paymentTermDays ?? 30 };
+      setProfile(saved);
+      setDraft(saved);
       setEditing(false);
+      notifyTerm(saved.paymentTermDays);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -417,6 +464,17 @@ function ProfileEditCard(): JSX.Element {
             onChange={(e) => handleField("maxAffiliates", e.target.value)}
           />
         </label>
+        <label>
+          <span>Ciclo de pago a afiliados</span>
+          <select
+            value={String(draft.paymentTermDays ?? 30)}
+            disabled={!editing}
+            onChange={(e) => handleTermChange(e.target.value)}
+          >
+            <option value="15">Cada 15 días</option>
+            <option value="30">Cada 30 días</option>
+          </select>
+        </label>
         <label className="affseller-profile-grid-full">
           <span>Descripción</span>
           <input value={draft.description} disabled={!editing} onChange={(e) => handleField("description", e.target.value)} />
@@ -428,6 +486,10 @@ function ProfileEditCard(): JSX.Element {
 
 export default function SellerDashboard({ businessName }: SellerDashboardProps): JSX.Element {
   const [tab, setTab] = useState<TabKey>("ofertas");
+
+  // Ciclo de pago elegido por el vendedor (15 o 30 días). Se usa como
+  // fallback para calcular vencimientos cuando el backend no manda dueDate.
+  const [paymentTermDays, setPaymentTermDays] = useState<15 | 30>(30);
 
   // --- Tab: Ofertas (catálogo paginado de 5 en 5) ---
   const [products, setProducts] = useState<SellerProductItem[]>([]);
@@ -702,7 +764,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
 
     const totalUrgent = payables.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
     const soonest = payables.urgentSales[0];
-    const soonestDays = getDaysRemaining(soonest);
+    const soonestDays = getDaysRemaining(soonest, paymentTermDays);
     const affiliateName = soonest.affiliate ? `${soonest.affiliate.firstName} ${soonest.affiliate.lastName}` : "un afiliado";
 
     void Swal.fire({
@@ -717,6 +779,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     }).then((result) => {
       if (result.isConfirmed) setTab("pagos");
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payables]);
 
   const handleMarkPaid = async (saleId: string) => {
@@ -735,7 +798,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
 
   return (
     <div className="affseller-dashboard">
-      <ProfileEditCard />
+      <ProfileEditCard onPaymentTermChange={setPaymentTermDays} />
 
       <div className="affseller-tabs">
         <button
@@ -1076,7 +1139,8 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
 
                       <div className="affseller-sales-list">
                         {group.sales.map((sale) => {
-                          const saleDays = getDaysRemaining(sale);
+                          const saleDays = getDaysRemaining(sale, paymentTermDays);
+                          const effectiveDueDate = getEffectiveDueDate(sale, paymentTermDays);
                           return (
                             <div
                               key={sale.saleId}
@@ -1094,7 +1158,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
                                 <span className={`affseller-due-badge ${saleDays <= 5 ? "affseller-due-badge-urgent" : ""}`}>
                                   {daysLabel(saleDays)}
                                 </span>
-                                <span className="affseller-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                                <span className="affseller-due-date">Vence: {formatDate(effectiveDueDate)}</span>
                               </div>
                               <button
                                 type="button"
