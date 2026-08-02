@@ -1,6 +1,5 @@
 "use client";
 // app/programa-afiliados/SellerDashboard.tsx
-
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import Swal from "sweetalert2";
 import {
