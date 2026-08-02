@@ -19,7 +19,7 @@ function getToken(): string | null {
   return localStorage.getItem("marketplace_token");
 }
 
-type AffiliateRole = "seller" | "buyer" | "admin";
+type AffiliateRole = "seller" | "user" | "admin";
 
 interface AffiliateStatus {
   role: AffiliateRole;
@@ -123,7 +123,7 @@ export default function ProgramaAfiliadosPage() {
           description: data.application.description || "",
         });
       }
-      if (data.role === "buyer" && data.application) {
+      if (data.role === "user" && data.application) {
         setBuyerForm({
           firstName: data.application.firstName || "",
           lastName: data.application.lastName || "",
