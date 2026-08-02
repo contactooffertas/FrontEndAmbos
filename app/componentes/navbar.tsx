@@ -575,7 +575,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="navbar-logo" aria-label="MercadoRosario — Ir al inicio">
             <span className="navbar-logo-badge" aria-hidden="true">
-              <span className="navbar-logo-badge-text">MR</span>
+              <img src="/assets/navbarbolsa.png" alt="" className="navbar-logo-badge-img" />
             </span>
             <span className="navbar-logo-wordmark">
               <span className="navbar-logo-word-main">Mercado</span>
