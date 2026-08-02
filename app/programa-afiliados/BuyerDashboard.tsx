@@ -1,9 +1,11 @@
 "use client";
 // app/programa-afiliados/BuyerDashboard.tsx
-import { useCallback, useEffect, useState, type JSX } from "react";
+import { useCallback, useEffect, useRef, useState, type JSX } from "react";
+import Swal from "sweetalert2";
 import {
   Package, Send, Clock, CheckCircle2, Search,
   MessageCircle, Copy, Loader2, ChevronLeft, ChevronRight, Check, Star,
+  Wallet, Pencil, X, Save,
 } from "lucide-react";
 import "../styles/afiliados-comprador.css";
 
@@ -13,7 +15,6 @@ function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("marketplace_token");
 }
-
 
 async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
@@ -47,6 +48,20 @@ function formatDate(value: string | null): string {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+function formatMoney(value: number): string {
+  return value.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  });
+}
+
+function daysLabel(daysRemaining: number): string {
+  if (daysRemaining < 0) return `Vencido hace ${Math.abs(daysRemaining)} día${Math.abs(daysRemaining) === 1 ? "" : "s"}`;
+  if (daysRemaining === 0) return "Vence hoy";
+  return `Vence en ${daysRemaining} día${daysRemaining === 1 ? "" : "s"}`;
 }
 
 interface PaginationMeta {
@@ -89,13 +104,48 @@ interface MyApplicationItem {
   decidedAt: string | null;
   rating: number | null;
   salesCount: number;
+  totalSalesAmount: number;
+  totalEarnedCommission: number;
+  totalPendingCommission: number;
   commissionPercentage: number | null;
   product: ProductData | null;
   seller: SellerCardData | null;
   affiliateLink: string | null;
 }
 
-type TabKey = "ofertas" | "solicitudes" | "mis-ofertas";
+interface PendingSaleItem {
+  saleId: string;
+  productName: string;
+  seller: SellerCardData | null;
+  date: string;
+  dueDate: string;
+  daysRemaining: number;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  commissionAmount: number;
+}
+
+interface EarningsSummary {
+  totalEarned: number;
+  totalPending: number;
+  totalCollected: number;
+  pendingSales: PendingSaleItem[];
+  urgentSales: PendingSaleItem[];
+}
+
+interface BuyerProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  province: string;
+  socialMedia: string;
+  salesExperience: string;
+}
+
+type TabKey = "ofertas" | "solicitudes" | "mis-ofertas" | "ganancias";
 
 interface BuyerDashboardProps {
   buyerName: string;
@@ -151,6 +201,139 @@ function SellerCarnet({
         <MessageCircle size={15} /> Contactar por WhatsApp
       </a>
       {footer}
+    </div>
+  );
+}
+
+/** Card de perfil propio del comprador, editable in-place. */
+function ProfileEditCard(): JSX.Element {
+  const [profile, setProfile] = useState<BuyerProfile | null>(null);
+  const [draft, setDraft] = useState<BuyerProfile | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await authFetch<{ profile: BuyerProfile }>("/perfil");
+      setProfile(data.profile);
+      setDraft(data.profile);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
+
+  const handleField = (field: keyof BuyerProfile, value: string) => {
+    setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
+  const handleCancel = () => {
+    setDraft(profile);
+    setEditing(false);
+    setError("");
+  };
+
+  const handleSave = async () => {
+    if (!draft) return;
+    setSaving(true);
+    setError("");
+    try {
+      const data = await authFetch<{ profile: BuyerProfile }>("/perfil", {
+        method: "PATCH",
+        body: JSON.stringify(draft),
+      });
+      setProfile(data.profile);
+      setDraft(data.profile);
+      setEditing(false);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="affbuyer-profile-card">
+        <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando tu perfil...</div>
+      </div>
+    );
+  }
+
+  if (!profile || !draft) {
+    return (
+      <div className="affbuyer-profile-card">
+        {error && <p className="affbuyer-error">{error}</p>}
+        <p className="affbuyer-empty">No pudimos cargar tu perfil de afiliado.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="affbuyer-profile-card">
+      <div className="affbuyer-profile-header">
+        <p className="affbuyer-profile-title">Mi perfil de afiliado</p>
+        {!editing ? (
+          <button type="button" className="affbuyer-edit-btn" onClick={() => setEditing(true)}>
+            <Pencil size={14} /> Editar
+          </button>
+        ) : (
+          <div className="affbuyer-profile-actions">
+            <button type="button" className="affbuyer-cancel-btn" disabled={saving} onClick={handleCancel}>
+              <X size={14} /> Cancelar
+            </button>
+            <button type="button" className="affbuyer-save-btn" disabled={saving} onClick={() => void handleSave()}>
+              {saving ? <Loader2 size={14} className="affbuyer-spin" /> : <Save size={14} />} Guardar
+            </button>
+          </div>
+        )}
+      </div>
+
+      {error && <p className="affbuyer-error">{error}</p>}
+
+      <div className="affbuyer-profile-grid">
+        <label>
+          <span>Nombre</span>
+          <input value={draft.firstName} disabled={!editing} onChange={(e) => handleField("firstName", e.target.value)} />
+        </label>
+        <label>
+          <span>Apellido</span>
+          <input value={draft.lastName} disabled={!editing} onChange={(e) => handleField("lastName", e.target.value)} />
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" value={draft.email} disabled={!editing} onChange={(e) => handleField("email", e.target.value)} />
+        </label>
+        <label>
+          <span>Teléfono</span>
+          <input value={draft.phone} disabled={!editing} onChange={(e) => handleField("phone", e.target.value)} />
+        </label>
+        <label>
+          <span>Ciudad</span>
+          <input value={draft.city} disabled={!editing} onChange={(e) => handleField("city", e.target.value)} />
+        </label>
+        <label>
+          <span>Provincia</span>
+          <input value={draft.province} disabled={!editing} onChange={(e) => handleField("province", e.target.value)} />
+        </label>
+        <label>
+          <span>Redes sociales</span>
+          <input value={draft.socialMedia} disabled={!editing} onChange={(e) => handleField("socialMedia", e.target.value)} />
+        </label>
+        <label className="affbuyer-profile-grid-full">
+          <span>Experiencia en ventas</span>
+          <input value={draft.salesExperience} disabled={!editing} onChange={(e) => handleField("salesExperience", e.target.value)} />
+        </label>
+      </div>
     </div>
   );
 }
@@ -239,8 +422,57 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // --- Tab: Ganancias (cuánto llevás ganado y qué te corresponde cobrar) ---
+  const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(false);
+  const [earningsError, setEarningsError] = useState("");
+  const alertShownRef = useRef(false);
+
+  const loadEarnings = useCallback(async () => {
+    setEarningsLoading(true);
+    setEarningsError("");
+    try {
+      const data = await authFetch<EarningsSummary>("/resumen");
+      setEarnings(data);
+    } catch (err) {
+      setEarningsError(errorMessage(err));
+    } finally {
+      setEarningsLoading(false);
+    }
+  }, []);
+
+  // Se carga siempre al montar (no solo al entrar a la pestaña) para poder
+  // disparar la alerta de vencimiento apenas el comprador entra al panel.
+  useEffect(() => {
+    void loadEarnings();
+  }, [loadEarnings]);
+
+  useEffect(() => {
+    if (!earnings || alertShownRef.current) return;
+    if (earnings.urgentSales.length === 0) return;
+    alertShownRef.current = true;
+
+    const totalUrgent = earnings.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
+    const soonest = earnings.urgentSales[0];
+
+    void Swal.fire({
+      icon: "info",
+      title: "Tenés un cobro por vencer",
+      html: `
+        <p>Tenés <strong>${formatMoney(totalUrgent)}</strong> por cobrar de tus últimas ventas.</p>
+        <p>${daysLabel(soonest.daysRemaining)} el pago de <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
+      `,
+      confirmButtonText: "Ver mis ganancias",
+      confirmButtonColor: "#111827",
+    }).then((result) => {
+      if (result.isConfirmed) setTab("ganancias");
+    });
+  }, [earnings]);
+
   return (
     <div className="affbuyer-dashboard">
+      <ProfileEditCard />
+
       <div className="affbuyer-tabs">
         <button type="button" className={`affbuyer-tab ${tab === "ofertas" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("ofertas")}>
           <Package size={15} /> Ofertas disponibles
@@ -250,6 +482,10 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "mis-ofertas" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("mis-ofertas")}>
           <CheckCircle2 size={15} /> Mis Ofertas
+        </button>
+        <button type="button" className={`affbuyer-tab ${tab === "ganancias" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("ganancias")}>
+          <Wallet size={15} /> Ganancias
+          {earnings && earnings.urgentSales.length > 0 && <span className="affbuyer-tab-dot" />}
         </button>
       </div>
 
@@ -342,6 +578,26 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                             <>
                               <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
                               <p><span>Ventas registradas</span> {application.salesCount}</p>
+                              <div className="affbuyer-amount-box">
+                                <p className="affbuyer-amount-line">
+                                  <span>Monto total vendido</span>
+                                  <strong className="affbuyer-amount-value">{formatMoney(application.totalSalesAmount)}</strong>
+                                </p>
+                                <p className="affbuyer-amount-line">
+                                  <span>Tu comisión ganada</span>
+                                  <strong className="affbuyer-amount-value affbuyer-amount-positive">
+                                    {formatMoney(application.totalEarnedCommission)}
+                                  </strong>
+                                </p>
+                                {application.totalPendingCommission > 0 && (
+                                  <p className="affbuyer-amount-line">
+                                    <span>Pendiente de cobro</span>
+                                    <strong className="affbuyer-amount-value affbuyer-amount-pending">
+                                      {formatMoney(application.totalPendingCommission)}
+                                    </strong>
+                                  </p>
+                                )}
+                              </div>
                               {application.rating !== null && (
                                 <div className="affbuyer-rating">
                                   {[1, 2, 3, 4, 5].map((value) => (
@@ -389,6 +645,61 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
           )}
 
           <Pagination meta={applicationsMeta} onChange={(page) => void loadApplications(page, statusForTab)} />
+        </div>
+      )}
+
+      {tab === "ganancias" && (
+        <div className="affbuyer-panel">
+          {earningsError && <p className="affbuyer-error">{earningsError}</p>}
+
+          {earningsLoading && !earnings ? (
+            <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando tus ganancias...</div>
+          ) : earnings ? (
+            <>
+              <div className="affbuyer-earnings-summary">
+                <div className="affbuyer-earnings-card">
+                  <p className="affbuyer-earnings-label">Llevás ganado en total</p>
+                  <p className="affbuyer-earnings-value">{formatMoney(earnings.totalEarned)}</p>
+                </div>
+                <div className="affbuyer-earnings-card affbuyer-earnings-card-pending">
+                  <p className="affbuyer-earnings-label">Te corresponde cobrar</p>
+                  <p className="affbuyer-earnings-value">{formatMoney(earnings.totalPending)}</p>
+                </div>
+                <div className="affbuyer-earnings-card affbuyer-earnings-card-collected">
+                  <p className="affbuyer-earnings-label">Ya cobrado</p>
+                  <p className="affbuyer-earnings-value">{formatMoney(earnings.totalCollected)}</p>
+                </div>
+              </div>
+
+              {earnings.pendingSales.length === 0 ? (
+                <p className="affbuyer-empty">No tenés cobros pendientes.</p>
+              ) : (
+                <div className="affbuyer-sales-list">
+                  {earnings.pendingSales.map((sale) => (
+                    <div
+                      key={sale.saleId}
+                      className={`affbuyer-sale-row ${sale.daysRemaining <= 5 ? "affbuyer-sale-row-urgent" : ""}`}
+                    >
+                      <div>
+                        <p className="affbuyer-sale-product">{sale.productName}</p>
+                        <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · {formatDate(sale.date)}</p>
+                      </div>
+                      <div className="affbuyer-sale-amounts">
+                        <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                        <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
+                      </div>
+                      <div className="affbuyer-sale-due">
+                        <span className={`affbuyer-due-badge ${sale.daysRemaining <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
+                          {daysLabel(sale.daysRemaining)}
+                        </span>
+                        <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       )}
     </div>
