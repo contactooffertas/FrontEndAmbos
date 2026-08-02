@@ -773,3 +773,87 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Agregar al final de app/styles/afiliados-vendedor.css */
+
+.affseller-field-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.affseller-dispute-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.affseller-dispute-title {
+  font-weight: 600;
+  margin: 0;
+}
+
+.affseller-dispute-sub {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.affseller-sale-row-disputed {
+  border: 1px solid #fca5a5 !important;
+  background: #fff5f5;
+}
+
+.affseller-dispute-reason {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.affseller-sale-row-paid {
+  opacity: 0.9;
+}
+
+.affseller-due-badge-paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.affseller-proof-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.affseller-proof-btn:hover {
+  background: #f3f4f6;
+}
+
+.affseller-history-section {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.affseller-history-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
