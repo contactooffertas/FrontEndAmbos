@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
+import SellerDashboard from "./SellerDashboard";
+import BuyerDashboard from "./BuyerDashboard";
 import "../styles/afiliados.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
@@ -189,6 +191,7 @@ export default function ProgramaAfiliadosPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "No se pudo guardar la configuración");
       setSubmitSuccess(true);
+      await loadStatus();
     } catch (err: any) {
       setSubmitError(err.message || "Error al guardar la configuración del programa");
     } finally {
@@ -215,6 +218,7 @@ export default function ProgramaAfiliadosPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "No se pudo enviar la solicitud");
       setSubmitSuccess(true);
+      await loadStatus();
     } catch (err: any) {
       setSubmitError(err.message || "Error al enviar la solicitud de afiliado");
     } finally {
@@ -266,6 +270,34 @@ export default function ProgramaAfiliadosPage() {
   }
 
   const isSeller = status.role === "seller";
+  const isOnboarded = termsAccepted && status.hasApplication;
+
+  // Ya aceptó TyC y ya tiene su aplicación cargada -> directo al dashboard,
+  // sin volver a mostrar el hero de bienvenida ni los formularios.
+  if (isOnboarded) {
+    return (
+      <MainLayout>
+        <div className="affiliate-page">
+          <div className="affiliate-hero">
+            <span className="affiliate-hero-icon">
+              {isSeller ? <Store size={22} /> : <ShoppingBag size={22} />}
+            </span>
+            <div>
+              <h1 className="affiliate-title">Programa de Afiliados</h1>
+              <p className="affiliate-subtitle">
+                {isSeller ? `Panel de ${status.name}` : `Hola ${status.name}, estas son tus ofertas`}
+              </p>
+            </div>
+          </div>
+          {isSeller ? (
+            <SellerDashboard businessName={status.name} />
+          ) : (
+            <BuyerDashboard buyerName={status.name} />
+          )}
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
