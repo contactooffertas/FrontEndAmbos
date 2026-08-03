@@ -765,27 +765,17 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payables]);
 
+  // NUEVO: click directo → marca pagado sin pedir comprobante. El link de
+  // comprobante se sigue pudiendo cargar después desde "Ver / cambiar
+  // comprobante" en el historial de pagos, así que no se pierde la función,
+  // solo se saca del paso obligatorio para marcar como pagado.
   const handleMarkPaid = async (saleId: string) => {
-    // El comprobante es opcional: si el afiliado después dice que no cobró,
-    // puede rechazar el pago desde su panel de Ganancias.
-    const { value: proofUrl, isDismissed } = await Swal.fire({
-      title: "Marcar como pagado",
-      input: "url",
-      inputLabel: "Link del comprobante (opcional)",
-      inputPlaceholder: "https://...",
-      showCancelButton: true,
-      confirmButtonText: "Marcar pagado",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#6d28d9",
-    });
-    if (isDismissed) return;
-
     setPayingId(saleId);
     setPayablesError("");
     try {
       await authFetch(`/sales/${saleId}/pay`, {
         method: "PATCH",
-        body: JSON.stringify({ proofUrl: proofUrl || undefined }),
+        body: JSON.stringify({}),
       });
       await loadPayables();
       await loadAffiliates(affiliatesMeta.page);
