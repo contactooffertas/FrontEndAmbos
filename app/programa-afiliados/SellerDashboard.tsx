@@ -12,7 +12,6 @@ import "../styles/afiliados-vendedor.css";
 
 const API = "https://new-backend-lovat.vercel.app/api/affiliates/seller";
 
-
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("marketplace_token");
