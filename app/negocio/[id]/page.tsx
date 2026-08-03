@@ -251,12 +251,28 @@ export default function NegocioPublicoPage() {
   const productViewStartRef = useRef<Record<string, number>>({}); // <-- TRACKING
   const pageEnterRef = useRef<number>(Date.now()); // <-- TRACKING
 
-  const highlightProductId = searchParams.get("p");
+  // FIX: antes esto leía searchParams.get(...) en cada render. Como
+  // closeSpotlight() y goToProductInGrid() hacen router.replace(`/negocio/${id}`)
+  // para "limpiar" la URL, la próxima vez que se renderizaba el componente
+  // searchParams.get("ref") y searchParams.get("p") ya daban null — el
+  // comprador cerraba el modal del producto compartido (algo súper normal,
+  // por ejemplo con "Ver en el catálogo del negocio") y a partir de ahí
+  // CUALQUIER "Agregar al carrito" posterior ya no llevaba el affiliateCode,
+  // aunque fuera el mismo producto y la misma visita. Ahora se capturan una
+  // sola vez al montar la página, en un ref que no se pisa con la URL.
+  const initialAffiliateParamsRef = useRef<{ productId: string | null; ref: string | null } | null>(null);
+  if (initialAffiliateParamsRef.current === null) {
+    initialAffiliateParamsRef.current = {
+      productId: searchParams.get("p"),
+      ref: (searchParams.get("ref") || "").trim() || null,
+    };
+  }
+  const highlightProductId = initialAffiliateParamsRef.current.productId;
   // Código de afiliado del Programa de Afiliados: viaja en el link
   // compartido (?ref=xxxx) y solo debe acreditarse al producto que fue
   // efectivamente compartido (highlightProductId), no a cualquier otro
   // producto que el usuario agregue de paso mientras navega la tienda.
-  const affiliateRef = (searchParams.get("ref") || "").trim() || null;
+  const affiliateRef = initialAffiliateParamsRef.current.ref;
   const { gps, refresh: refreshGps } = useDynamicGps();
   const [business,        setBusiness]        = useState<Business | null>(null);
   const [products,        setProducts]        = useState<Product[]>([]);
@@ -521,7 +537,9 @@ export default function NegocioPublicoPage() {
   // Solo se manda affiliateCode cuando el producto agregado es exactamente
   // el que vino en el link compartido (?p=...&ref=...). Cualquier otro
   // producto que el usuario agregue navegando la tienda entra como venta
-  // normal, sin afiliado.
+  // normal, sin afiliado. Como highlightProductId/affiliateRef ahora vienen
+  // del ref capturado al montar (ver arriba), esto sigue funcionando aunque
+  // el modal ya se haya cerrado o la URL ya no tenga los query params.
   const handleAddToCart = (product: Product) => {
     if (!user) { requireAuth(); return; }
     const isReferredProduct = !!affiliateRef && product._id === highlightProductId;
