@@ -449,6 +449,20 @@
 
 /* --- Solicitudes / Mis ofertas: metadatos, link de afiliado --- */
 
+.affbuyer-store-app-item-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.affbuyer-store-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .affbuyer-application-footer {
   display: flex;
   flex-direction: column;
