@@ -2,11 +2,13 @@
 // app/programa-afiliados/BuyerDashboard.tsx
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import Swal from "sweetalert2";
+import jsPDF from "jspdf";
+import autoTable, { type CellHookData } from "jspdf-autotable";
 import {
   Package, Send, Clock, CheckCircle2, Search,
   MessageCircle, Copy, Loader2, ChevronLeft, ChevronRight, Check, Star,
   Wallet, Pencil, X, Save, FileText, XOctagon, History, Store, Sparkles,
-  Users, ArrowLeft, Percent,
+  Users, ArrowLeft, Percent, Download, Boxes,
 } from "lucide-react";
 import "../styles/afiliados-comprador.css";
 
@@ -95,6 +97,8 @@ interface ProductBasic {
   name: string;
   image: string | null;
   price: number;
+  /** Unidades disponibles. Solo se muestra al comprador si está afiliado a ese producto puntual. */
+  stock?: number;
 }
 
 type ApplicationStatus = "pending" | "accepted" | "rejected" | "blocked";
@@ -225,6 +229,139 @@ interface BuyerDashboardProps {
   buyerName: string;
 }
 
+/* ============================ Generación de PDF ============================ */
+
+/**
+ * Genera un catálogo PDF profesional para una tienda.
+ * Reglas de stock: si el comprador está afiliado (applicationStatus === "accepted")
+ * al producto puntual, se muestra el stock real. Si no está afiliado a ESE producto,
+ * se muestra "Sin stock" independientemente del stock real, para no exponer
+ * disponibilidad a quien todavía no tiene la oferta aceptada.
+ */
+function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]): void {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginX = 40;
+
+  // --- Encabezado ---
+  doc.setFillColor(17, 24, 39); // #111827
+  doc.rect(0, 0, pageWidth, 96, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(19);
+  doc.text(store.businessName, marginX, 38);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10.5);
+  doc.text(store.contactName, marginX, 57);
+  doc.text(`${store.email}   •   ${store.phone}`, marginX, 72);
+
+  const generatedAt = new Date().toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  doc.setFontSize(9);
+  doc.text("CATÁLOGO DE PRODUCTOS", pageWidth - marginX, 38, { align: "right" });
+  doc.text(`Generado el ${generatedAt}`, pageWidth - marginX, 54, { align: "right" });
+  doc.text(`Plazo de pago: ${store.paymentTermDays} días`, pageWidth - marginX, 69, { align: "right" });
+
+  // --- Resumen ---
+  const affiliatedCount = items.filter((i) => i.applicationStatus === "accepted").length;
+  doc.setFontSize(9.5);
+  doc.setTextColor(107, 114, 128);
+  doc.text(
+    `${items.length} producto${items.length === 1 ? "" : "s"} en catálogo  •  ${affiliatedCount} con afiliación activa`,
+    marginX,
+    118
+  );
+
+  // --- Tabla ---
+  const rows = items.map((item) => {
+    const isAffiliated = item.applicationStatus === "accepted";
+    const stockLabel = isAffiliated
+      ? typeof item.product.stock === "number"
+        ? `${item.product.stock} unidades`
+        : "Consultar"
+      : "Sin stock";
+    const statusLabel = item.applicationStatus ? STATUS_LABEL[item.applicationStatus] : "No afiliado";
+    const commissionLabel = `${item.commissionPercentage}%`;
+    return [item.product.name, item.product.category, commissionLabel, stockLabel, statusLabel];
+  });
+
+  autoTable(doc, {
+    startY: 130,
+    head: [["Producto", "Categoría", "Comisión", "Stock", "Estado"]],
+    body: rows,
+    theme: "striped",
+    styles: {
+      font: "helvetica",
+      cellPadding: 8,
+      lineColor: [229, 231, 235],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      fillColor: [17, 24, 39],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 10,
+      halign: "left",
+    },
+    bodyStyles: { fontSize: 9.5, textColor: [55, 65, 81] },
+    alternateRowStyles: { fillColor: [249, 250, 251] },
+    columnStyles: {
+      1: { halign: "left" },
+      2: { halign: "center", cellWidth: 60 },
+      3: { halign: "center", cellWidth: 78 },
+      4: { halign: "center", cellWidth: 92 },
+    },
+    margin: { left: marginX, right: marginX },
+    didParseCell: (data: CellHookData) => {
+      if (data.section !== "body") return;
+
+      if (data.column.index === 3) {
+        const text = String(data.cell.raw);
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.textColor = text === "Sin stock" ? [185, 28, 28] : [5, 150, 105];
+      }
+
+      if (data.column.index === 4) {
+        const text = String(data.cell.raw);
+        data.cell.styles.fontStyle = "bold";
+        if (text === STATUS_LABEL.accepted) data.cell.styles.textColor = [5, 150, 105];
+        else if (text === STATUS_LABEL.pending) data.cell.styles.textColor = [180, 83, 9];
+        else if (text === "No afiliado") data.cell.styles.textColor = [107, 114, 128];
+        else data.cell.styles.textColor = [185, 28, 28];
+      }
+    },
+    didDrawPage: () => {
+      const pageCount = doc.getNumberOfPages();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.text(
+        `Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`,
+        pageWidth - marginX,
+        pageHeight - 22,
+        { align: "right" }
+      );
+      doc.text("Programa de Afiliados", marginX, pageHeight - 22);
+      doc.setDrawColor(229, 231, 235);
+      doc.line(marginX, pageHeight - 32, pageWidth - marginX, pageHeight - 32);
+    },
+  });
+
+  const fileSafeName = store.businessName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  doc.save(`catalogo-${fileSafeName || "tienda"}.pdf`);
+}
+
 /* ============================ Componentes chicos ============================ */
 
 function Pagination({ meta, onChange }: { meta: PaginationMeta; onChange: (page: number) => void }): JSX.Element {
@@ -246,6 +383,23 @@ function Pagination({ meta, onChange }: { meta: PaginationMeta; onChange: (page:
 
 function StatusBadge({ status }: { status: ApplicationStatus }): JSX.Element {
   return <span className={`affbuyer-status-badge affbuyer-status-${status}`}>{STATUS_LABEL[status]}</span>;
+}
+
+function StockBadge({ item }: { item: StoreProductItem }): JSX.Element {
+  const isAffiliated = item.applicationStatus === "accepted";
+  if (!isAffiliated) {
+    return (
+      <span className="affbuyer-stock-badge affbuyer-stock-badge-none">
+        <Boxes size={12} /> Sin stock
+      </span>
+    );
+  }
+  const label = typeof item.product.stock === "number" ? `${item.product.stock} disp.` : "Consultar";
+  return (
+    <span className="affbuyer-stock-badge affbuyer-stock-badge-available">
+      <Boxes size={12} /> {label}
+    </span>
+  );
 }
 
 function SellerCarnet({
@@ -505,6 +659,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
   const [productsError, setProductsError] = useState("");
   const [productsSearch, setProductsSearch] = useState("");
   const [applyingOfferId, setApplyingOfferId] = useState<string | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const loadStoreProducts = useCallback(async (sellerId: string, page: number, searchTerm: string) => {
     setProductsLoading(true);
@@ -555,6 +710,33 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
       setProductsError(errorMessage(err));
     } finally {
       setApplyingOfferId(null);
+    }
+  };
+
+  /** Descarga un PDF con el catálogo completo de la tienda (todas las páginas, no solo la visible). */
+  const handleDownloadCatalog = async () => {
+    if (!selectedSellerId) return;
+    setGeneratingPdf(true);
+    setProductsError("");
+    try {
+      const query = new URLSearchParams({ page: "1", limit: "1000" });
+      const data = await authFetch<{ items: StoreProductItem[]; store: StoreDetail }>(
+        `/stores/${selectedSellerId}/products?${query.toString()}`
+      );
+      if (data.items.length === 0) {
+        void Swal.fire({
+          icon: "info",
+          title: "Sin productos",
+          text: "Esta tienda todavía no tiene productos para incluir en el catálogo.",
+          confirmButtonColor: "#111827",
+        });
+        return;
+      }
+      generateStoreCatalogPdf(data.store, data.items);
+    } catch (err) {
+      setProductsError(errorMessage(err));
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -792,14 +974,26 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
             </div>
           )}
 
-          <div className="affbuyer-search">
-            <Search size={15} />
-            <input
-              type="text"
-              placeholder="Buscar producto por nombre..."
-              value={productsSearch}
-              onChange={(e) => setProductsSearch(e.target.value)}
-            />
+          <div className="affbuyer-store-detail-toolbar">
+            <div className="affbuyer-search">
+              <Search size={15} />
+              <input
+                type="text"
+                placeholder="Buscar producto por nombre..."
+                value={productsSearch}
+                onChange={(e) => setProductsSearch(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="affbuyer-download-btn"
+              disabled={generatingPdf}
+              onClick={() => void handleDownloadCatalog()}
+              title="Descarga un PDF con todos los productos de esta tienda"
+            >
+              {generatingPdf ? <Loader2 size={14} className="affbuyer-spin" /> : <Download size={14} />}
+              Descargar catálogo PDF
+            </button>
           </div>
 
           {productsError && <p className="affbuyer-error">{productsError}</p>}
@@ -824,7 +1018,10 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                         {offer.product.name}
                         {offer.applicationStatus === null && <span className="affbuyer-new-badge">Nuevo</span>}
                       </p>
-                      <p className="affbuyer-offer-commission">Comisión: {offer.commissionPercentage}%</p>
+                      <div className="affbuyer-offer-meta-row">
+                        <p className="affbuyer-offer-commission">Comisión: {offer.commissionPercentage}%</p>
+                        <StockBadge item={offer} />
+                      </div>
                     </div>
                   </div>
                   {offer.applicationStatus === null ? (
