@@ -245,6 +245,10 @@ interface BuyerDashboardProps {
  * al producto puntual, se muestra el stock real. Si no está afiliado a ESE producto,
  * se muestra "Sin stock" independientemente del stock real, para no exponer
  * disponibilidad a quien todavía no tiene la oferta aceptada.
+ *
+ * NOTA: el catálogo NO incluye la comisión del afiliado. Es un dato interno
+ * del comprador/afiliado y no tiene que figurar en un PDF que se puede
+ * compartir con terceros (ej. para mostrarle el catálogo a un cliente).
  */
 function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]): void {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -285,7 +289,7 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
     118
   );
 
-  // --- Tabla ---
+  // --- Tabla (sin columna de comisión: es un dato interno del afiliado) ---
   const rows = items.map((item) => {
     const isAffiliated = item.applicationStatus === "accepted";
     const stockLabel = isAffiliated
@@ -294,8 +298,7 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
         : "Consultar"
       : "Sin stock";
     const statusLabel = item.applicationStatus ? STATUS_LABEL[item.applicationStatus] : "No afiliado";
-    const commissionLabel = `${item.commissionPercentage}%`;
-    return [item.product.name, item.product.category,stockLabel, statusLabel];
+    return [item.product.name, item.product.category, stockLabel, statusLabel];
   });
 
  autoTable(doc, {
@@ -1206,7 +1209,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
                         <div className="affbuyer-store-app-list">
                           {group.applications.map((application) => (
-                            <div key={application.applicationId} className="affbuyer-store-app-item">
+                            <div key={application.applicationId} className="affbuyer-store-app-item affbuyer-store-app-item-card">
                               <div className="affbuyer-application-meta">
                                 <p><span>Producto</span> {application.product?.name ?? "-"}</p>
                                 <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
