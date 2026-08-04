@@ -137,7 +137,7 @@ export default function LoginPage() {
             ← Volver al inicio
           </Link>
           <h1>Iniciar sesión</h1>
-          <p>Bienvenido de vuelta a Off-ertas</p>
+          <p>Bienvenido de vuelta a Mercado Rosario</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
