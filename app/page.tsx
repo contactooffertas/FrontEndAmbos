@@ -121,11 +121,11 @@ function dedupeById<T extends { _id: string }>(items: T[]): T[] {
 }
 
 function flashBasePrice(product: Product): number {
-  return product.originalPrice?? product.price;
+  return product.originalPrice ?? product.price;
 }
 
 function computeFlashFinalPrice(product: Product): number {
-  const discount = product.flashOffer?.discount?? 0;
+  const discount = product.flashOffer?.discount ?? 0;
   return flashBasePrice(product) * (1 - discount / 100);
 }
 
@@ -139,7 +139,7 @@ function formatFlashTime(seconds?: number): string {
 }
 
 function formatClockCountdown(seconds?: number): string {
-  const s = Math.max(0, Math.floor(seconds?? 0));
+  const s = Math.max(0, Math.floor(seconds ?? 0));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
@@ -164,7 +164,7 @@ function PartialStar({ fill, size = 14 }: { fill: number; size?: number }) {
       <polygon
         points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
         fill={`url(#${id})`}
-        stroke={fill > 0.05? "#f97316" : "#d1d5db"}
+        stroke={fill > 0.05 ? "#f97316" : "#d1d5db"}
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
@@ -184,7 +184,7 @@ function StarRow({ rating = 0, size = 13 }: { rating?: number; size?: number }) 
 
 function HeroSlider({ products }: { products: Product[] }) {
   const suscriptorProducts = products.filter((p) => p.business?.cuotaSuscriptor === true);
-  const usePool = suscriptorProducts.length > 0? suscriptorProducts : products;
+  const usePool = suscriptorProducts.length > 0 ? suscriptorProducts : products;
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -208,16 +208,16 @@ function HeroSlider({ products }: { products: Product[] }) {
   const slice = [0, 1, 2].map((offset) => usePool[(idx + offset) % usePool.length]);
 
   return (
-    <div className="hero-visual" style={{ opacity: fade? 1 : 0, transition: "opacity 0.35s ease" }}>
+    <div className="hero-visual" style={{ opacity: fade ? 1 : 0, transition: "opacity 0.35s ease" }}>
       {slice.map((p, i) => {
-        const rating = p.business?.rating?? 0;
+        const rating = p.business?.rating ?? 0;
         const bizId = p.business?._id;
         const featured = p._isFeatured;
         return (
           <div
             key={`${p._id}-${i}`}
             className="hero-card"
-            style={featured? { outline: "1.5px solid rgba(249,115,22,0.55)", boxShadow: "0 0 0 1px rgba(249,115,22,0.18)" } : undefined}
+            style={featured ? { outline: "1.5px solid rgba(249,115,22,0.55)", boxShadow: "0 0 0 1px rgba(249,115,22,0.18)" } : undefined}
           >
             {featured && (
               <div style={{ position: "absolute", top: 7, left: 7, zIndex: 2, background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontSize: "0.57rem", fontWeight: 800, padding: "2px 6px", borderRadius: 5, display: "flex", alignItems: "center", gap: 2, boxShadow: "0 1px 4px rgba(249,115,22,0.4)" }}>
@@ -229,7 +229,7 @@ function HeroSlider({ products }: { products: Product[] }) {
               <p className="hero-card-name">{p.name}</p>
               <div className="hero-card-stars">
                 <StarRow rating={rating} size={11} />
-                <span className="hero-card-rating-text">{rating > 0? rating.toFixed(1) : "Sin votos"}</span>
+                <span className="hero-card-rating-text">{rating > 0 ? rating.toFixed(1) : "Sin votos"}</span>
               </div>
               <div className="hero-card-footer">
                 <div className="hero-card-footer-row">
@@ -253,7 +253,7 @@ function HeroSlider({ products }: { products: Product[] }) {
 
 function BusinessCard({ featured }: { featured: FeaturedBusiness }) {
   const b = featured.business;
-  const followers = b.followers?.length?? 0;
+  const followers = b.followers?.length ?? 0;
   return (
     <div className="biz-card" style={{ border: "1.5px solid rgba(249,115,22,0.4)" }}>
       <Link href={`/negocio/${b._id}`} className="biz-card-banner">
@@ -270,14 +270,14 @@ function BusinessCard({ featured }: { featured: FeaturedBusiness }) {
         {b.description && <p className="biz-card-desc">{b.description}</p>}
         <div className="biz-card-stats">
           <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <StarRow rating={b.rating?? 0} size={13} />
+            <StarRow rating={b.rating ?? 0} size={13} />
             <span className="biz-card-stat-text">
-              {b.rating && b.rating > 0? `${b.rating.toFixed(1)} (${b.totalRatings?? 0})` : "Sin calificación"}
+              {b.rating && b.rating > 0 ? `${b.rating.toFixed(1)} (${b.totalRatings ?? 0})` : "Sin calificación"}
             </span>
           </div>
           <div className="biz-card-meta-row">
             {followers > 0 && <span className="biz-card-meta-item"><Users size={12} />{followers} seguidores</span>}
-            {(b.totalProducts?? 0) > 0 && <span className="biz-card-meta-item"><Package size={12} />{b.totalProducts} productos</span>}
+            {(b.totalProducts ?? 0) > 0 && <span className="biz-card-meta-item"><Package size={12} />{b.totalProducts} productos</span>}
           </div>
         </div>
         <div className="biz-card-actions">
@@ -320,7 +320,7 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
             <span className="section-title-icon"><Store size={20} strokeWidth={2} /></span>
             Negocios destacados
           </h2>
-          <p className="section-subtitle">{total} negocio{total!== 1? "s" : ""} con plan activo</p>
+          <p className="section-subtitle">{total} negocio{total !== 1 ? "s" : ""} con plan activo</p>
         </div>
         {total > SHOW && (
           <div className="featured-biz-slider__controls">
@@ -329,13 +329,13 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
           </div>
         )}
       </div>
-      <div className="featured-biz-slider__track" style={{ opacity: fade? 1 : 0 }}>
+      <div className="featured-biz-slider__track" style={{ opacity: fade ? 1 : 0 }}>
         {visible.map((f) => <BusinessCard key={`${f._id}-${startIdx}`} featured={f} />)}
       </div>
       {showDots && (
         <div className="fbs-dots">
           {Array.from({ length: total }, (_, i) => (
-            <button key={i} className={`fbs-dot ${i === startIdx? "active" : ""}`} onClick={() => { setFade(false); setTimeout(() => { setStartIdx(i); setFade(true); }, 280); }} aria-label={`Ir al negocio ${i + 1}`} />
+            <button key={i} className={`fbs-dot ${i === startIdx ? "active" : ""}`} onClick={() => { setFade(false); setTimeout(() => { setStartIdx(i); setFade(true); }, 280); }} aria-label={`Ir al negocio ${i + 1}`} />
           ))}
         </div>
       )}
@@ -348,13 +348,13 @@ function FeaturedBusinessesSlider({ businesses }: { businesses: FeaturedBusiness
 
 function FlashOfferCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
-  const discount = product.flashOffer?.discount?? 0;
+  const discount = product.flashOffer?.discount ?? 0;
   const finalPrice = computeFlashFinalPrice(product);
   const basePrice = flashBasePrice(product);
-  const [secondsLeft, setSecondsLeft] = useState<number>(product.flashOfferSecondsLeft?? 0);
-  useEffect(() => { setSecondsLeft(product.flashOfferSecondsLeft?? 0); }, [product.flashOfferSecondsLeft]);
+  const [secondsLeft, setSecondsLeft] = useState<number>(product.flashOfferSecondsLeft ?? 0);
+  useEffect(() => { setSecondsLeft(product.flashOfferSecondsLeft ?? 0); }, [product.flashOfferSecondsLeft]);
   useEffect(() => {
-    const t = setInterval(() => { setSecondsLeft((s) => (s > 0? s - 1 : 0)); }, 1000);
+    const t = setInterval(() => { setSecondsLeft((s) => (s > 0 ? s - 1 : 0)); }, 1000);
     return () => clearInterval(t);
   }, []);
   const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
@@ -380,7 +380,7 @@ function FlashOfferCard({ product }: { product: Product }) {
     <div className="flash-card">
       <div className="flash-card-content">
         <span className="flash-card-badge"><Zap size={11} fill="#fff" strokeWidth={0} /> -{discount}%</span>
-        <span className={`flash-card-timer ${isUrgent? "urgent" : ""}`}><Clock size={10} /> {formatClockCountdown(secondsLeft)}</span>
+        <span className={`flash-card-timer ${isUrgent ? "urgent" : ""}`}><Clock size={10} /> {formatClockCountdown(secondsLeft)}</span>
         <div className="flash-card-img-wrap"><img src={imgUrl(product.image)} alt={product.name} className="flash-card-img" /></div>
         <div className="flash-card-body">
           {product.business?.name && <p className="flash-card-biz">{product.business.name}</p>}
@@ -411,7 +411,7 @@ function FlashOffersSection({ products }: { products: Product[] }) {
       <div className="flash-section-header">
         <div>
           <h2 className="section-title flash-section-title"><span className="flash-section-icon"><Zap size={20} strokeWidth={0} fill="#fff" /></span>Ofertas Flash</h2>
-          <p className="section-subtitle">{randomized.length} oferta{randomized.length!== 1? "s" : ""} por tiempo limitado</p>
+          <p className="section-subtitle">{randomized.length} oferta{randomized.length !== 1 ? "s" : ""} por tiempo limitado</p>
         </div>
       </div>
       <div className="flash-grid">
@@ -432,7 +432,7 @@ function FlashOverlayCard({
   onAdd: (p: Product) => void;
   justAdded: boolean;
 }) {
-  const discount = product.flashOffer?.discount?? 0;
+  const discount = product.flashOffer?.discount ?? 0;
   const finalPrice = computeFlashFinalPrice(product);
   const basePrice = flashBasePrice(product);
   const isUrgent = secondsLeft > 0 && secondsLeft <= 300;
@@ -448,7 +448,7 @@ function FlashOverlayCard({
       <div className="flash-overlay-card-body" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 0 }}>
         {product.business?.name && (<p className="flash-overlay-card-biz" style={{ color: "#9ca3af", fontSize: "0.85rem", margin: 0 }}>{product.business.name}</p>)}
         <p className="flash-overlay-card-name" style={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.name}</p>
-        <span className={`flash-overlay-card-timer ${isUrgent? "urgent" : ""}`} style={{ color: isUrgent? "#ef4444" : "#fbbf24", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 4 }}><Clock size={12} /> {formatClockCountdown(secondsLeft)} restantes</span>
+        <span className={`flash-overlay-card-timer ${isUrgent ? "urgent" : ""}`} style={{ color: isUrgent ? "#ef4444" : "#fbbf24", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 4 }}><Clock size={12} /> {formatClockCountdown(secondsLeft)} restantes</span>
         <div className="flash-overlay-card-prices" style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "0.3rem" }}>
           <span className="flash-overlay-card-final" style={{ color: "#f97316", fontWeight: 900, fontSize: "1.4rem" }}>${finalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
           <span className="flash-overlay-card-orig" style={{ color: "#6b7280", textDecoration: "line-through", fontSize: "0.9rem" }}>${basePrice.toLocaleString()}</span>
@@ -480,7 +480,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     setIdx(0);
     setCountdowns((prev) => {
       const next: Record<string, number> = {};
-      unique.forEach((p) => { next[p._id] = prev[p._id]?? (p.flashOfferSecondsLeft?? 0); });
+      unique.forEach((p) => { next[p._id] = prev[p._id] ?? (p.flashOfferSecondsLeft ?? 0); });
       return next;
     });
   }, [products]);
@@ -489,7 +489,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
     const t = setInterval(() => {
       setCountdowns((prev) => {
         const next: Record<string, number> = {};
-        for (const id in prev) { next[id] = prev[id] > 0? prev[id] - 1 : 0; }
+        for (const id in prev) { next[id] = prev[id] > 0 ? prev[id] - 1 : 0; }
         return next;
       });
     }, 1000);
@@ -502,7 +502,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   }, []);
 
   const total = pool.length;
-  const safeIdx = total > 0? ((idx % total) + total) % total : 0;
+  const safeIdx = total > 0 ? ((idx % total) + total) % total : 0;
 
   useEffect(() => {
     if (total <= 1) return;
@@ -511,7 +511,7 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   }, [total, safeIdx, goTo]);
 
   const handleAdd = (product: Product) => {
-    const discount = product.flashOffer?.discount?? 0;
+    const discount = product.flashOffer?.discount ?? 0;
     const finalPrice = computeFlashFinalPrice(product);
     const basePrice = flashBasePrice(product);
     addToCart({
@@ -543,14 +543,14 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
       </div>
       <div className="flash-overlay-body" style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", minWidth: "100%" }}>
         {total > 1 && (<button className="flash-overlay-nav-btn" onClick={() => goTo(-1)} aria-label="Anterior" style={{ background: "rgba(0,0,0,0.3)", border: 0, color: "#fff", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}><ChevronLeft size={18} /></button>)}
-        <div className="flash-overlay-slide" style={{ flex: 1, opacity: fade? 1 : 0, transition: "opacity 0.25s", minWidth: 0, width: "100%" }}>
-          <FlashOverlayCard key={current._id} product={current} secondsLeft={countdowns[current._id]?? current.flashOfferSecondsLeft?? 0} onAdd={handleAdd} justAdded={justAddedId === current._id} />
+        <div className="flash-overlay-slide" style={{ flex: 1, opacity: fade ? 1 : 0, transition: "opacity 0.25s", minWidth: 0, width: "100%" }}>
+          <FlashOverlayCard key={current._id} product={current} secondsLeft={countdowns[current._id] ?? current.flashOfferSecondsLeft ?? 0} onAdd={handleAdd} justAdded={justAddedId === current._id} />
         </div>
         {total > 1 && (<button className="flash-overlay-nav-btn" onClick={() => goTo(1)} aria-label="Siguiente" style={{ background: "rgba(0,0,0,0.3)", border: 0, color: "#fff", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}><ChevronRight size={18} /></button>)}
       </div>
       {total > 1 && (
         <div className="flash-overlay-dots" style={{ display: "flex", justifyContent: "center", gap: 6, paddingBottom: 4 }}>
-          {pool.map((p, i) => (<span key={p._id} className={`flash-overlay-dot ${i === safeIdx? "active" : ""}`} style={{ width: i === safeIdx? 20 : 8, height: 8, borderRadius: 999, background: i === safeIdx? "#fff" : "rgba(255,255,255,0.4)", transition: "all 0.2s" }} />))}
+          {pool.map((p, i) => (<span key={p._id} className={`flash-overlay-dot ${i === safeIdx ? "active" : ""}`} style={{ width: i === safeIdx ? 20 : 8, height: 8, borderRadius: 999, background: i === safeIdx ? "#fff" : "rgba(255,255,255,0.4)", transition: "all 0.2s" }} />))}
         </div>
       )}
     </div>
@@ -567,21 +567,21 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   const bizId = product.business?._id;
   const bizName = product.business?.name;
   const bizCity = product.business?.city;
-  const followers = product.business?.followers?.length?? 0;
-  const rating = product.business?.rating?? 0;
-  const totalRatings = product.business?.totalRatings?? 0;
-  const flashDiscount = product.flashOffer?.discount?? 0;
+  const followers = product.business?.followers?.length ?? 0;
+  const rating = product.business?.rating ?? 0;
+  const totalRatings = product.business?.totalRatings ?? 0;
+  const flashDiscount = product.flashOffer?.discount ?? 0;
   const flashBase = flashBasePrice(product);
-  const flashFinalPrice = isFlash? computeFlashFinalPrice(product) : product.price;
+  const flashFinalPrice = isFlash ? computeFlashFinalPrice(product) : product.price;
 
   const handleCart = () => {
     addToCart({
       _id: product._id,
       productId: product._id,
       name: product.name,
-      price: isFlash? Number(flashFinalPrice.toFixed(2)) : product.price,
-      originalPrice: isFlash? flashBase : product.originalPrice,
-      discount: isFlash? flashDiscount : product.discount,
+      price: isFlash ? Number(flashFinalPrice.toFixed(2)) : product.price,
+      originalPrice: isFlash ? flashBase : product.originalPrice,
+      discount: isFlash ? flashDiscount : product.discount,
       image: product.image,
       businessId: bizId,
       businessName: bizName,
@@ -598,7 +598,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
       Swal.fire({ icon: "info", title: "Iniciá sesión", timer: 2000, showConfirmButton: false });
       return;
     }
-    setLiked((v) =>!v);
+    setLiked((v) => !v);
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -606,7 +606,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
     e.stopPropagation();
     const url = shareUrlFor(product._id);
     const shareData = { title: product.name, text: `${product.name} - $${product.price.toLocaleString()}`, url };
-    if (typeof navigator!== "undefined" && (navigator as any).share) {
+    if (typeof navigator !== "undefined" && (navigator as any).share) {
       try { await (navigator as any).share(shareData); } catch {}
       return;
     }
@@ -621,14 +621,14 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   };
 
   return (
-    <div className="product-card" style={isFlash? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" } : isFeatured? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" } : undefined}>
+    <div className="product-card" style={isFlash ? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" } : isFeatured ? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" } : undefined}>
       <div className="product-image-wrap">
         <img src={imgUrl(product.image)} alt={product.name} loading="lazy" />
-        {!isFlash && product.discount? <span className="product-discount-badge">-{product.discount}%</span> : null}
+        {!isFlash && product.discount ? <span className="product-discount-badge">-{product.discount}%</span> : null}
         {isFlash && (<span className="product-flash-badge"><Zap size={10} fill="#111" strokeWidth={0} /> FLASH -{flashDiscount}%</span>)}
         {!isFlash && isFeatured && (<span style={{ position: "absolute", top: 8, left: 8, background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontSize: "0.65rem", fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "flex", alignItems: "center", gap: 4, boxShadow: "0 2px 8px rgba(249,115,22,0.5)", zIndex: 2 }}><Crown size={9} /> Destacado</span>)}
-        <button className="product-fav-btn product-fav-btn--always" onClick={handleLike}><span style={{ fontSize: "1.05rem", color: liked? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>{liked? "♥" : "♡"}</span></button>
-        <button className="product-fav-btn product-fav-btn--always" style={{ right: "2.6rem" }} onClick={handleShare} aria-label="Compartir producto" title="Compartir"><Share2 size={15} style={{ color: justShared? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} /></button>
+        <button className="product-fav-btn product-fav-btn--always" onClick={handleLike}><span style={{ fontSize: "1.05rem", color: liked ? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>{liked ? "♥" : "♡"}</span></button>
+        <button className="product-fav-btn product-fav-btn--always" style={{ right: "2.6rem" }} onClick={handleShare} aria-label="Compartir producto" title="Compartir"><Share2 size={15} style={{ color: justShared ? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} /></button>
         {justShared && (<span style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(34,197,94,0.95)", color: "#fff", fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px", borderRadius: 6, zIndex: 3 }}>¡Enlace copiado!</span>)}
       </div>
       {isFlash && (<div className="product-flash-strip"><Zap size={10} fill="#f59e0b" strokeWidth={0} /><span>Oferta por tiempo limitado - {formatFlashTime(product.flashOfferSecondsLeft)} restantes</span></div>)}
@@ -638,14 +638,14 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         </div>
       )}
       <div className="product-body">
-        {bizId? (<Link href={`/negocio/${bizId}`} className="product-business" style={{ textDecoration: "none", color: "inherit" }}>{bizName}{bizCity? ` - ${bizCity}` : ""}{product.business?.verified && <span style={{ color: "#f97316", marginLeft: "0.2rem" }}>✓</span>}</Link>) : (<div className="product-business">{bizName}{bizCity? ` - ${bizCity}` : ""}</div>)}
+        {bizId ? (<Link href={`/negocio/${bizId}`} className="product-business" style={{ textDecoration: "none", color: "inherit" }}>{bizName}{bizCity ? ` - ${bizCity}` : ""}{product.business?.verified && <span style={{ color: "#f97316", marginLeft: "0.2rem" }}>✓</span>}</Link>) : (<div className="product-business">{bizName}{bizCity ? ` - ${bizCity}` : ""}</div>)}
         <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
-          <StarRow rating={rating} size={13} /><span style={{ fontSize: "0.71rem", color: "#9ca3af", fontWeight: 500 }}>{rating > 0? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}</span>
+          <StarRow rating={rating} size={13} /><span style={{ fontSize: "0.71rem", color: "#9ca3af", fontWeight: 500 }}>{rating > 0 ? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}</span>
           {followers > 0 && (<span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: "0.71rem", color: "#9ca3af" }}><Users size={10} />{followers}</span>)}
         </div>
         <div className="product-name">{product.name}</div>
         <div className="product-prices">
-          {isFlash? (<><span className="product-price product-price--flash">${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span><span className="product-original">${flashBase.toLocaleString()}</span></>) : (<><span className="product-price">${product.price.toLocaleString()}</span>{product.originalPrice && <span className="product-original">${product.originalPrice.toLocaleString()}</span>}</>)}
+          {isFlash ? (<><span className="product-price product-price--flash">${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span><span className="product-original">${flashBase.toLocaleString()}</span></>) : (<><span className="product-price">${product.price.toLocaleString()}</span>{product.originalPrice && <span className="product-original">${product.originalPrice.toLocaleString()}</span>}</>)}
         </div>
       </div>
       <div className="product-card-footer" style={{ flexDirection: "column", gap: "0.45rem" }}>
@@ -660,7 +660,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
     <Share2 size={13} /> Compartir
   </button>
 </div>
-        <ReportModal targetType="product" targetId={product._id} targetName={product.name} token={typeof window!== "undefined"? localStorage.getItem("marketplace_token") || "" : ""} onRequireAuth={async () => { const Swal = (await import("sweetalert2")).default; Swal.fire({ icon: "info", title: "Iniciá sesión para reportar", timer: 2000, showConfirmButton: false }); }} />
+        <ReportModal targetType="product" targetId={product._id} targetName={product.name} token={typeof window !== "undefined" ? localStorage.getItem("marketplace_token") || "" : ""} onRequireAuth={async () => { const Swal = (await import("sweetalert2")).default; Swal.fire({ icon: "info", title: "Iniciá sesión para reportar", timer: 2000, showConfirmButton: false }); }} />
       </div>
     </div>
   );
@@ -680,12 +680,12 @@ function HomeContent() {
   const [notifBannerDismissed, setNotifBannerDismissed] = useState<boolean>(() => { if (typeof window === "undefined") return false; return localStorage.getItem("notif_banner_dismissed") === "true"; });
   const dismissGeoBanner = () => { localStorage.setItem("geo_banner_dismissed", "true"); setGeoBannerDismissed(true); };
   const dismissNotifBanner = () => { localStorage.setItem("notif_banner_dismissed", "true"); setNotifBannerDismissed(true); };
-  const notifAlreadyGranted = typeof window!== "undefined" && Notification.permission === "granted";
+  const notifAlreadyGranted = typeof window !== "undefined" && Notification.permission === "granted";
   const currentUserId = (user as any)?._id || (user as any)?.id;
   const userLat = (user as any)?.lat;
   const userLng = (user as any)?.lng;
-  const userHasLoc =!!(user?.locationEnabled && userLat && userLng);
-  const [userRadius] = useState<number>(() => { if (typeof window === "undefined") return 3000; const saved = localStorage.getItem("nearbyRadius"); return saved? parseInt(saved) : 3000; });
+  const userHasLoc = !!(user?.locationEnabled && userLat && userLng);
+  const [userRadius] = useState<number>(() => { if (typeof window === "undefined") return 3000; const saved = localStorage.getItem("nearbyRadius"); return saved ? parseInt(saved) : 3000; });
   const buildLocationParams = (extra: Record<string, string> = {}): string => {
     const p = new URLSearchParams(extra);
     if (userHasLoc) { p.set("lat", userLat.toString()); p.set("lng", userLng.toString()); p.set("userRadius", userRadius.toString()); }
@@ -695,53 +695,76 @@ function HomeContent() {
 
   useEffect(() => { fetch(`${API}/products/public-stats`).then((r) => r.json()).then(setPublicStats).catch(() => {}); }, []);
 
+  // ── Fetch de productos ────────────────────────────────────────────────────
+  // FIX: antes, cuando había destacados, el fetch a /products/featured se
+  // hacía SIN mandar search/category → aparecían destacados random arriba
+  // de los resultados de la búsqueda aunque no tuvieran nada que ver.
+  // Y cuando NO había destacados, el fetch a /products/random tampoco
+  // mandaba search/category → la búsqueda quedaba directamente ignorada.
+  // Ahora ambos fetches (featured y random) siempre reciben category/search
+  // cuando están activos, así el filtro se respeta en cualquier escenario.
   useEffect(() => {
     setLoading(true);
-    const params = buildLocationParams({ limit: "60" });
-    fetch(`${API}/products/featured?${params}`).then((r) => r.json()).then(async (data) => {
-      const featured: Product[] = data.products || [];
-      if (featured.length === 0) {
-        const r2 = await fetch(`${API}/products/random?${buildLocationParams({ limit: "40" })}`);
-        const d2 = await r2.json();
-        setAllProducts(d2.products || []);
-      } else {
-        const excludeIds = featured.map((p) => p._id);
-        const extra: Record<string, string> = { limit: "40" };
-        if (excludeIds.length) extra.excludeIds = JSON.stringify(excludeIds);
-        if (activeCategory) extra.category = activeCategory;
-        if (searchParam) extra.search = searchParam;
-        const r2 = await fetch(`${API}/products/random?${buildLocationParams(extra)}`);
-        const d2 = await r2.json();
-        setAllProducts([...featured,...(d2.products || [])]);
-      }
-    }).catch(async () => {
+
+    const filterExtras: Record<string, string> = {};
+    if (activeCategory) filterExtras.category = activeCategory;
+    if (searchParam) filterExtras.search = searchParam;
+
+    let cancelled = false;
+
+    const fetchProducts = async () => {
       try {
-        const r2 = await fetch(`${API}/products/random?${buildLocationParams({ limit: "40" })}`);
-        const d2 = await r2.json();
-        setAllProducts(d2.products || []);
-      } catch { setAllProducts([]); }
-    }).finally(() => setLoading(false));
+        const featuredParams = buildLocationParams({ limit: "60", ...filterExtras });
+        const featRes = await fetch(`${API}/products/featured?${featuredParams}`);
+        const featData = await featRes.json();
+        const featured: Product[] = featData.products || [];
+
+        const excludeIds = featured.map((p) => p._id);
+        const randomExtras: Record<string, string> = { limit: "40", ...filterExtras };
+        if (excludeIds.length) randomExtras.excludeIds = JSON.stringify(excludeIds);
+
+        const randRes = await fetch(`${API}/products/random?${buildLocationParams(randomExtras)}`);
+        const randData = await randRes.json();
+
+        if (!cancelled) setAllProducts([...featured, ...(randData.products || [])]);
+      } catch {
+        try {
+          const randRes = await fetch(
+            `${API}/products/random?${buildLocationParams({ limit: "40", ...filterExtras })}`
+          );
+          const randData = await randRes.json();
+          if (!cancelled) setAllProducts(randData.products || []);
+        } catch {
+          if (!cancelled) setAllProducts([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchProducts();
+    return () => { cancelled = true; };
   }, [currentUserId, userHasLoc, userRadius, activeCategory, searchParam]);
 
   useEffect(() => {
     if (!allProducts.length) return;
-    const token = typeof window!== "undefined"? localStorage.getItem("marketplace_token") : null;
+    const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
     if (!token) { setReportedProductIds(new Set()); return; }
-    const productIds = allProducts.filter((p) =>!p._isFeatured).map((p) => p._id);
+    const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id);
     if (!productIds.length) return;
     fetch(`${API}/reports/batch-check`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ productIds }) })
-     .then((r) => (r.ok? r.json() : null))
+     .then((r) => (r.ok ? r.json() : null))
      .then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); }).catch(() => {});
   }, [allProducts]);
 
-  useEffect(() => { fetch(`${API}/products/featured-businesses`).then((r) => r.json()).then((data) => setFeaturedBusinesses(Array.isArray(data)? data : [])).catch(() => setFeaturedBusinesses([])); }, []);
+  useEffect(() => { fetch(`${API}/products/featured-businesses`).then((r) => r.json()).then((data) => setFeaturedBusinesses(Array.isArray(data) ? data : [])).catch(() => setFeaturedBusinesses([])); }, []);
 
   const handleRequestGeo = async () => {
     const Swal = (await import("sweetalert2")).default;
     const r = await Swal.fire({ title: "Activar ubicación", icon: "info", showCancelButton: true, html: "Necesitamos tu ubicación para mostrarte productos <b>cercanos a vos</b>.", confirmButtonText: "Activar", cancelButtonText: "Ahora no", confirmButtonColor: "var(--primary)" });
     if (r.isConfirmed) {
       const ok = await enableLocation();
-      Swal.fire(ok? { icon: "success", title: "¡Ubicación activada!", timer: 2000, showConfirmButton: false } : { icon: "error", title: "No se pudo activar", text: "Verificá los permisos de tu navegador." });
+      Swal.fire(ok ? { icon: "success", title: "¡Ubicación activada!", timer: 2000, showConfirmButton: false } : { icon: "error", title: "No se pudo activar", text: "Verificá los permisos de tu navegador." });
     }
     dismissGeoBanner();
   };
@@ -756,7 +779,7 @@ function HomeContent() {
     dismissNotifBanner();
   };
 
-  const radiusLabel = userRadius === 0? "todo el país" : userRadius >= 1000? `${userRadius / 1000} km` : `${userRadius} m`;
+  const radiusLabel = userRadius === 0 ? "todo el país" : userRadius >= 1000 ? `${userRadius / 1000} km` : `${userRadius} m`;
 
   // FIX: Turbopack no soportaba el ternario con template string + —, lo separamos
   const categoryName = categories.find((c) => c.slug === activeCategory)?.name || activeCategory;
@@ -770,8 +793,8 @@ function HomeContent() {
 
   const heroProducts = allProducts.slice(0, 9);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
-  const gridProducts = allProducts.filter((p) =>!reportedProductIds.has(p._id));
-  const showNotifBanner =!!user &&!notifBannerDismissed &&!notifAlreadyGranted;
+  const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
+  const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
 
   return (
     <MainLayout>
@@ -786,8 +809,8 @@ function HomeContent() {
               {!user && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}
             </div>
             <div className="hero-stats">
-              <div className="hero-stat"><span className="hero-stat-num">{publicStats.totalProducts > 0? `+${publicStats.totalProducts.toLocaleString()}` : "—"}</span><span className="hero-stat-label">Productos</span></div>
-              <div className="hero-stat"><span className="hero-stat-num">{publicStats.totalBusinesses > 0? `+${publicStats.totalBusinesses.toLocaleString()}` : "—"}</span><span className="hero-stat-label">Negocios</span></div>
+              <div className="hero-stat"><span className="hero-stat-num">{publicStats.totalProducts > 0 ? `+${publicStats.totalProducts.toLocaleString()}` : "—"}</span><span className="hero-stat-label">Productos</span></div>
+              <div className="hero-stat"><span className="hero-stat-num">{publicStats.totalBusinesses > 0 ? `+${publicStats.totalBusinesses.toLocaleString()}` : "—"}</span><span className="hero-stat-label">Negocios</span></div>
               <div className="hero-stat"><span className="hero-stat-num">98%</span><span className="hero-stat-label">Satisfacción</span></div>
             </div>
           </div>
@@ -795,7 +818,7 @@ function HomeContent() {
         </div>
       </section>
 
-      {!user?.locationEnabled &&!geoBannerDismissed && (
+      {!user?.locationEnabled && !geoBannerDismissed && (
         <div style={{ padding: "1.5rem 1.5rem 0" }}>
           <div className="geo-banner">
             <span className="geo-banner-icon"><MapPin size={26} strokeWidth={1.75} /></span>
@@ -830,19 +853,19 @@ function HomeContent() {
           <div><h2 className="section-title">Categorías</h2><p className="section-subtitle">Explorá por rubro</p></div>
         </div>
         <div className="categories-grid">
-          <div className={`category-card ${!activeCategory? "active" : ""}`} onClick={() => setActiveCategory("")}><Tag size={30} strokeWidth={2.5} /><span className="category-name">Todas</span></div>
-          {categories.map((cat) => (<div key={cat.slug} className={`category-card ${activeCategory === cat.slug? "active" : ""}`} onClick={() => setActiveCategory(cat.slug)}><CategoryIcon name={cat.iconName} size={24} strokeWidth={1.75} /><span className="category-name">{cat.name}</span></div>))}
+          <div className={`category-card ${!activeCategory ? "active" : ""}`} onClick={() => setActiveCategory("")}><Tag size={30} strokeWidth={2.5} /><span className="category-name">Todas</span></div>
+          {categories.map((cat) => (<div key={cat.slug} className={`category-card ${activeCategory === cat.slug ? "active" : ""}`} onClick={() => setActiveCategory(cat.slug)}><CategoryIcon name={cat.iconName} size={24} strokeWidth={1.75} /><span className="category-name">{cat.name}</span></div>))}
         </div>
       </section>
 
       <section className="section" id="offers">
         <div className="section-header">
           <div>
-            <h2 className="section-title"><span className="section-title-icon">{hasFeatured? <Crown size={20} strokeWidth={2} style={{ color: "#f97316" }} /> : userHasLoc? <MapPin size={20} strokeWidth={2} /> : <TrendingUp size={20} strokeWidth={2} />}</span>{sectionTitle}</h2>
-            <p className="section-subtitle">{gridProducts.length} productos{hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#f97316", fontSize: "0.75rem", fontWeight: 600 }}>· incluye destacados</span>}{userHasLoc &&!hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#4ade80", fontSize: "0.75rem", fontWeight: 600 }}>· {radiusLabel}</span>}</p>
+            <h2 className="section-title"><span className="section-title-icon">{hasFeatured ? <Crown size={20} strokeWidth={2} style={{ color: "#f97316" }} /> : userHasLoc ? <MapPin size={20} strokeWidth={2} /> : <TrendingUp size={20} strokeWidth={2} />}</span>{sectionTitle}</h2>
+            <p className="section-subtitle">{gridProducts.length} productos{hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#f97316", fontSize: "0.75rem", fontWeight: 600 }}>· incluye destacados</span>}{userHasLoc && !hasFeatured && <span style={{ marginLeft: "0.5rem", color: "#4ade80", fontSize: "0.75rem", fontWeight: 600 }}>· {radiusLabel}</span>}</p>
           </div>
         </div>
-        {loading? (<div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}><Clock size={32} style={{ opacity: 0.4, display: "block", margin: "0 auto 1rem" }} /><p>Cargando ofertas...</p></div>) : gridProducts.length === 0? (<div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}><Search size={48} strokeWidth={1} style={{ opacity: 0.3, display: "block", margin: "0 auto 1rem" }} /><h3>No encontramos resultados</h3><p>{userHasLoc? `No hay productos en ${radiusLabel}. Probá con un radio más amplio.` : "Probá con otra búsqueda o categoría."}</p></div>) : (<div className="products-grid">{gridProducts.map((p, i) => (<ProductCard key={`${p._id}-${i}`} product={p} currentUserId={currentUserId} />))}</div>)}
+        {loading ? (<div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}><Clock size={32} style={{ opacity: 0.4, display: "block", margin: "0 auto 1rem" }} /><p>Cargando ofertas...</p></div>) : gridProducts.length === 0 ? (<div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}><Search size={48} strokeWidth={1} style={{ opacity: 0.3, display: "block", margin: "0 auto 1rem" }} /><h3>No encontramos resultados</h3><p>{userHasLoc ? `No hay productos en ${radiusLabel}. Probá con un radio más amplio.` : "Probá con otra búsqueda o categoría."}</p></div>) : (<div className="products-grid">{gridProducts.map((p, i) => (<ProductCard key={`${p._id}-${i}`} product={p} currentUserId={currentUserId} />))}</div>)}
       </section>
 
       <div className="banner" style={{ margin: "0 1.5rem" }}>
