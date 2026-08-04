@@ -1,10 +1,23 @@
 /* app/styles/afiliados-comprador.css */
+/* Misma identidad visual original (colores, radios, sombras, tipografía).
+   Se agrega un sistema responsive mobile-first para todos los bloques. */
+
+* {
+  box-sizing: border-box;
+}
 
 .affbuyer-dashboard {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 4px;
 }
+
+/* ============================================================
+   Tabs principales
+   ============================================================ */
 
 .affbuyer-tabs {
   display: flex;
@@ -12,6 +25,14 @@
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 8px;
   flex-wrap: wrap;
+  /* En pantallas muy chicas, permite scroll horizontal en vez de romper el layout */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.affbuyer-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .affbuyer-tab {
@@ -27,11 +48,18 @@
   color: #6b7280;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 40px;
 }
 
 .affbuyer-tab:hover {
   background: #f3f4f6;
   color: #111827;
+}
+
+.affbuyer-tab:active {
+  transform: scale(0.97);
 }
 
 .affbuyer-tab-active {
@@ -45,12 +73,15 @@
   border-radius: 50%;
   background: #dc2626;
   margin-left: 2px;
+  flex-shrink: 0;
 }
 
 .affbuyer-panel {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: 100%;
+  min-width: 0; /* evita overflow por contenido flex/grid hijo */
 }
 
 .affbuyer-error {
@@ -60,6 +91,7 @@
   border: 1px solid #fecaca;
   border-radius: 8px;
   padding: 8px 12px;
+  word-break: break-word;
 }
 
 .affbuyer-empty {
@@ -77,10 +109,12 @@
   font-size: 14px;
   padding: 24px 0;
   justify-content: center;
+  text-align: center;
 }
 
 .affbuyer-spin {
   animation: affbuyer-spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 
 @keyframes affbuyer-spin {
@@ -97,13 +131,19 @@
   border-radius: 8px;
   padding: 8px 12px;
   color: #6b7280;
+  width: 100%;
+}
+
+.affbuyer-search svg {
+  flex-shrink: 0;
 }
 
 .affbuyer-search input {
   border: none;
   outline: none;
   flex: 1;
-  font-size: 14px;
+  min-width: 0;
+  font-size: 16px; /* >=16px evita zoom automático de iOS al enfocar */
   color: #111827;
   background: transparent;
 }
@@ -131,6 +171,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.affbuyer-offer-info > div {
+  min-width: 0;
 }
 
 .affbuyer-offer-thumb {
@@ -150,11 +196,24 @@
   font-size: 14px;
   font-weight: 600;
   color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  word-break: break-word;
 }
 
 .affbuyer-offer-seller {
   font-size: 12px;
   color: #6b7280;
+}
+
+.affbuyer-offer-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
 }
 
 .affbuyer-offer-commission {
@@ -164,9 +223,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+.affbuyer-new-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
 .affbuyer-apply-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 14px;
   border-radius: 8px;
@@ -177,6 +249,8 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 38px;
+  flex-shrink: 0;
 }
 
 .affbuyer-apply-btn:disabled {
@@ -192,6 +266,7 @@
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .affbuyer-status-pending {
@@ -214,6 +289,29 @@
   color: #4b5563;
 }
 
+/* --- Stock --- */
+
+.affbuyer-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.affbuyer-stock-badge-available {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.affbuyer-stock-badge-none {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
 /* --- Paginación --- */
 
 .affbuyer-pagination {
@@ -222,19 +320,21 @@
   justify-content: center;
   gap: 12px;
   padding-top: 4px;
+  flex-wrap: wrap;
 }
 
 .affbuyer-page-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   border: 1px solid #d1d5db;
   background: #fff;
   cursor: pointer;
   color: #374151;
+  flex-shrink: 0;
 }
 
 .affbuyer-page-btn:disabled {
@@ -245,6 +345,7 @@
 .affbuyer-page-info {
   font-size: 13px;
   color: #6b7280;
+  text-align: center;
 }
 
 /* --- Carnet de vendedor (dentro de solicitudes / mis ofertas) --- */
@@ -264,12 +365,14 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .affbuyer-carnet-header {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .affbuyer-carnet-avatar {
@@ -286,15 +389,21 @@
   flex-shrink: 0;
 }
 
+.affbuyer-carnet-header > div {
+  min-width: 0;
+}
+
 .affbuyer-carnet-name {
   font-size: 15px;
   font-weight: 700;
   color: #111827;
+  word-break: break-word;
 }
 
 .affbuyer-carnet-contact {
   font-size: 12px;
   color: #6b7280;
+  word-break: break-word;
 }
 
 .affbuyer-carnet-divider {
@@ -305,6 +414,7 @@
   font-size: 13px;
   color: #4b5563;
   line-height: 1.4;
+  word-break: break-word;
 }
 
 .affbuyer-carnet-details {
@@ -313,6 +423,10 @@
   gap: 4px;
   font-size: 13px;
   color: #374151;
+}
+
+.affbuyer-carnet-details p {
+  word-break: break-word;
 }
 
 .affbuyer-carnet-details span {
@@ -325,13 +439,14 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   background: #16a34a;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
+  min-height: 40px;
 }
 
 /* --- Solicitudes / Mis ofertas: metadatos, link de afiliado --- */
@@ -342,12 +457,35 @@
   gap: 10px;
 }
 
+.affbuyer-store-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.affbuyer-store-app-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 10px;
+}
+
+.affbuyer-store-app-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
 .affbuyer-application-meta {
   display: flex;
   flex-direction: column;
   gap: 3px;
   font-size: 13px;
   color: #374151;
+}
+
+.affbuyer-application-meta p {
+  word-break: break-word;
 }
 
 .affbuyer-application-meta span {
@@ -373,7 +511,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7px 10px;
+  padding: 9px 10px;
   border-radius: 8px;
   border: 1px solid #d1d5db;
   background: #fff;
@@ -381,6 +519,8 @@
   font-weight: 600;
   color: #374151;
   cursor: pointer;
+  min-height: 38px;
+  width: 100%;
 }
 
 /* ============================================================
@@ -396,12 +536,15 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .affbuyer-profile-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .affbuyer-profile-title {
@@ -420,15 +563,17 @@
 .affbuyer-save-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border-radius: 8px;
-  padding: 7px 12px;
+  padding: 8px 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid #d1d5db;
   background: #fff;
   color: #374151;
+  min-height: 38px;
 }
 
 .affbuyer-save-btn {
@@ -456,6 +601,7 @@
   gap: 4px;
   font-size: 12px;
   color: #6b7280;
+  min-width: 0;
 }
 
 .affbuyer-profile-grid-full {
@@ -466,9 +612,11 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 14px;
+  font-size: 16px; /* evita zoom en iOS */
   color: #111827;
   background: #fff;
+  width: 100%;
+  min-width: 0;
 }
 
 .affbuyer-profile-grid input:disabled {
@@ -504,6 +652,7 @@
   color: #111827;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.2px;
+  white-space: nowrap;
 }
 
 .affbuyer-amount-positive {
@@ -526,6 +675,7 @@
   border-radius: 14px;
   padding: 16px;
   background: #f9fafb;
+  min-width: 0;
 }
 
 .affbuyer-earnings-card-pending {
@@ -553,6 +703,7 @@
   color: #111827;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.4px;
+  word-break: break-word;
 }
 
 .affbuyer-earnings-card-pending .affbuyer-earnings-value {
@@ -561,6 +712,47 @@
 
 .affbuyer-earnings-card-collected .affbuyer-earnings-value {
   color: #059669;
+}
+
+/* --- Bloque de ganancias por tienda --- */
+
+.affbuyer-store-earnings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.affbuyer-store-earnings-block {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.affbuyer-store-earnings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.affbuyer-store-earnings-totals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.affbuyer-store-earnings-totals strong {
+  color: #111827;
 }
 
 /* --- Lista de ventas pendientes de cobro --- */
@@ -579,6 +771,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 12px 14px;
+  min-width: 0;
 }
 
 .affbuyer-sale-row-urgent {
@@ -586,15 +779,32 @@
   background: #fef2f2;
 }
 
+.affbuyer-sale-row-disputed {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.affbuyer-sale-row-paid {
+  background: #fafafa;
+}
+
 .affbuyer-sale-product {
   font-size: 14px;
   font-weight: 700;
   color: #111827;
+  word-break: break-word;
 }
 
 .affbuyer-sale-seller {
   font-size: 12px;
   color: #6b7280;
+}
+
+.affbuyer-dispute-note {
+  font-size: 12px;
+  color: #c2410c;
+  font-weight: 600;
+  margin-top: 2px;
 }
 
 .affbuyer-sale-amounts {
@@ -608,6 +818,7 @@
   font-size: 12px;
   color: #6b7280;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .affbuyer-sale-commission {
@@ -616,6 +827,7 @@
   color: #059669;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.2px;
+  white-space: nowrap;
 }
 
 .affbuyer-sale-due {
@@ -640,7 +852,536 @@
   color: #b91c1c;
 }
 
+.affbuyer-due-badge-paid {
+  background: #ecfdf5;
+  color: #047857;
+}
+
 .affbuyer-due-date {
   font-size: 11px;
   color: #9ca3af;
+  white-space: nowrap;
+}
+
+.affbuyer-paid-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.affbuyer-proof-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.affbuyer-reject-payment-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.affbuyer-reject-payment-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.affbuyer-history-section {
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 10px;
+}
+
+.affbuyer-history-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.affbuyer-history-title::-webkit-details-marker {
+  display: none;
+}
+
+.affbuyer-history-section > .affbuyer-sales-list {
+  margin-top: 10px;
+}
+
+/* ============================================================
+   Vitrina de tiendas (Tab Tiendas)
+   ============================================================ */
+
+.affbuyer-subtabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.affbuyer-subtabs::-webkit-scrollbar {
+  display: none;
+}
+
+.affbuyer-subtab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 36px;
+}
+
+.affbuyer-subtab-active {
+  background: #111827;
+  border-color: #111827;
+  color: #fff;
+}
+
+.affbuyer-store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.affbuyer-store-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  min-width: 0;
+}
+
+.affbuyer-store-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.affbuyer-store-card-header > div {
+  min-width: 0;
+}
+
+.affbuyer-category-badge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.affbuyer-store-stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.affbuyer-store-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.affbuyer-view-store-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: auto;
+  min-height: 40px;
+}
+
+/* --- Detalle de tienda --- */
+
+.affbuyer-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 0;
+  width: fit-content;
+  min-height: 36px;
+}
+
+.affbuyer-store-detail-header {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, #fafafa 0%, #ffffff 45%);
+  min-width: 0;
+}
+
+.affbuyer-store-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.affbuyer-store-detail-info p {
+  word-break: break-word;
+}
+
+.affbuyer-store-detail-info span {
+  color: #9ca3af;
+  margin-right: 4px;
+}
+
+.affbuyer-store-detail-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.affbuyer-store-detail-toolbar .affbuyer-search {
+  flex: 1 1 220px;
+}
+
+.affbuyer-download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+  flex-shrink: 0;
+}
+
+.affbuyer-download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Breakpoints: Tablet (<=768px)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .affbuyer-carnet-grid,
+  .affbuyer-store-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+
+  .affbuyer-earnings-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================================
+   Breakpoints: Mobile (<=560px) — "celu"
+   ============================================================ */
+
+@media (max-width: 560px) {
+  .affbuyer-dashboard {
+    gap: 14px;
+    padding: 0 2px;
+  }
+
+  /* Tabs: se convierten en franja scrolleable de ancho completo */
+  .affbuyer-tabs {
+    gap: 6px;
+    padding-bottom: 6px;
+    margin: 0 -2px;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .affbuyer-tab {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  /* Perfil */
+  .affbuyer-profile-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .affbuyer-profile-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .affbuyer-profile-title {
+    font-size: 14px;
+  }
+
+  .affbuyer-profile-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .affbuyer-profile-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Subtabs de tiendas */
+  .affbuyer-subtab {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+
+  /* Vitrina de tiendas: una columna */
+  .affbuyer-store-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .affbuyer-store-card {
+    padding: 14px;
+  }
+
+  /* Detalle de tienda */
+  .affbuyer-store-detail-header {
+    padding: 14px;
+  }
+
+  .affbuyer-store-detail-toolbar {
+    flex-direction: column;
+  }
+
+  .affbuyer-download-btn {
+    width: 100%;
+  }
+
+  /* Filas de oferta: apilar info y acción */
+  .affbuyer-offer-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .affbuyer-offer-info {
+    flex: 1 1 auto;
+  }
+
+  .affbuyer-apply-btn {
+    width: 100%;
+  }
+
+  .affbuyer-status-badge {
+    align-self: flex-start;
+  }
+
+  /* Carnets: una columna */
+  .affbuyer-carnet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .affbuyer-carnet {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .affbuyer-amount-line {
+    font-size: 11px;
+  }
+
+  .affbuyer-amount-value {
+    font-size: 15px;
+  }
+
+  .affbuyer-copy-link-btn {
+    padding: 10px;
+  }
+
+  /* Ganancias */
+  .affbuyer-earnings-summary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .affbuyer-earnings-card {
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .affbuyer-earnings-label {
+    margin-bottom: 0;
+  }
+
+  .affbuyer-earnings-value {
+    font-size: 20px;
+  }
+
+  .affbuyer-store-earnings-block {
+    padding: 12px;
+  }
+
+  .affbuyer-store-earnings-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .affbuyer-store-earnings-totals {
+    align-items: flex-start;
+    text-align: left;
+    flex-direction: row;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Filas de venta: apilar en columna, montos alineados a la izquierda */
+  .affbuyer-sale-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .affbuyer-sale-amounts {
+    text-align: left;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .affbuyer-sale-due {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .affbuyer-paid-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .affbuyer-reject-payment-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .affbuyer-proof-link {
+    justify-content: center;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 8px;
+  }
+
+  /* Paginación más cómoda para el pulgar */
+  .affbuyer-page-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ============================================================
+   Mobile chico (<=380px) — ajustes finos
+   ============================================================ */
+
+@media (max-width: 380px) {
+  .affbuyer-carnet-avatar,
+  .affbuyer-store-card-header .affbuyer-carnet-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .affbuyer-offer-thumb {
+    width: 40px;
+    height: 40px;
+  }
+
+  .affbuyer-earnings-value {
+    font-size: 18px;
+  }
+
+  .affbuyer-sale-commission {
+    font-size: 15px;
+  }
+}
+
+/* --- Accesibilidad: foco visible y menos movimiento si el usuario lo prefiere --- */
+
+.affbuyer-tab:focus-visible,
+.affbuyer-subtab:focus-visible,
+.affbuyer-apply-btn:focus-visible,
+.affbuyer-view-store-btn:focus-visible,
+.affbuyer-download-btn:focus-visible,
+.affbuyer-copy-link-btn:focus-visible,
+.affbuyer-whatsapp-btn:focus-visible,
+.affbuyer-edit-btn:focus-visible,
+.affbuyer-save-btn:focus-visible,
+.affbuyer-cancel-btn:focus-visible,
+.affbuyer-reject-payment-btn:focus-visible,
+.affbuyer-page-btn:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .affbuyer-spin {
+    animation-duration: 1.6s;
+  }
 }
