@@ -411,33 +411,16 @@ function StockBadge({ item }: { item: StoreProductItem }): JSX.Element {
 }
 
 /**
- * Badge de disponibilidad para un producto ya afiliado (tab "Mis Ofertas").
- * A diferencia de StockBadge (que es para la vitrina de la tienda), este avisa
- * al afiliado que, aunque su link siga andando, esas ventas no le van a generar
- * comisión mientras la oferta esté desactivada o el producto sin stock.
+ * Un producto afiliado se considera "no disponible" cuando el vendedor
+ * desactivó la oferta o el stock llegó a cero. Estos productos se ocultan de
+ * "Mis Ofertas" (ver visibleStoreApps más abajo) para que el afiliado no siga
+ * compartiendo un link que, si vende, no le va a generar comisión.
  */
-function OfferAvailabilityBadge({
-  offerActive,
-  stock,
-}: {
-  offerActive?: boolean;
-  stock?: number;
-}): JSX.Element | null {
-  if (offerActive === false) {
-    return (
-      <span className="affbuyer-stock-badge affbuyer-stock-badge-none">
-        <Boxes size={12} /> Oferta desactivada
-      </span>
-    );
-  }
-  if (typeof stock === "number" && stock <= 0) {
-    return (
-      <span className="affbuyer-stock-badge affbuyer-stock-badge-none">
-        <Boxes size={12} /> Sin stock
-      </span>
-    );
-  }
-  return null;
+function isApplicationUnavailable(application: AppItem): boolean {
+  if (application.status !== "accepted" || !application.product) return false;
+  if (application.offerActive === false) return true;
+  if (typeof application.product.stock === "number" && application.product.stock <= 0) return true;
+  return false;
 }
 
 function SellerCarnet({
@@ -810,10 +793,27 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
   }, [tab]);
 
   /**
-   * Avisa una sola vez por sesión si algún producto afiliado (ya aceptado)
-   * quedó sin stock o con la oferta desactivada por el vendedor. El link de
-   * afiliado puede seguir funcionando y la venta puede concretarse, pero no
-   * te va a generar comisión mientras esté así.
+   * Lista de "Mis Ofertas" ya filtrada: los productos afiliados que el
+   * vendedor desactivó o se quedaron sin stock NO se muestran. Si una tienda
+   * se queda sin productos visibles por esto, la tienda entera se oculta.
+   * Requiere que el backend mande `offerActive` y `product.stock` en cada
+   * aplicación de /mis-ofertas; si no los manda, esto no filtra nada.
+   */
+  const visibleStoreApps =
+    tab === "mis-ofertas"
+      ? storeApps
+          .map((group) => ({
+            ...group,
+            applications: group.applications.filter((application) => !isApplicationUnavailable(application)),
+          }))
+          .filter((group) => group.applications.length > 0)
+      : storeApps;
+
+  const hiddenByUnavailability = tab === "mis-ofertas" && storeApps.length > 0 && visibleStoreApps.length === 0;
+
+  /**
+   * Avisa una sola vez por sesión si se ocultaron productos de "Mis Ofertas"
+   * porque el vendedor los desactivó o se quedaron sin stock.
    */
   const unavailableAlertShownRef = useRef(false);
 
@@ -823,20 +823,12 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     const unavailable: { productName: string; sellerName: string; reason: string }[] = [];
     storeApps.forEach((group) => {
       group.applications.forEach((application) => {
-        if (application.status !== "accepted" || !application.product) return;
-        if (application.offerActive === false) {
-          unavailable.push({
-            productName: application.product.name,
-            sellerName: group.seller?.businessName ?? "una tienda",
-            reason: "el vendedor la desactivó",
-          });
-        } else if (typeof application.product.stock === "number" && application.product.stock <= 0) {
-          unavailable.push({
-            productName: application.product.name,
-            sellerName: group.seller?.businessName ?? "una tienda",
-            reason: "está sin stock",
-          });
-        }
+        if (!isApplicationUnavailable(application) || !application.product) return;
+        unavailable.push({
+          productName: application.product.name,
+          sellerName: group.seller?.businessName ?? "una tienda",
+          reason: application.offerActive === false ? "el vendedor la desactivó" : "está sin stock",
+        });
       });
     });
 
@@ -850,11 +842,12 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
     void Swal.fire({
       icon: "warning",
-      title: "Tenés productos no disponibles",
+      title: "Ocultamos algunos productos de tu lista",
       html: `
-        <p>Seguís afiliado a estos productos, pero ahora mismo no están disponibles.
-        Si alguien compra con tu link mientras estén así, esa venta no te va a
-        generar comisión hasta que el vendedor lo reactive o reponga stock:</p>
+        <p>Estos productos no están disponibles ahora mismo, así que los sacamos
+        de "Mis Ofertas" para que no compartas un link que, si vende, no te va
+        a generar comisión. Van a volver a aparecer apenas el vendedor los
+        reactive o repongan stock:</p>
         <ul style="text-align:left; margin-top:8px;">${list}</ul>
       `,
       confirmButtonText: "Entendido",
@@ -1144,13 +1137,17 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
           {appsLoading ? (
             <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando...</div>
-          ) : storeApps.length === 0 ? (
+          ) : visibleStoreApps.length === 0 ? (
             <p className="affbuyer-empty">
-              {tab === "solicitudes" ? "No tenés solicitudes pendientes." : "Todavía no tenés tiendas con ofertas aceptadas."}
+              {tab === "solicitudes"
+                ? "No tenés solicitudes pendientes."
+                : hiddenByUnavailability
+                  ? "Tus productos afiliados no están disponibles en este momento (el vendedor los desactivó o se quedaron sin stock)."
+                  : "Todavía no tenés tiendas con ofertas aceptadas."}
             </p>
           ) : (
             <div className="affbuyer-carnet-grid">
-              {storeApps.map((group) =>
+              {visibleStoreApps.map((group) =>
                 group.seller ? (
                   <SellerCarnet
                     key={group.sellerId}
@@ -1182,68 +1179,50 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                         )}
 
                         <div className="affbuyer-store-app-list">
-                          {group.applications.map((application) => {
-                            const isUnavailable =
-                              tab === "mis-ofertas" &&
-                              (application.offerActive === false ||
-                                (typeof application.product?.stock === "number" &&
-                                  (application.product?.stock ?? 0) <= 0));
-
-                            return (
-                              <div key={application.applicationId} className="affbuyer-store-app-item">
-                                <div className="affbuyer-application-meta">
-                                  <p><span>Producto</span> {application.product?.name ?? "-"}</p>
-                                  <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
-                                  {tab === "mis-ofertas" && (
-                                    <>
-                                      <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
-                                      <p><span>Ventas registradas</span> {application.salesCount}</p>
-                                      {application.rating !== null && (
-                                        <div className="affbuyer-rating">
-                                          {[1, 2, 3, 4, 5].map((value) => (
-                                            <Star
-                                              key={value}
-                                              size={14}
-                                              className={
-                                                application.rating !== null && application.rating >= value
-                                                  ? "affbuyer-star-filled"
-                                                  : "affbuyer-star"
-                                              }
-                                            />
-                                          ))}
-                                        </div>
-                                      )}
-                                      <OfferAvailabilityBadge
-                                        offerActive={application.offerActive}
-                                        stock={application.product?.stock}
-                                      />
-                                    </>
-                                  )}
-                                  <StatusBadge status={application.status} />
-                                </div>
-
-                                {isUnavailable && (
-                                  <p className="affbuyer-dispute-note">
-                                    Mientras esté así, las ventas con tu link no te generan comisión.
-                                  </p>
-                                )}
-
-                                {application.affiliateLink && (
-                                  <button
-                                    type="button"
-                                    className="affbuyer-copy-link-btn"
-                                    onClick={() => void handleCopyLink(application.applicationId, application.affiliateLink as string)}
-                                  >
-                                    {copiedId === application.applicationId ? (
-                                      <><Check size={14} /> Copiado</>
-                                    ) : (
-                                      <><Copy size={14} /> Copiar link</>
+                          {group.applications.map((application) => (
+                            <div key={application.applicationId} className="affbuyer-store-app-item">
+                              <div className="affbuyer-application-meta">
+                                <p><span>Producto</span> {application.product?.name ?? "-"}</p>
+                                <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
+                                {tab === "mis-ofertas" && (
+                                  <>
+                                    <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
+                                    <p><span>Ventas registradas</span> {application.salesCount}</p>
+                                    {application.rating !== null && (
+                                      <div className="affbuyer-rating">
+                                        {[1, 2, 3, 4, 5].map((value) => (
+                                          <Star
+                                            key={value}
+                                            size={14}
+                                            className={
+                                              application.rating !== null && application.rating >= value
+                                                ? "affbuyer-star-filled"
+                                                : "affbuyer-star"
+                                            }
+                                          />
+                                        ))}
+                                      </div>
                                     )}
-                                  </button>
+                                  </>
                                 )}
+                                <StatusBadge status={application.status} />
                               </div>
-                            );
-                          })}
+
+                              {application.affiliateLink && (
+                                <button
+                                  type="button"
+                                  className="affbuyer-copy-link-btn"
+                                  onClick={() => void handleCopyLink(application.applicationId, application.affiliateLink as string)}
+                                >
+                                  {copiedId === application.applicationId ? (
+                                    <><Check size={14} /> Copiado</>
+                                  ) : (
+                                    <><Copy size={14} /> Copiar link</>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     }
