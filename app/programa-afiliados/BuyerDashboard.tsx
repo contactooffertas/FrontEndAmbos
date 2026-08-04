@@ -295,71 +295,97 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
       : "Sin stock";
     const statusLabel = item.applicationStatus ? STATUS_LABEL[item.applicationStatus] : "No afiliado";
     const commissionLabel = `${item.commissionPercentage}%`;
-    return [item.product.name, item.product.category, commissionLabel, stockLabel, statusLabel];
+    return [item.product.name, item.product.category,stockLabel, statusLabel];
   });
 
-  autoTable(doc, {
-    startY: 130,
-    head: [["Producto", "Categoría", "Comisión", "Stock", "Estado"]],
-    body: rows,
-    theme: "striped",
-    styles: {
-      font: "helvetica",
-      cellPadding: 8,
-      lineColor: [229, 231, 235],
-      lineWidth: 0.5,
-    },
-    headStyles: {
-      fillColor: [17, 24, 39],
-      textColor: 255,
-      fontStyle: "bold",
-      fontSize: 10,
-      halign: "left",
-    },
-    bodyStyles: { fontSize: 9.5, textColor: [55, 65, 81] },
-    alternateRowStyles: { fillColor: [249, 250, 251] },
-    columnStyles: {
-      1: { halign: "left" },
-      2: { halign: "center", cellWidth: 60 },
-      3: { halign: "center", cellWidth: 78 },
-      4: { halign: "center", cellWidth: 92 },
-    },
-    margin: { left: marginX, right: marginX },
-    didParseCell: (data: CellHookData) => {
-      if (data.section !== "body") return;
+ autoTable(doc, {
+  startY: 130,
+  head: [["Producto", "Categoría", "Stock", "Estado"]],
+  body: rows,
+  theme: "striped",
+  styles: {
+    font: "helvetica",
+    cellPadding: 8,
+    lineColor: [229, 231, 235],
+    lineWidth: 0.5,
+  },
+  headStyles: {
+    fillColor: [17, 24, 39],
+    textColor: 255,
+    fontStyle: "bold",
+    fontSize: 10,
+    halign: "left",
+  },
+  bodyStyles: {
+    fontSize: 9.5,
+    textColor: [55, 65, 81],
+  },
+  alternateRowStyles: {
+    fillColor: [249, 250, 251],
+  },
+  columnStyles: {
+    1: { halign: "left" },
+    2: { halign: "center", cellWidth: 78 }, // Stock
+    3: { halign: "center", cellWidth: 92 }, // Estado
+  },
+  margin: {
+    left: marginX,
+    right: marginX,
+  },
+  didParseCell: (data: CellHookData) => {
+    if (data.section !== "body") return;
 
-      if (data.column.index === 3) {
-        const text = String(data.cell.raw);
-        data.cell.styles.fontStyle = "bold";
-        data.cell.styles.textColor = text === "Sin stock" ? [185, 28, 28] : [5, 150, 105];
+    // Stock
+    if (data.column.index === 2) {
+      const text = String(data.cell.raw);
+      data.cell.styles.fontStyle = "bold";
+      data.cell.styles.textColor =
+        text === "Sin stock"
+          ? [185, 28, 28]
+          : [5, 150, 105];
+    }
+
+    // Estado
+    if (data.column.index === 3) {
+      const text = String(data.cell.raw);
+      data.cell.styles.fontStyle = "bold";
+
+      if (text === STATUS_LABEL.accepted) {
+        data.cell.styles.textColor = [5, 150, 105];
+      } else if (text === STATUS_LABEL.pending) {
+        data.cell.styles.textColor = [180, 83, 9];
+      } else if (text === "No afiliado") {
+        data.cell.styles.textColor = [107, 114, 128];
+      } else {
+        data.cell.styles.textColor = [185, 28, 28];
       }
+    }
+  },
+  didDrawPage: () => {
+    const pageCount = doc.getNumberOfPages();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-      if (data.column.index === 4) {
-        const text = String(data.cell.raw);
-        data.cell.styles.fontStyle = "bold";
-        if (text === STATUS_LABEL.accepted) data.cell.styles.textColor = [5, 150, 105];
-        else if (text === STATUS_LABEL.pending) data.cell.styles.textColor = [180, 83, 9];
-        else if (text === "No afiliado") data.cell.styles.textColor = [107, 114, 128];
-        else data.cell.styles.textColor = [185, 28, 28];
-      }
-    },
-    didDrawPage: () => {
-      const pageCount = doc.getNumberOfPages();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.setFontSize(8);
-      doc.setTextColor(156, 163, 175);
-      doc.text(
-        `Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`,
-        pageWidth - marginX,
-        pageHeight - 22,
-        { align: "right" }
-      );
-      doc.text("Programa de Afiliados", marginX, pageHeight - 22);
-      doc.setDrawColor(229, 231, 235);
-      doc.line(marginX, pageHeight - 32, pageWidth - marginX, pageHeight - 32);
-    },
-  });
+    doc.setFontSize(8);
+    doc.setTextColor(156, 163, 175);
 
+    doc.text(
+      `Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`,
+      pageWidth - marginX,
+      pageHeight - 22,
+      { align: "right" }
+    );
+
+    doc.text("Programa de Afiliados", marginX, pageHeight - 22);
+
+    doc.setDrawColor(229, 231, 235);
+    doc.line(
+      marginX,
+      pageHeight - 32,
+      pageWidth - marginX,
+      pageHeight - 32
+    );
+  },
+});
   const fileSafeName = store.businessName
     .toLowerCase()
     .normalize("NFD")
