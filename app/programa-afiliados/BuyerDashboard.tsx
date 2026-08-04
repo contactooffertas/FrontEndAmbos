@@ -153,6 +153,13 @@ interface AppItem {
   commissionPercentage: number | null;
   product: ProductBasic | null;
   affiliateLink: string | null;
+  /**
+   * Si la oferta del vendedor sigue activa para este producto. Si es false,
+   * el link de afiliado puede seguir funcionando, pero las ventas nuevas NO
+   * generan comisión hasta que el vendedor la reactive. Opcional para no
+   * romper nada mientras el backend todavía no lo envíe.
+   */
+  offerActive?: boolean;
 }
 
 /** Grupo por tienda para "Mis Solicitudes" / "Mis Ofertas" */
@@ -401,6 +408,36 @@ function StockBadge({ item }: { item: StoreProductItem }): JSX.Element {
       <Boxes size={12} /> {label}
     </span>
   );
+}
+
+/**
+ * Badge de disponibilidad para un producto ya afiliado (tab "Mis Ofertas").
+ * A diferencia de StockBadge (que es para la vitrina de la tienda), este avisa
+ * al afiliado que, aunque su link siga andando, esas ventas no le van a generar
+ * comisión mientras la oferta esté desactivada o el producto sin stock.
+ */
+function OfferAvailabilityBadge({
+  offerActive,
+  stock,
+}: {
+  offerActive?: boolean;
+  stock?: number;
+}): JSX.Element | null {
+  if (offerActive === false) {
+    return (
+      <span className="affbuyer-stock-badge affbuyer-stock-badge-none">
+        <Boxes size={12} /> Oferta desactivada
+      </span>
+    );
+  }
+  if (typeof stock === "number" && stock <= 0) {
+    return (
+      <span className="affbuyer-stock-badge affbuyer-stock-badge-none">
+        <Boxes size={12} /> Sin stock
+      </span>
+    );
+  }
+  return null;
 }
 
 function SellerCarnet({
@@ -772,6 +809,59 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  /**
+   * Avisa una sola vez por sesión si algún producto afiliado (ya aceptado)
+   * quedó sin stock o con la oferta desactivada por el vendedor. El link de
+   * afiliado puede seguir funcionando y la venta puede concretarse, pero no
+   * te va a generar comisión mientras esté así.
+   */
+  const unavailableAlertShownRef = useRef(false);
+
+  useEffect(() => {
+    if (tab !== "mis-ofertas" || appsLoading || unavailableAlertShownRef.current) return;
+
+    const unavailable: { productName: string; sellerName: string; reason: string }[] = [];
+    storeApps.forEach((group) => {
+      group.applications.forEach((application) => {
+        if (application.status !== "accepted" || !application.product) return;
+        if (application.offerActive === false) {
+          unavailable.push({
+            productName: application.product.name,
+            sellerName: group.seller?.businessName ?? "una tienda",
+            reason: "el vendedor la desactivó",
+          });
+        } else if (typeof application.product.stock === "number" && application.product.stock <= 0) {
+          unavailable.push({
+            productName: application.product.name,
+            sellerName: group.seller?.businessName ?? "una tienda",
+            reason: "está sin stock",
+          });
+        }
+      });
+    });
+
+    if (unavailable.length === 0) return;
+    unavailableAlertShownRef.current = true;
+
+    const list = unavailable
+      .slice(0, 6)
+      .map((u) => `<li><strong>${u.productName}</strong> (${u.sellerName}) — ${u.reason}</li>`)
+      .join("");
+
+    void Swal.fire({
+      icon: "warning",
+      title: "Tenés productos no disponibles",
+      html: `
+        <p>Seguís afiliado a estos productos, pero ahora mismo no están disponibles.
+        Si alguien compra con tu link mientras estén así, esa venta no te va a
+        generar comisión hasta que el vendedor lo reactive o reponga stock:</p>
+        <ul style="text-align:left; margin-top:8px;">${list}</ul>
+      `,
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#111827",
+    });
+  }, [tab, appsLoading, storeApps]);
+
   const handleCopyLink = async (applicationId: string, link: string) => {
     await navigator.clipboard.writeText(link);
     setCopiedId(applicationId);
@@ -1092,50 +1182,68 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                         )}
 
                         <div className="affbuyer-store-app-list">
-                          {group.applications.map((application) => (
-                            <div key={application.applicationId} className="affbuyer-store-app-item">
-                              <div className="affbuyer-application-meta">
-                                <p><span>Producto</span> {application.product?.name ?? "-"}</p>
-                                <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
-                                {tab === "mis-ofertas" && (
-                                  <>
-                                    <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
-                                    <p><span>Ventas registradas</span> {application.salesCount}</p>
-                                    {application.rating !== null && (
-                                      <div className="affbuyer-rating">
-                                        {[1, 2, 3, 4, 5].map((value) => (
-                                          <Star
-                                            key={value}
-                                            size={14}
-                                            className={
-                                              application.rating !== null && application.rating >= value
-                                                ? "affbuyer-star-filled"
-                                                : "affbuyer-star"
-                                            }
-                                          />
-                                        ))}
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                                <StatusBadge status={application.status} />
-                              </div>
+                          {group.applications.map((application) => {
+                            const isUnavailable =
+                              tab === "mis-ofertas" &&
+                              (application.offerActive === false ||
+                                (typeof application.product?.stock === "number" &&
+                                  (application.product?.stock ?? 0) <= 0));
 
-                              {application.affiliateLink && (
-                                <button
-                                  type="button"
-                                  className="affbuyer-copy-link-btn"
-                                  onClick={() => void handleCopyLink(application.applicationId, application.affiliateLink as string)}
-                                >
-                                  {copiedId === application.applicationId ? (
-                                    <><Check size={14} /> Copiado</>
-                                  ) : (
-                                    <><Copy size={14} /> Copiar link</>
+                            return (
+                              <div key={application.applicationId} className="affbuyer-store-app-item">
+                                <div className="affbuyer-application-meta">
+                                  <p><span>Producto</span> {application.product?.name ?? "-"}</p>
+                                  <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
+                                  {tab === "mis-ofertas" && (
+                                    <>
+                                      <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
+                                      <p><span>Ventas registradas</span> {application.salesCount}</p>
+                                      {application.rating !== null && (
+                                        <div className="affbuyer-rating">
+                                          {[1, 2, 3, 4, 5].map((value) => (
+                                            <Star
+                                              key={value}
+                                              size={14}
+                                              className={
+                                                application.rating !== null && application.rating >= value
+                                                  ? "affbuyer-star-filled"
+                                                  : "affbuyer-star"
+                                              }
+                                            />
+                                          ))}
+                                        </div>
+                                      )}
+                                      <OfferAvailabilityBadge
+                                        offerActive={application.offerActive}
+                                        stock={application.product?.stock}
+                                      />
+                                    </>
                                   )}
-                                </button>
-                              )}
-                            </div>
-                          ))}
+                                  <StatusBadge status={application.status} />
+                                </div>
+
+                                {isUnavailable && (
+                                  <p className="affbuyer-dispute-note">
+                                    Mientras esté así, las ventas con tu link no te generan comisión.
+                                  </p>
+                                )}
+
+                                {application.affiliateLink && (
+                                  <button
+                                    type="button"
+                                    className="affbuyer-copy-link-btn"
+                                    onClick={() => void handleCopyLink(application.applicationId, application.affiliateLink as string)}
+                                  >
+                                    {copiedId === application.applicationId ? (
+                                      <><Check size={14} /> Copiado</>
+                                    ) : (
+                                      <><Copy size={14} /> Copiar link</>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     }
