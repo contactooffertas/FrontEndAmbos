@@ -5,7 +5,8 @@ import Swal from "sweetalert2";
 import {
   Package, Send, Clock, CheckCircle2, Search,
   MessageCircle, Copy, Loader2, ChevronLeft, ChevronRight, Check, Star,
-  Wallet, Pencil, X, Save, FileText, XOctagon, History,
+  Wallet, Pencil, X, Save, FileText, XOctagon, History, Store, Sparkles,
+  Users, ArrowLeft, Percent,
 } from "lucide-react";
 import "../styles/afiliados-comprador.css";
 
@@ -63,6 +64,15 @@ function daysLabel(daysRemaining: number): string {
   return `Vence en ${daysRemaining} día${daysRemaining === 1 ? "" : "s"}`;
 }
 
+const STATUS_LABEL: Record<ApplicationStatus, string> = {
+  pending: "Solicitud enviada",
+  accepted: "Ya sos afiliado",
+  rejected: "Rechazada",
+  blocked: "Bloqueado",
+};
+
+/* ============================ Tipos ============================ */
+
 interface PaginationMeta {
   page: number;
   totalPages: number;
@@ -80,7 +90,7 @@ interface SellerCardData {
   paymentTermDays?: number | null;
 }
 
-interface ProductData {
+interface ProductBasic {
   productId: string;
   name: string;
   image: string | null;
@@ -88,16 +98,44 @@ interface ProductData {
 }
 
 type ApplicationStatus = "pending" | "accepted" | "rejected" | "blocked";
+type StoreSubTab = "todas" | "nuevas" | "mis-tiendas";
+type MainTab = "tiendas" | "solicitudes" | "mis-ofertas" | "ganancias";
 
-interface OfferListItem {
+/** Card de tienda en la vitrina (tab Tiendas) */
+interface StoreCard {
+  sellerId: string;
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  description: string;
+  category: string;
+  offerCount: number;
+  commissionMin: number;
+  commissionMax: number;
+  joinedAt: string;
+}
+
+/** Producto dentro del detalle de una tienda */
+interface StoreProductItem {
   offerId: string;
   commissionPercentage: number;
-  product: ProductData;
-  seller: SellerCardData | null;
+  product: ProductBasic & { category: string };
   applicationStatus: ApplicationStatus | null;
 }
 
-interface MyApplicationItem {
+interface StoreDetail {
+  sellerId: string;
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  description: string;
+  paymentTermDays: number;
+}
+
+/** Solicitud individual (dentro de un grupo de tienda) */
+interface AppItem {
   applicationId: string;
   status: ApplicationStatus;
   appliedAt: string;
@@ -108,18 +146,24 @@ interface MyApplicationItem {
   totalEarnedCommission: number;
   totalPendingCommission: number;
   commissionPercentage: number | null;
-  product: ProductData | null;
-  seller: SellerCardData | null;
+  product: ProductBasic | null;
   affiliateLink: string | null;
 }
 
-// El backend ya calcula dueDate/daysRemaining siempre a partir del ciclo de
-// pago del vendedor, así que estos valores nunca deberían llegar en null;
-// se dejan como nullable únicamente por seguridad ante datos muy viejos.
+/** Grupo por tienda para "Mis Solicitudes" / "Mis Ofertas" */
+interface StoreApplicationsGroup {
+  sellerId: string;
+  seller: SellerCardData | null;
+  latestAppliedAt: string;
+  applications: AppItem[];
+  totalSalesAmount: number;
+  totalEarnedCommission: number;
+  totalPendingCommission: number;
+}
+
 interface PendingSaleItem {
   saleId: string;
   productName: string;
-  seller: SellerCardData | null;
   date: string;
   dueDate: string | null;
   daysRemaining: number;
@@ -134,7 +178,6 @@ interface PendingSaleItem {
 interface PaidSaleItem {
   saleId: string;
   productName: string;
-  seller: SellerCardData | null;
   date: string;
   paidAt: string;
   quantity: number;
@@ -144,13 +187,27 @@ interface PaidSaleItem {
   proofUrl: string | null;
 }
 
-interface EarningsSummary {
+interface UrgentSaleItem extends PendingSaleItem {
+  seller: SellerCardData | null;
+}
+
+/** Grupo por tienda para "Ganancias" */
+interface StoreEarningsGroup {
+  sellerId: string;
+  seller: SellerCardData | null;
   totalEarned: number;
   totalPending: number;
   totalCollected: number;
   pendingSales: PendingSaleItem[];
-  urgentSales: PendingSaleItem[];
   paidSales: PaidSaleItem[];
+}
+
+interface EarningsSummary {
+  totalEarned: number;
+  totalPending: number;
+  totalCollected: number;
+  stores: StoreEarningsGroup[];
+  urgentSales: UrgentSaleItem[];
 }
 
 interface BuyerProfile {
@@ -164,13 +221,14 @@ interface BuyerProfile {
   salesExperience: string;
 }
 
-type TabKey = "ofertas" | "solicitudes" | "mis-ofertas" | "ganancias";
-
 interface BuyerDashboardProps {
   buyerName: string;
 }
 
+/* ============================ Componentes chicos ============================ */
+
 function Pagination({ meta, onChange }: { meta: PaginationMeta; onChange: (page: number) => void }): JSX.Element {
+  if (meta.totalPages <= 1) return <></>;
   return (
     <div className="affbuyer-pagination">
       <button type="button" className="affbuyer-page-btn" disabled={meta.page <= 1} onClick={() => onChange(meta.page - 1)}>
@@ -184,6 +242,10 @@ function Pagination({ meta, onChange }: { meta: PaginationMeta; onChange: (page:
       </button>
     </div>
   );
+}
+
+function StatusBadge({ status }: { status: ApplicationStatus }): JSX.Element {
+  return <span className={`affbuyer-status-badge affbuyer-status-${status}`}>{STATUS_LABEL[status]}</span>;
 }
 
 function SellerCarnet({
@@ -357,74 +419,166 @@ function ProfileEditCard(): JSX.Element {
   );
 }
 
+/* ============================ Vitrina de tiendas ============================ */
+
+function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId: string) => void }): JSX.Element {
+  const initial = store.businessName?.[0]?.toUpperCase() ?? "?";
+  const commissionLabel =
+    store.commissionMin === store.commissionMax
+      ? `${store.commissionMin}%`
+      : `${store.commissionMin}% - ${store.commissionMax}%`;
+
+  return (
+    <div className="affbuyer-store-card">
+      <div className="affbuyer-store-card-header">
+        <div className="affbuyer-carnet-avatar">{initial}</div>
+        <div>
+          <p className="affbuyer-carnet-name">{store.businessName}</p>
+          <p className="affbuyer-carnet-contact">{store.contactName}</p>
+        </div>
+      </div>
+
+      <span className="affbuyer-category-badge">{store.category}</span>
+
+      {store.description && <p className="affbuyer-carnet-description">{store.description}</p>}
+
+      <div className="affbuyer-store-stats">
+        <div className="affbuyer-store-stat">
+          <Percent size={13} />
+          <span>{commissionLabel}</span>
+        </div>
+        <div className="affbuyer-store-stat">
+          <Package size={13} />
+          <span>{store.offerCount} producto{store.offerCount === 1 ? "" : "s"}</span>
+        </div>
+      </div>
+
+      <button type="button" className="affbuyer-view-store-btn" onClick={() => onView(store.sellerId)}>
+        <Store size={14} /> Ver tienda
+      </button>
+    </div>
+  );
+}
+
+/* ============================ Componente principal ============================ */
+
 export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.Element {
-  const [tab, setTab] = useState<TabKey>("ofertas");
+  const [tab, setTab] = useState<MainTab>("tiendas");
 
-  // --- Tab: Ofertas disponibles (5 en 5, con búsqueda) ---
-  const [offers, setOffers] = useState<OfferListItem[]>([]);
-  const [offersMeta, setOffersMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 5 });
-  const [offersLoading, setOffersLoading] = useState(false);
-  const [offersError, setOffersError] = useState("");
-  const [search, setSearch] = useState("");
-  const [applyingId, setApplyingId] = useState<string | null>(null);
+  /* --- Tab: Tiendas (vitrina, 3 en 3) --- */
+  const [storeSubTab, setStoreSubTab] = useState<StoreSubTab>("todas");
+  const [stores, setStores] = useState<StoreCard[]>([]);
+  const [storesMeta, setStoresMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 3 });
+  const [storesLoading, setStoresLoading] = useState(false);
+  const [storesError, setStoresError] = useState("");
+  const [storesSearch, setStoresSearch] = useState("");
 
-  const loadOffers = useCallback(async (page: number, searchTerm: string) => {
-    setOffersLoading(true);
-    setOffersError("");
+  const loadStores = useCallback(async (page: number, subTab: StoreSubTab, searchTerm: string) => {
+    setStoresLoading(true);
+    setStoresError("");
     try {
-      const query = new URLSearchParams({ page: String(page), limit: "5" });
+      const query = new URLSearchParams({ page: String(page), limit: "3", tab: subTab });
       if (searchTerm) query.set("search", searchTerm);
-      const data = await authFetch<{ items: OfferListItem[] } & PaginationMeta>(`/offers?${query.toString()}`);
-      setOffers(data.items);
-      setOffersMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
+      const data = await authFetch<{ items: StoreCard[] } & PaginationMeta>(`/stores?${query.toString()}`);
+      setStores(data.items);
+      setStoresMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
     } catch (err) {
-      setOffersError(errorMessage(err));
+      setStoresError(errorMessage(err));
     } finally {
-      setOffersLoading(false);
+      setStoresLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (tab !== "ofertas") return;
-    const timeout = setTimeout(() => void loadOffers(1, search), 350);
+    if (tab !== "tiendas") return;
+    const timeout = setTimeout(() => void loadStores(1, storeSubTab, storesSearch), 350);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, search]);
+  }, [tab, storeSubTab, storesSearch]);
+
+  /* --- Detalle de una tienda (productos para aplicar) --- */
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const [storeDetail, setStoreDetail] = useState<StoreDetail | null>(null);
+  const [storeProducts, setStoreProducts] = useState<StoreProductItem[]>([]);
+  const [productsMeta, setProductsMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 5 });
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState("");
+  const [productsSearch, setProductsSearch] = useState("");
+  const [applyingOfferId, setApplyingOfferId] = useState<string | null>(null);
+
+  const loadStoreProducts = useCallback(async (sellerId: string, page: number, searchTerm: string) => {
+    setProductsLoading(true);
+    setProductsError("");
+    try {
+      const query = new URLSearchParams({ page: String(page), limit: "5" });
+      if (searchTerm) query.set("search", searchTerm);
+      const data = await authFetch<{ items: StoreProductItem[]; store: StoreDetail } & PaginationMeta>(
+        `/stores/${sellerId}/products?${query.toString()}`
+      );
+      setStoreProducts(data.items);
+      setStoreDetail(data.store);
+      setProductsMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
+    } catch (err) {
+      setProductsError(errorMessage(err));
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
+
+  const handleViewStore = (sellerId: string) => {
+    setSelectedSellerId(sellerId);
+    setProductsSearch("");
+    void loadStoreProducts(sellerId, 1, "");
+  };
+
+  const handleBackToStores = () => {
+    setSelectedSellerId(null);
+    setStoreDetail(null);
+    setStoreProducts([]);
+  };
+
+  useEffect(() => {
+    if (!selectedSellerId) return;
+    const timeout = setTimeout(() => void loadStoreProducts(selectedSellerId, 1, productsSearch), 350);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productsSearch]);
 
   const handleApply = async (offerId: string) => {
-    setApplyingId(offerId);
-    setOffersError("");
+    if (!selectedSellerId) return;
+    setApplyingOfferId(offerId);
+    setProductsError("");
     try {
       await authFetch(`/offers/${offerId}/apply`, { method: "POST" });
-      await loadOffers(offersMeta.page, search);
+      await loadStoreProducts(selectedSellerId, productsMeta.page, productsSearch);
     } catch (err) {
-      setOffersError(errorMessage(err));
+      setProductsError(errorMessage(err));
     } finally {
-      setApplyingId(null);
+      setApplyingOfferId(null);
     }
   };
 
-  // --- Tabs: Mis Solicitudes (pending) y Mis Ofertas (accepted) ---
-  const [applications, setApplications] = useState<MyApplicationItem[]>([]);
-  const [applicationsMeta, setApplicationsMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 5 });
-  const [applicationsLoading, setApplicationsLoading] = useState(false);
-  const [applicationsError, setApplicationsError] = useState("");
+  /* --- Tabs: Mis Solicitudes (pending) y Mis Ofertas (accepted), agrupadas por tienda --- */
+  const [storeApps, setStoreApps] = useState<StoreApplicationsGroup[]>([]);
+  const [appsMeta, setAppsMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 3 });
+  const [appsLoading, setAppsLoading] = useState(false);
+  const [appsError, setAppsError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const statusForTab: ApplicationStatus = tab === "mis-ofertas" ? "accepted" : "pending";
 
   const loadApplications = useCallback(async (page: number, status: ApplicationStatus) => {
-    setApplicationsLoading(true);
-    setApplicationsError("");
+    setAppsLoading(true);
+    setAppsError("");
     try {
-      const query = new URLSearchParams({ page: String(page), limit: "5", status });
-      const data = await authFetch<{ items: MyApplicationItem[] } & PaginationMeta>(`/mis-ofertas?${query.toString()}`);
-      setApplications(data.items);
-      setApplicationsMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
+      const query = new URLSearchParams({ page: String(page), limit: "3", status });
+      const data = await authFetch<{ items: StoreApplicationsGroup[] } & PaginationMeta>(`/mis-ofertas?${query.toString()}`);
+      setStoreApps(data.items);
+      setAppsMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
     } catch (err) {
-      setApplicationsError(errorMessage(err));
+      setAppsError(errorMessage(err));
     } finally {
-      setApplicationsLoading(false);
+      setAppsLoading(false);
     }
   }, []);
 
@@ -441,7 +595,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // --- Tab: Ganancias (cuánto llevás ganado y qué te corresponde cobrar) ---
+  /* --- Tab: Ganancias, agrupada por tienda --- */
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
   const [earningsError, setEarningsError] = useState("");
@@ -461,8 +615,6 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     }
   }, []);
 
-  // Se carga siempre al montar (no solo al entrar a la pestaña) para poder
-  // disparar la alerta de vencimiento apenas el comprador entra al panel.
   useEffect(() => {
     void loadEarnings();
   }, [loadEarnings]);
@@ -480,7 +632,8 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
       title: "Tenés un cobro por vencer",
       html: `
         <p>Tenés <strong>${formatMoney(totalUrgent)}</strong> por cobrar de tus últimas ventas.</p>
-        <p>${daysLabel(soonest.daysRemaining)} el pago de <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
+        <p>${daysLabel(soonest.daysRemaining)} el pago de <strong>${soonest.productName}</strong>
+        (${formatMoney(soonest.commissionAmount)}) en <strong>${soonest.seller?.businessName ?? "una tienda"}</strong>.</p>
       `,
       confirmButtonText: "Ver mis ganancias",
       confirmButtonColor: "#111827",
@@ -519,13 +672,19 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     }
   };
 
+  /* ============================ Render ============================ */
+
   return (
     <div className="affbuyer-dashboard">
       <ProfileEditCard />
 
       <div className="affbuyer-tabs">
-        <button type="button" className={`affbuyer-tab ${tab === "ofertas" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("ofertas")}>
-          <Package size={15} /> Ofertas disponibles
+        <button
+          type="button"
+          className={`affbuyer-tab ${tab === "tiendas" ? "affbuyer-tab-active" : ""}`}
+          onClick={() => { setTab("tiendas"); handleBackToStores(); }}
+        >
+          <Store size={15} /> Tiendas
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "solicitudes" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("solicitudes")}>
           <Clock size={15} /> Mis Solicitudes
@@ -539,27 +698,119 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
         </button>
       </div>
 
-      {tab === "ofertas" && (
+      {/* ---------- TAB TIENDAS ---------- */}
+      {tab === "tiendas" && !selectedSellerId && (
         <div className="affbuyer-panel">
+          <div className="affbuyer-subtabs">
+            <button
+              type="button"
+              className={`affbuyer-subtab ${storeSubTab === "todas" ? "affbuyer-subtab-active" : ""}`}
+              onClick={() => setStoreSubTab("todas")}
+            >
+              <Store size={14} /> Todas
+            </button>
+            <button
+              type="button"
+              className={`affbuyer-subtab ${storeSubTab === "nuevas" ? "affbuyer-subtab-active" : ""}`}
+              onClick={() => setStoreSubTab("nuevas")}
+            >
+              <Sparkles size={14} /> Nuevas
+            </button>
+            <button
+              type="button"
+              className={`affbuyer-subtab ${storeSubTab === "mis-tiendas" ? "affbuyer-subtab-active" : ""}`}
+              onClick={() => setStoreSubTab("mis-tiendas")}
+            >
+              <Users size={14} /> Mis tiendas
+            </button>
+          </div>
+
+          <div className="affbuyer-search">
+            <Search size={15} />
+            <input
+              type="text"
+              placeholder="Buscar tienda por nombre..."
+              value={storesSearch}
+              onChange={(e) => setStoresSearch(e.target.value)}
+            />
+          </div>
+
+          {storesError && <p className="affbuyer-error">{storesError}</p>}
+
+          {storesLoading ? (
+            <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando tiendas...</div>
+          ) : stores.length === 0 ? (
+            <p className="affbuyer-empty">
+              {storeSubTab === "mis-tiendas"
+                ? "Todavía no sos afiliado de ninguna tienda."
+                : storeSubTab === "nuevas"
+                  ? "No hay tiendas nuevas por el momento."
+                  : "No encontramos tiendas disponibles."}
+            </p>
+          ) : (
+            <div className="affbuyer-store-grid">
+              {stores.map((store) => (
+                <StoreListCard key={store.sellerId} store={store} onView={handleViewStore} />
+              ))}
+            </div>
+          )}
+
+          <Pagination meta={storesMeta} onChange={(page) => void loadStores(page, storeSubTab, storesSearch)} />
+        </div>
+      )}
+
+      {/* ---------- DETALLE DE TIENDA ---------- */}
+      {tab === "tiendas" && selectedSellerId && (
+        <div className="affbuyer-panel">
+          <button type="button" className="affbuyer-back-btn" onClick={handleBackToStores}>
+            <ArrowLeft size={15} /> Volver a tiendas
+          </button>
+
+          {storeDetail && (
+            <div className="affbuyer-store-detail-header">
+              <div className="affbuyer-carnet-header">
+                <div className="affbuyer-carnet-avatar">{storeDetail.businessName?.[0]?.toUpperCase() ?? "?"}</div>
+                <div>
+                  <p className="affbuyer-carnet-name">{storeDetail.businessName}</p>
+                  <p className="affbuyer-carnet-contact">{storeDetail.contactName}</p>
+                </div>
+              </div>
+              {storeDetail.description && <p className="affbuyer-carnet-description">{storeDetail.description}</p>}
+              <div className="affbuyer-store-detail-info">
+                <p><span>Email</span> {storeDetail.email}</p>
+                <p><span>Teléfono</span> {storeDetail.phone}</p>
+                <p><span>Plazo de pago</span> {storeDetail.paymentTermDays} días</p>
+              </div>
+              <a
+                href={buildWhatsAppLink(storeDetail.phone, buyerName)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="affbuyer-whatsapp-btn"
+              >
+                <MessageCircle size={15} /> Contactar por WhatsApp
+              </a>
+            </div>
+          )}
+
           <div className="affbuyer-search">
             <Search size={15} />
             <input
               type="text"
               placeholder="Buscar producto por nombre..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={productsSearch}
+              onChange={(e) => setProductsSearch(e.target.value)}
             />
           </div>
 
-          {offersError && <p className="affbuyer-error">{offersError}</p>}
+          {productsError && <p className="affbuyer-error">{productsError}</p>}
 
-          {offersLoading ? (
-            <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando ofertas...</div>
-          ) : offers.length === 0 ? (
-            <p className="affbuyer-empty">No encontramos ofertas disponibles.</p>
+          {productsLoading ? (
+            <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando productos...</div>
+          ) : storeProducts.length === 0 ? (
+            <p className="affbuyer-empty">Esta tienda no tiene productos en oferta.</p>
           ) : (
             <div className="affbuyer-offer-list">
-              {offers.map((offer) => (
+              {storeProducts.map((offer) => (
                 <div key={offer.offerId} className="affbuyer-offer-row">
                   <div className="affbuyer-offer-info">
                     {offer.product.image ? (
@@ -569,8 +820,10 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                       <div className="affbuyer-offer-thumb affbuyer-offer-thumb-empty" />
                     )}
                     <div>
-                      <p className="affbuyer-offer-name">{offer.product.name}</p>
-                      <p className="affbuyer-offer-seller">{offer.seller?.businessName ?? "Vendedor"}</p>
+                      <p className="affbuyer-offer-name">
+                        {offer.product.name}
+                        {offer.applicationStatus === null && <span className="affbuyer-new-badge">Nuevo</span>}
+                      </p>
                       <p className="affbuyer-offer-commission">Comisión: {offer.commissionPercentage}%</p>
                     </div>
                   </div>
@@ -578,114 +831,114 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                     <button
                       type="button"
                       className="affbuyer-apply-btn"
-                      disabled={applyingId === offer.offerId}
+                      disabled={applyingOfferId === offer.offerId}
                       onClick={() => void handleApply(offer.offerId)}
                     >
-                      {applyingId === offer.offerId ? <Loader2 size={14} className="affbuyer-spin" /> : <Send size={14} />}
+                      {applyingOfferId === offer.offerId ? <Loader2 size={14} className="affbuyer-spin" /> : <Send size={14} />}
                       Aplicar
                     </button>
                   ) : (
-                    <span className={`affbuyer-status-badge affbuyer-status-${offer.applicationStatus}`}>
-                      {offer.applicationStatus === "pending" && "Solicitud enviada"}
-                      {offer.applicationStatus === "accepted" && "Ya sos afiliado"}
-                      {offer.applicationStatus === "rejected" && "Rechazada"}
-                      {offer.applicationStatus === "blocked" && "Bloqueado"}
-                    </span>
+                    <StatusBadge status={offer.applicationStatus} />
                   )}
                 </div>
               ))}
             </div>
           )}
 
-          <Pagination meta={offersMeta} onChange={(page) => void loadOffers(page, search)} />
+          <Pagination meta={productsMeta} onChange={(page) => void loadStoreProducts(selectedSellerId, page, productsSearch)} />
         </div>
       )}
 
+      {/* ---------- MIS SOLICITUDES / MIS OFERTAS (agrupadas por tienda) ---------- */}
       {(tab === "solicitudes" || tab === "mis-ofertas") && (
         <div className="affbuyer-panel">
-          {applicationsError && <p className="affbuyer-error">{applicationsError}</p>}
+          {appsError && <p className="affbuyer-error">{appsError}</p>}
 
-          {applicationsLoading ? (
+          {appsLoading ? (
             <div className="affbuyer-loading"><Loader2 size={18} className="affbuyer-spin" /> Cargando...</div>
-          ) : applications.length === 0 ? (
+          ) : storeApps.length === 0 ? (
             <p className="affbuyer-empty">
-              {tab === "solicitudes" ? "No tenés solicitudes pendientes." : "Todavía no tenés ofertas aceptadas."}
+              {tab === "solicitudes" ? "No tenés solicitudes pendientes." : "Todavía no tenés tiendas con ofertas aceptadas."}
             </p>
           ) : (
             <div className="affbuyer-carnet-grid">
-              {applications.map((application) =>
-                application.seller ? (
+              {storeApps.map((group) =>
+                group.seller ? (
                   <SellerCarnet
-                    key={application.applicationId}
-                    seller={application.seller}
+                    key={group.sellerId}
+                    seller={group.seller}
                     buyerName={buyerName}
                     footer={
                       <div className="affbuyer-application-footer">
-                        <div className="affbuyer-application-meta">
-                          <p><span>Producto</span> {application.product?.name ?? "-"}</p>
-                          <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
-                          {tab === "mis-ofertas" && (
-                            <>
-                              <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
-                              <p><span>Ventas registradas</span> {application.salesCount}</p>
-                              <div className="affbuyer-amount-box">
-                                <p className="affbuyer-amount-line">
-                                  <span>Monto total vendido</span>
-                                  <strong className="affbuyer-amount-value">{formatMoney(application.totalSalesAmount)}</strong>
-                                </p>
-                                <p className="affbuyer-amount-line">
-                                  <span>Tu comisión ganada</span>
-                                  <strong className="affbuyer-amount-value affbuyer-amount-positive">
-                                    {formatMoney(application.totalEarnedCommission)}
-                                  </strong>
-                                </p>
-                                {application.totalPendingCommission > 0 && (
-                                  <p className="affbuyer-amount-line">
-                                    <span>Pendiente de cobro</span>
-                                    <strong className="affbuyer-amount-value affbuyer-amount-pending">
-                                      {formatMoney(application.totalPendingCommission)}
-                                    </strong>
-                                  </p>
-                                )}
-                              </div>
-                              {application.rating !== null && (
-                                <div className="affbuyer-rating">
-                                  {[1, 2, 3, 4, 5].map((value) => (
-                                    <Star
-                                      key={value}
-                                      size={14}
-                                      className={
-                                        application.rating !== null && application.rating >= value
-                                          ? "affbuyer-star-filled"
-                                          : "affbuyer-star"
-                                      }
-                                    />
-                                  ))}
-                                </div>
-                              )}
-                            </>
-                          )}
-                          <p className={`affbuyer-status-badge affbuyer-status-${application.status}`}>
-                            {application.status === "pending" && "Pendiente"}
-                            {application.status === "accepted" && "Aceptado"}
-                            {application.status === "rejected" && "Rechazado"}
-                            {application.status === "blocked" && "Bloqueado"}
-                          </p>
-                        </div>
-
-                        {application.affiliateLink && (
-                          <button
-                            type="button"
-                            className="affbuyer-copy-link-btn"
-                            onClick={() => void handleCopyLink(application.applicationId, application.affiliateLink as string)}
-                          >
-                            {copiedId === application.applicationId ? (
-                              <><Check size={14} /> Copiado</>
-                            ) : (
-                              <><Copy size={14} /> Copiar link de afiliado</>
+                        {tab === "mis-ofertas" && (
+                          <div className="affbuyer-amount-box">
+                            <p className="affbuyer-amount-line">
+                              <span>Monto total vendido</span>
+                              <strong className="affbuyer-amount-value">{formatMoney(group.totalSalesAmount)}</strong>
+                            </p>
+                            <p className="affbuyer-amount-line">
+                              <span>Tu comisión ganada</span>
+                              <strong className="affbuyer-amount-value affbuyer-amount-positive">
+                                {formatMoney(group.totalEarnedCommission)}
+                              </strong>
+                            </p>
+                            {group.totalPendingCommission > 0 && (
+                              <p className="affbuyer-amount-line">
+                                <span>Pendiente de cobro</span>
+                                <strong className="affbuyer-amount-value affbuyer-amount-pending">
+                                  {formatMoney(group.totalPendingCommission)}
+                                </strong>
+                              </p>
                             )}
-                          </button>
+                          </div>
                         )}
+
+                        <div className="affbuyer-store-app-list">
+                          {group.applications.map((application) => (
+                            <div key={application.applicationId} className="affbuyer-store-app-item">
+                              <div className="affbuyer-application-meta">
+                                <p><span>Producto</span> {application.product?.name ?? "-"}</p>
+                                <p><span>Comisión</span> {application.commissionPercentage ?? "-"}%</p>
+                                {tab === "mis-ofertas" && (
+                                  <>
+                                    <p><span>Afiliado desde</span> {formatDate(application.decidedAt)}</p>
+                                    <p><span>Ventas registradas</span> {application.salesCount}</p>
+                                    {application.rating !== null && (
+                                      <div className="affbuyer-rating">
+                                        {[1, 2, 3, 4, 5].map((value) => (
+                                          <Star
+                                            key={value}
+                                            size={14}
+                                            className={
+                                              application.rating !== null && application.rating >= value
+                                                ? "affbuyer-star-filled"
+                                                : "affbuyer-star"
+                                            }
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                                <StatusBadge status={application.status} />
+                              </div>
+
+                              {application.affiliateLink && (
+                                <button
+                                  type="button"
+                                  className="affbuyer-copy-link-btn"
+                                  onClick={() => void handleCopyLink(application.applicationId, application.affiliateLink as string)}
+                                >
+                                  {copiedId === application.applicationId ? (
+                                    <><Check size={14} /> Copiado</>
+                                  ) : (
+                                    <><Copy size={14} /> Copiar link</>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     }
                   />
@@ -694,10 +947,11 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
             </div>
           )}
 
-          <Pagination meta={applicationsMeta} onChange={(page) => void loadApplications(page, statusForTab)} />
+          <Pagination meta={appsMeta} onChange={(page) => void loadApplications(page, statusForTab)} />
         </div>
       )}
 
+      {/* ---------- GANANCIAS (agrupadas por tienda) ---------- */}
       {tab === "ganancias" && (
         <div className="affbuyer-panel">
           {earningsError && <p className="affbuyer-error">{earningsError}</p>}
@@ -721,91 +975,108 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                 </div>
               </div>
 
-              {earnings.pendingSales.length === 0 ? (
-                <p className="affbuyer-empty">No tenés cobros pendientes.</p>
+              {earnings.stores.length === 0 ? (
+                <p className="affbuyer-empty">Todavía no tenés ventas registradas.</p>
               ) : (
-                <div className="affbuyer-sales-list">
-                  {earnings.pendingSales.map((sale) => (
-                    <div
-                      key={sale.saleId}
-                      className={`affbuyer-sale-row ${sale.daysRemaining <= 5 ? "affbuyer-sale-row-urgent" : ""} ${
-                        sale.paymentDisputed ? "affbuyer-sale-row-disputed" : ""
-                      }`}
-                    >
-                      <div>
-                        <p className="affbuyer-sale-product">{sale.productName}</p>
-                        <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · {formatDate(sale.date)}</p>
-                        {sale.paymentDisputed && (
-                          <p className="affbuyer-dispute-note">Ya avisaste que no cobraste este pago.</p>
+                <div className="affbuyer-store-earnings-list">
+                  {earnings.stores.map((group) =>
+                    group.seller ? (
+                      <div key={group.sellerId} className="affbuyer-store-earnings-block">
+                        <div className="affbuyer-store-earnings-header">
+                          <div className="affbuyer-carnet-header">
+                            <div className="affbuyer-carnet-avatar">{group.seller.businessName?.[0]?.toUpperCase() ?? "?"}</div>
+                            <div>
+                              <p className="affbuyer-carnet-name">{group.seller.businessName}</p>
+                              <p className="affbuyer-carnet-contact">{group.seller.contactName}</p>
+                            </div>
+                          </div>
+                          <div className="affbuyer-store-earnings-totals">
+                            <span>Pendiente: <strong>{formatMoney(group.totalPending)}</strong></span>
+                            <span>Cobrado: <strong>{formatMoney(group.totalCollected)}</strong></span>
+                          </div>
+                        </div>
+
+                        {group.pendingSales.length > 0 && (
+                          <div className="affbuyer-sales-list">
+                            {group.pendingSales.map((sale) => (
+                              <div
+                                key={sale.saleId}
+                                className={`affbuyer-sale-row ${sale.daysRemaining <= 5 ? "affbuyer-sale-row-urgent" : ""} ${
+                                  sale.paymentDisputed ? "affbuyer-sale-row-disputed" : ""
+                                }`}
+                              >
+                                <div>
+                                  <p className="affbuyer-sale-product">{sale.productName}</p>
+                                  <p className="affbuyer-sale-seller">{formatDate(sale.date)}</p>
+                                  {sale.paymentDisputed && (
+                                    <p className="affbuyer-dispute-note">Ya avisaste que no cobraste este pago.</p>
+                                  )}
+                                </div>
+                                <div className="affbuyer-sale-amounts">
+                                  <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                                  <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
+                                </div>
+                                <div className="affbuyer-sale-due">
+                                  <span className={`affbuyer-due-badge ${sale.daysRemaining <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
+                                    {daysLabel(sale.daysRemaining)}
+                                  </span>
+                                  <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {group.paidSales.length > 0 && (
+                          <details className="affbuyer-history-section">
+                            <summary className="affbuyer-history-title">
+                              <History size={16} /> Cobros recibidos ({group.paidSales.length})
+                            </summary>
+                            <div className="affbuyer-sales-list">
+                              {group.paidSales.map((sale) => (
+                                <div key={sale.saleId} className="affbuyer-sale-row affbuyer-sale-row-paid">
+                                  <div>
+                                    <p className="affbuyer-sale-product">{sale.productName}</p>
+                                    <p className="affbuyer-sale-seller">Vendido: {formatDate(sale.date)}</p>
+                                  </div>
+                                  <div className="affbuyer-sale-amounts">
+                                    <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                                    <p className="affbuyer-sale-commission">Cobrado: {formatMoney(sale.commissionAmount)}</p>
+                                  </div>
+                                  <div className="affbuyer-sale-due">
+                                    <span className="affbuyer-due-badge affbuyer-due-badge-paid">Pagado</span>
+                                    <span className="affbuyer-due-date">El {formatDate(sale.paidAt)}</span>
+                                  </div>
+                                  <div className="affbuyer-paid-actions">
+                                    {sale.proofUrl && (
+                                      <a href={sale.proofUrl} target="_blank" rel="noopener noreferrer" className="affbuyer-proof-link">
+                                        <FileText size={14} /> Ver comprobante
+                                      </a>
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="affbuyer-reject-payment-btn"
+                                      disabled={rejectingId === sale.saleId}
+                                      onClick={() => void handleRejectPayment(sale.saleId)}
+                                    >
+                                      {rejectingId === sale.saleId ? (
+                                        <Loader2 size={14} className="affbuyer-spin" />
+                                      ) : (
+                                        <XOctagon size={14} />
+                                      )}
+                                      No recibí este pago
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
                         )}
                       </div>
-                      <div className="affbuyer-sale-amounts">
-                        <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
-                        <p className="affbuyer-sale-commission">A cobrar: {formatMoney(sale.commissionAmount)}</p>
-                      </div>
-                      <div className="affbuyer-sale-due">
-                        <span className={`affbuyer-due-badge ${sale.daysRemaining <= 5 ? "affbuyer-due-badge-urgent" : ""}`}>
-                          {daysLabel(sale.daysRemaining)}
-                        </span>
-                        <span className="affbuyer-due-date">Vence: {formatDate(sale.dueDate)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ) : null
+                  )}
                 </div>
               )}
-
-              <div className="affbuyer-history-section">
-                <p className="affbuyer-history-title">
-                  <History size={16} /> Cobros recibidos
-                </p>
-                {earnings.paidSales.length === 0 ? (
-                  <p className="affbuyer-empty">Todavía no cobraste ninguna comisión.</p>
-                ) : (
-                  <div className="affbuyer-sales-list">
-                    {earnings.paidSales.map((sale) => (
-                      <div key={sale.saleId} className="affbuyer-sale-row affbuyer-sale-row-paid">
-                        <div>
-                          <p className="affbuyer-sale-product">{sale.productName}</p>
-                          <p className="affbuyer-sale-seller">{sale.seller?.businessName ?? "Vendedor"} · Vendido: {formatDate(sale.date)}</p>
-                        </div>
-                        <div className="affbuyer-sale-amounts">
-                          <p className="affbuyer-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
-                          <p className="affbuyer-sale-commission">Cobrado: {formatMoney(sale.commissionAmount)}</p>
-                        </div>
-                        <div className="affbuyer-sale-due">
-                          <span className="affbuyer-due-badge affbuyer-due-badge-paid">Pagado</span>
-                          <span className="affbuyer-due-date">El {formatDate(sale.paidAt)}</span>
-                        </div>
-                        <div className="affbuyer-paid-actions">
-                          {sale.proofUrl && (
-                            <a
-                              href={sale.proofUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="affbuyer-proof-link"
-                            >
-                              <FileText size={14} /> Ver comprobante
-                            </a>
-                          )}
-                          <button
-                            type="button"
-                            className="affbuyer-reject-payment-btn"
-                            disabled={rejectingId === sale.saleId}
-                            onClick={() => void handleRejectPayment(sale.saleId)}
-                          >
-                            {rejectingId === sale.saleId ? (
-                              <Loader2 size={14} className="affbuyer-spin" />
-                            ) : (
-                              <XOctagon size={14} />
-                            )}
-                            No recibí este pago
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </>
           ) : null}
         </div>
