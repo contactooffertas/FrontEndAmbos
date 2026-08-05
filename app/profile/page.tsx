@@ -26,6 +26,9 @@ const SECURITY_SEEN_KEY = "profile_security_seen_v1";
 // El usuario tiene que moverse al menos esto antes de refrescar.
 const NEARBY_FETCH_THRESHOLD_METERS = 100;
 
+// ── NUEVO: cada cuánto se consulta el badge del programa de afiliados ────────
+const AFFILIATE_BADGE_INTERVAL_MS = 30_000;
+
 const RADIUS_OPTIONS = [
   { label: "3 km",          value: 3000  },
   { label: "5 km",          value: 5000  },
@@ -314,6 +317,7 @@ export default function ProfilePage() {
   const [bannerOpen,          setBannerOpen]          = useState(false);
   const [glowActive,          setGlowActive]          = useState(false);
   const [annsLoaded,          setAnnsLoaded]          = useState(false);
+  const [affiliateBadge,      setAffiliateBadge]      = useState(0); // ── NUEVO
 
   useEffect(() => { if (!loading && !user) router.push("/login"); }, [user, loading, router]);
   useEffect(() => { if (user) { setProfileName(user.name); setProfileEmail(user.email); } }, [user?.id]);
@@ -435,6 +439,30 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => { if (user) loadConvs(); }, [user?.id, loadConvs]);
+
+  // ── NUEVO: badge del Programa de Afiliados (solicitudes/pagos urgentes).
+  //    Pega a /affiliates/seller/notifications-badge o /affiliates/buyer/...
+  //    según el rol, cada 30s. Nunca rompe la pantalla: si falla, se queda en 0.
+  const loadAffiliateBadge = useCallback(async () => {
+    const token = getToken(); if (!token || !user) return;
+    const u = user as any;
+    const path = u.role === "seller" ? "seller" : "buyer";
+    try {
+      const res = await fetch(`${API}/affiliates/${path}/notifications-badge`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setAffiliateBadge(data.count || 0);
+    } catch {}
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadAffiliateBadge();
+    const interval = setInterval(loadAffiliateBadge, AFFILIATE_BADGE_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [user?.id, loadAffiliateBadge]);
 
   useEffect(() => {
     const token = getToken(); if (!token || !user) return;
@@ -670,7 +698,17 @@ export default function ProfilePage() {
              textDecoration: "none",
              boxShadow: "0 6px 18px rgba(249,115,22,.35)",
              transition: "0.25s",}}>
-              <Handshake size={18} color="#f59e0b" /> Programa de Afiliados</Link>
+              <Handshake size={18} color="#f59e0b" /> Programa de Afiliados
+              {/* ── NUEVO: badge de solicitudes/pagos pendientes del programa de afiliados */}
+              {affiliateBadge > 0 && (
+                <span style={{
+                  background:"#ef4444", color:"#fff", borderRadius:999,
+                  fontSize:"0.72rem", fontWeight:800, padding:"1px 7px", lineHeight:1.6,
+                }}>
+                  {affiliateBadge > 99 ? "99+" : affiliateBadge}
+                </span>
+              )}
+              </Link>
             </div>
           </div>
           <div className="profile-stats">
