@@ -91,7 +91,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="footer-bottom-inner">
           <p>
-            © {new Date().getFullYear()} Mercado Rosario. Todos los derechos
+            © {new Date().getFullYear()} Rosario Market. Todos los derechos
             reservados.
           </p>
           <div className="footer-bottom-links">
