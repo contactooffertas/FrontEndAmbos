@@ -37,12 +37,12 @@ interface Props {
   onAccept?: () => void;
 }
 
-// ── Contenido real de Mercadorosario.com.ar ──────────────────────────────────────────
+// ── Contenido real de rosariomarket.com.ar ──────────────────────────────────────────
 const defaultSecciones: Seccion[] = [
   {
     titulo: "Bienvenida",
     contenido:
-      "¡Bienvenido a la comunidad de Mercadorosario.com.ar! Para que todos estemos seguros y las cosas fluyan bien, acá te explicamos clarito cómo funcionamos. Leé con calma, porque al usarnos aceptás todo esto.",
+      "¡Bienvenido a la comunidad de rosariomarket.com.ar! Para que todos estemos seguros y las cosas fluyan bien, acá te explicamos clarito cómo funcionamos. Leé con calma, porque al usarnos aceptás todo esto.",
   },
   {
     titulo: "¿Qué somos?",
@@ -52,7 +52,7 @@ const defaultSecciones: Seccion[] = [
   {
     titulo: "El trato es 100% entre vos y el otro",
     contenido:
-      "La compra, el pago, la entrega y cualquier arreglo se hace directo entre vendedor y comprador (por chat de la web, WhatsApp o como quieran). Mercadorosario.com.ar NO toca un peso de las ventas, NO verifica productos, NO se hace responsable por el estado, calidad, origen o entrega de lo que se vende. Si algo sale mal (daños, retrasos, mentiras), es problema tuyo y del otro. Nosotros no intervenimos ni respondemos por eso. Usá tu criterio y protegéte siempre.",
+      "La compra, el pago, la entrega y cualquier arreglo se hace directo entre vendedor y comprador (por chat de la web, WhatsApp o como quieran). rosariomarket.com.ar NO toca un peso de las ventas, NO verifica productos, NO se hace responsable por el estado, calidad, origen o entrega de lo que se vende. Si algo sale mal (daños, retrasos, mentiras), es problema tuyo y del otro. Nosotros no intervenimos ni respondemos por eso. Usá tu criterio y protegéte siempre.",
   },
   {
     titulo: "Pagos y comisiones",
@@ -77,22 +77,22 @@ const defaultSecciones: Seccion[] = [
   {
     titulo: "Limitación de responsabilidad — Responsabilidad máxima: $0",
     contenido:
-      "Mercadorosario.com.ar es exclusivamente un intermediario tecnológico que facilita el contacto entre usuarios. En ningún caso Mercadorosario.com.ar, sus fundadores, empleados, representantes o socios serán responsables por daños directos, indirectos, incidentales, especiales, consecuentes o punitivos de ningún tipo — incluyendo pero no limitado a: pérdida de dinero, bienes, datos, ganancias esperadas, daño moral o cualquier otro perjuicio — que surjan del uso o imposibilidad de uso de la plataforma, o de transacciones entre usuarios. La responsabilidad máxima de Mercadorosario.com.ar frente a cualquier usuario, en cualquier circunstancia y por cualquier concepto, es de CERO PESOS ($0 ARS). Esta limitación aplica incluso si Mercadorosario.com.ar fue advertido de la posibilidad de dichos daños.",
+      "rosariomarket.com.ar es exclusivamente un intermediario tecnológico que facilita el contacto entre usuarios. En ningún caso rosariomarket.com.ar, sus fundadores, empleados, representantes o socios serán responsables por daños directos, indirectos, incidentales, especiales, consecuentes o punitivos de ningún tipo — incluyendo pero no limitado a: pérdida de dinero, bienes, datos, ganancias esperadas, daño moral o cualquier otro perjuicio — que surjan del uso o imposibilidad de uso de la plataforma, o de transacciones entre usuarios. La responsabilidad máxima de rosariomarket.com.ar frente a cualquier usuario, en cualquier circunstancia y por cualquier concepto, es de CERO PESOS ($0 ARS). Esta limitación aplica incluso si rosariomarket.com.ar fue advertido de la posibilidad de dichos daños.",
   },
   {
     titulo: "Operaciones fuera de la plataforma — Responsabilidad nula",
     contenido:
-      "Mercadorosario.com.ar no tiene ningún tipo de responsabilidad civil, comercial ni penal sobre transacciones, pagos, acuerdos, entregas o cualquier tipo de operación que se realice fuera de los canales oficiales de la plataforma (por ejemplo: pagos por transferencia bancaria, Mercado Pago, efectivo, WhatsApp u otras aplicaciones externas). Si un usuario acuerda o paga fuera de Mercadorosario.com.ar y sufre un perjuicio, la responsabilidad recae exclusiva y totalmente sobre las partes involucradas en dicha operación. El hecho de que el contacto inicial haya ocurrido dentro de la plataforma no genera ninguna responsabilidad sobre Mercadorosario.com.ar respecto del resultado de esa transacción.",
+      "rosariomarket.com.ar no tiene ningún tipo de responsabilidad civil, comercial ni penal sobre transacciones, pagos, acuerdos, entregas o cualquier tipo de operación que se realice fuera de los canales oficiales de la plataforma (por ejemplo: pagos por transferencia bancaria, Mercado Pago, efectivo, WhatsApp u otras aplicaciones externas). Si un usuario acuerda o paga fuera de rosariomarket.com.ar y sufre un perjuicio, la responsabilidad recae exclusiva y totalmente sobre las partes involucradas en dicha operación. El hecho de que el contacto inicial haya ocurrido dentro de la plataforma no genera ninguna responsabilidad sobre rosariomarket.com.ar respecto del resultado de esa transacción.",
   },
   {
     titulo: "Responsabilidad exclusiva del usuario por sus actos",
     contenido:
-      "Cada usuario es el único y exclusivo responsable de todo lo que publica, ofrece, vende, compra, acuerda o comunica dentro y fuera de la plataforma. Mercadorosario.com.ar no verifica la identidad, solvencia, honestidad ni legalidad de los usuarios ni de los productos y servicios publicados. Al aceptar estos términos, el usuario reconoce que actúa bajo su propio riesgo y libera a Mercadorosario.com.ar de toda responsabilidad derivada de sus acciones o de las acciones de terceros.",
+      "Cada usuario es el único y exclusivo responsable de todo lo que publica, ofrece, vende, compra, acuerda o comunica dentro y fuera de la plataforma. rosariomarket.com.ar no verifica la identidad, solvencia, honestidad ni legalidad de los usuarios ni de los productos y servicios publicados. Al aceptar estos términos, el usuario reconoce que actúa bajo su propio riesgo y libera a rosariomarket.com.ar de toda responsabilidad derivada de sus acciones o de las acciones de terceros.",
   },
   {
     titulo: "Indemnidad — El usuario nos deja a salvo",
     contenido:
-      "Al usar Mercadorosario.com.ar, el usuario acepta indemnizar, defender y mantener indemne a Mercadorosario.com.ar y a sus representantes frente a cualquier reclamo, demanda, pérdida, gasto (incluyendo honorarios legales) o daño que surja de: (a) su uso de la plataforma; (b) su incumplimiento de estos términos; (c) cualquier operación o conducta suya dentro o fuera de la plataforma; (d) cualquier infracción a derechos de terceros. Esto significa que si alguien nos demanda por algo que vos hiciste, vos asumís los costos.",
+      "Al usar rosariomarket.com.ar, el usuario acepta indemnizar, defender y mantener indemne a rosariomarket.com.ar y a sus representantes frente a cualquier reclamo, demanda, pérdida, gasto (incluyendo honorarios legales) o daño que surja de: (a) su uso de la plataforma; (b) su incumplimiento de estos términos; (c) cualquier operación o conducta suya dentro o fuera de la plataforma; (d) cualquier infracción a derechos de terceros. Esto significa que si alguien nos demanda por algo que vos hiciste, vos asumís los costos.",
   },
   {
     titulo: "Aceptación expresa de estos términos como condición de uso",
@@ -102,7 +102,7 @@ const defaultSecciones: Seccion[] = [
   {
     titulo: "Actualizaciones flexibles",
     contenido:
-      "Para que la plataforma siga mejorando, podemos actualizar estos términos cuando sea necesario. Te avisaremos por mail o en la web para que estés al tanto. Si seguís usando Mercadorosario.com.ar después de los cambios, significa que los aceptás.",
+      "Para que la plataforma siga mejorando, podemos actualizar estos términos cuando sea necesario. Te avisaremos por mail o en la web para que estés al tanto. Si seguís usando rosariomarket.com.ar después de los cambios, significa que los aceptás.",
   },
 ];
 
@@ -131,7 +131,7 @@ export default function Terminos({ onAccept }: Props) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/terminos");
+        const res = await fetch("https://new-backend-lovat.vercel.app/api/terminos");
         if (res.ok) {
           const json: TerminosData = await res.json();
           setDatos(json);
@@ -159,8 +159,8 @@ export default function Terminos({ onAccept }: Props) {
       const token  = localStorage.getItem("marketplace_token");
       const method = datos._id ? "PUT" : "POST";
       const url    = datos._id
-        ? `http://localhost:5000/api/terminos/${datos._id}`
-        : "http://localhost:5000/api/terminos";
+        ? `https://new-backend-lovat.vercel.app/api/terminos/${datos._id}`
+        : "https://new-backend-lovat.vercel.app/api/terminos";
 
       const res = await fetch(url, {
         method,
@@ -306,7 +306,7 @@ export default function Terminos({ onAccept }: Props) {
         <div className="tyc-intro">
           <p>
             Leé nuestros términos antes de usar la plataforma. Al registrarte o
-            continuar usando <strong>Mercadorosario.com.ar</strong>, aceptás todo lo
+            continuar usando <strong>rosariomarket.com.ar</strong>, aceptás todo lo
             que figura acá abajo.
           </p>
         </div>
@@ -384,7 +384,7 @@ export default function Terminos({ onAccept }: Props) {
               </span>
               <span className="tyc-checkbox-text">
                 Leí y acepto los <strong>Términos y Condiciones</strong> de
-                Mercadorosario.com.ar. Entiendo que la plataforma no intermedia
+                rosariomarket.com.ar. Entiendo que la plataforma no intermedia
                 transacciones, que no es responsable por operaciones realizadas
                 fuera de la misma, y que su responsabilidad máxima frente a
                 cualquier reclamo es de <strong>$0 (cero pesos)</strong>.
