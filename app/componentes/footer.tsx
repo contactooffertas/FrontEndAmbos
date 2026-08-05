@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="footer-top">
         <div className="footer-brand">
           <div className="footer-logo">
-            <Link href="/" className="footer-logo-link" aria-label="MercadoRosario — Ir al inicio">
+            <Link href="/" className="footer-logo-link" aria-label="RosarioMarket — Ir al inicio">
               {/* Isotipo — antes era el círculo "MR", ahora es la imagen
                   navbarbolsa.png dentro de un círculo blanco con borde
                   naranja, mismo criterio que el navbar */}
@@ -18,8 +18,8 @@ export default function Footer() {
               {/* Wordmark en dos líneas: "Mercado" (blanco, fondo oscuro del
                   footer) + "Rosario" (color primario) */}
               <span className="footer-logo-wordmark">
-                <span className="footer-logo-word-main">Mercado</span>
-                <span className="footer-logo-word-accent">Rosario</span>
+                <span className="footer-logo-word-main">Rosario</span>
+                <span className="footer-logo-word-accent">Market</span>
               </span>
             </Link>
           </div>
