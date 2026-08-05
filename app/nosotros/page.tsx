@@ -164,7 +164,7 @@ export default function Nosotros() {
 
         <p className="nosotros-community-closing">
           Apoyamos la economía real: sin complicaciones, sin intermediarios innecesarios.{' '}
-          <strong>¡Ofertas.com.ar: donde el trato directo hace la diferencia!</strong>
+          <strong>¡rosariomarket.com.ar: donde el trato directo hace la diferencia!</strong>
         </p>
       </section>
 
