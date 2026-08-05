@@ -680,7 +680,13 @@ function HomeContent() {
   const [notifBannerDismissed, setNotifBannerDismissed] = useState<boolean>(() => { if (typeof window === "undefined") return false; return localStorage.getItem("notif_banner_dismissed") === "true"; });
   const dismissGeoBanner = () => { localStorage.setItem("geo_banner_dismissed", "true"); setGeoBannerDismissed(true); };
   const dismissNotifBanner = () => { localStorage.setItem("notif_banner_dismissed", "true"); setNotifBannerDismissed(true); };
-  const notifAlreadyGranted = typeof window!== "undefined" && Notification.permission === "granted";
+  // FIX: en iOS Safari (y navegadores in-app como el de WhatsApp) el objeto global
+  // "Notification" directamente no existe. Acceder a Notification.permission sin
+  // chequear antes tira un ReferenceError que rompe toda la app ("client-side exception").
+  const notifAlreadyGranted =
+    typeof window !== "undefined" &&
+    typeof Notification !== "undefined" &&
+    Notification.permission === "granted";
   const currentUserId = (user as any)?._id || (user as any)?.id;
   const userLat = (user as any)?.lat;
   const userLng = (user as any)?.lng;
@@ -748,6 +754,14 @@ function HomeContent() {
 
   const handleRequestNotifications = async () => {
     const Swal = (await import("sweetalert2")).default;
+    // FIX: mismo caso que arriba - antes de ofrecer la acción, si el navegador
+    // no soporta Notification (iOS Safari, in-app browsers) avisamos en vez de
+    // dejar que explote al llamar enableNotifications().
+    if (typeof Notification === "undefined") {
+      Swal.fire({ icon: "info", title: "No disponible", text: "Tu navegador no soporta notificaciones push." });
+      dismissNotifBanner();
+      return;
+    }
     const r = await Swal.fire({ title: "Activar notificaciones", icon: "info", showCancelButton: true, html: "Recibí alertas de <b>ofertas exclusivas</b> de tus negocios favoritos.", confirmButtonText: "Activar", cancelButtonText: "Ahora no", confirmButtonColor: "var(--primary)" });
     if (r.isConfirmed) {
       const ok = await enableNotifications();
