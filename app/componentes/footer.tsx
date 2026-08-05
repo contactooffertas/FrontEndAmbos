@@ -9,14 +9,9 @@ export default function Footer() {
         <div className="footer-brand">
           <div className="footer-logo">
             <Link href="/" className="footer-logo-link" aria-label="RosarioMarket — Ir al inicio">
-              {/* Isotipo — antes era el círculo "MR", ahora es la imagen
-                  navbarbolsa.png dentro de un círculo blanco con borde
-                  naranja, mismo criterio que el navbar */}
               <span className="footer-logo-badge">
                 <img src="/assets/navbarbolsa.png" alt="" className="footer-logo-badge-img" />
               </span>
-              {/* Wordmark en dos líneas: "Mercado" (blanco, fondo oscuro del
-                  footer) + "Rosario" (color primario) */}
               <span className="footer-logo-wordmark">
                 <span className="footer-logo-word-main">Rosario</span>
                 <span className="footer-logo-word-accent">Market</span>
@@ -82,7 +77,7 @@ export default function Footer() {
               <Link href="/nosotros">Acerca de nosotros</Link>
             </li>
             <li>
-              <Link href="/login">Vender en Mercado Rosario</Link>
+              <Link href="/login">Vender en Rosario Market</Link>
             </li>
            
           </ul>
