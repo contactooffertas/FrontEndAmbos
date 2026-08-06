@@ -277,7 +277,6 @@ function BuyerCarnet({
           </p>
         )}
       </div>
-      
        <a href={buildWhatsAppLink(buyer.phone, businessName)}
         target="_blank"
         rel="noopener noreferrer"
