@@ -11,8 +11,17 @@ import {
   Wallet, Pencil, X, Save, FileText, XOctagon, History, Store, Sparkles,
   Users, ArrowLeft, Percent, Download, Boxes,
 } from "lucide-react";
-import { useExpiringBadge } from "../hooks/useExpiringBadge";
 import "../styles/afiliados-comprador.css";
+import { useAuth } from "../context/authContext";
+import { useAffiliateNotifications } from "../hooks/useAffiliateNotifications";
+import {
+  isSectionNew,
+  markSectionSeen,
+  noteNewStoresSignal,
+  hasUnseenNewStores,
+  markNewStoresSeen,
+  trackStoresAndGetNewMap,
+} from "../hooks/affiliateNotifications";
 
 const API = "https://new-backend-lovat.vercel.app/api/affiliates/buyer";
 function getToken(): string | null {
@@ -99,7 +108,6 @@ interface ProductBasic {
   name: string;
   image: string | null;
   price: number;
-  /** Unidades disponibles. Solo se muestra al comprador si está afiliado a ese producto puntual. */
   stock?: number;
 }
 
@@ -107,7 +115,6 @@ type ApplicationStatus = "pending" | "accepted" | "rejected" | "blocked";
 type StoreSubTab = "todas" | "nuevas" | "mis-tiendas";
 type MainTab = "tiendas" | "solicitudes" | "mis-ofertas" | "ganancias";
 
-/** Card de tienda en la vitrina (tab Tiendas) */
 interface StoreCard {
   sellerId: string;
   businessName: string;
@@ -122,7 +129,6 @@ interface StoreCard {
   joinedAt: string;
 }
 
-/** Producto dentro del detalle de una tienda */
 interface StoreProductItem {
   offerId: string;
   commissionPercentage: number;
@@ -140,7 +146,6 @@ interface StoreDetail {
   paymentTermDays: number;
 }
 
-/** Solicitud individual (dentro de un grupo de tienda) */
 interface AppItem {
   applicationId: string;
   status: ApplicationStatus;
@@ -154,16 +159,9 @@ interface AppItem {
   commissionPercentage: number | null;
   product: ProductBasic | null;
   affiliateLink: string | null;
-  /**
-   * Si la oferta del vendedor sigue activa para este producto. Si es false,
-   * el link de afiliado puede seguir funcionando, pero las ventas nuevas NO
-   * generan comisión hasta que el vendedor la reactive. Opcional para no
-   * romper nada mientras el backend todavía no lo envíe.
-   */
   offerActive?: boolean;
 }
 
-/** Grupo por tienda para "Mis Solicitudes" / "Mis Ofertas" */
 interface StoreApplicationsGroup {
   sellerId: string;
   seller: SellerCardData | null;
@@ -204,7 +202,6 @@ interface UrgentSaleItem extends PendingSaleItem {
   seller: SellerCardData | null;
 }
 
-/** Grupo por tienda para "Ganancias" */
 interface StoreEarningsGroup {
   sellerId: string;
   seller: SellerCardData | null;
@@ -238,7 +235,6 @@ interface BuyerDashboardProps {
   buyerName: string;
 }
 
-/** Desglose del badge de notificaciones para pintar contador por tab */
 interface NotificationBadge {
   count: number;
   pendingApplications: number;
@@ -253,8 +249,7 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 40;
 
-  // --- Encabezado ---
-  doc.setFillColor(17, 24, 39); // #111827
+  doc.setFillColor(17, 24, 39);
   doc.rect(0, 0, pageWidth, 96, "F");
 
   doc.setTextColor(255, 255, 255);
@@ -277,7 +272,6 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
   doc.text(`Generado el ${generatedAt}`, pageWidth - marginX, 54, { align: "right" });
   doc.text(`Plazo de pago: ${store.paymentTermDays} días`, pageWidth - marginX, 69, { align: "right" });
 
-  // --- Resumen ---
   const affiliatedCount = items.filter((i) => i.applicationStatus === "accepted").length;
   doc.setFontSize(9.5);
   doc.setTextColor(107, 114, 128);
@@ -287,7 +281,6 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
     118
   );
 
-  // --- Tabla (sin columna de comisión: es un dato interno del afiliado) ---
   const rows = items.map((item) => {
     const isAffiliated = item.applicationStatus === "accepted";
     const stockLabel = isAffiliated
@@ -299,94 +292,85 @@ function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]):
     return [item.product.name, item.product.category, stockLabel, statusLabel];
   });
 
- autoTable(doc, {
-  startY: 130,
-  head: [["Producto", "Categoría", "Stock", "Estado"]],
-  body: rows,
-  theme: "striped",
-  styles: {
-    font: "helvetica",
-    cellPadding: 8,
-    lineColor: [229, 231, 235],
-    lineWidth: 0.5,
-  },
-  headStyles: {
-    fillColor: [17, 24, 39],
-    textColor: 255,
-    fontStyle: "bold",
-    fontSize: 10,
-    halign: "left",
-  },
-  bodyStyles: {
-    fontSize: 9.5,
-    textColor: [55, 65, 81],
-  },
-  alternateRowStyles: {
-    fillColor: [249, 250, 251],
-  },
-  columnStyles: {
-    1: { halign: "left" },
-    2: { halign: "center", cellWidth: 78 }, // Stock
-    3: { halign: "center", cellWidth: 92 }, // Estado
-  },
-  margin: {
-    left: marginX,
-    right: marginX,
-  },
-  didParseCell: (data: CellHookData) => {
-    if (data.section !== "body") return;
+  autoTable(doc, {
+    startY: 130,
+    head: [["Producto", "Categoría", "Stock", "Estado"]],
+    body: rows,
+    theme: "striped",
+    styles: {
+      font: "helvetica",
+      cellPadding: 8,
+      lineColor: [229, 231, 235],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      fillColor: [17, 24, 39],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 10,
+      halign: "left",
+    },
+    bodyStyles: {
+      fontSize: 9.5,
+      textColor: [55, 65, 81],
+    },
+    alternateRowStyles: {
+      fillColor: [249, 250, 251],
+    },
+    columnStyles: {
+      1: { halign: "left" },
+      2: { halign: "center", cellWidth: 78 },
+      3: { halign: "center", cellWidth: 92 },
+    },
+    margin: {
+      left: marginX,
+      right: marginX,
+    },
+    didParseCell: (data: CellHookData) => {
+      if (data.section !== "body") return;
 
-    // Stock
-    if (data.column.index === 2) {
-      const text = String(data.cell.raw);
-      data.cell.styles.fontStyle = "bold";
-      data.cell.styles.textColor =
-        text === "Sin stock"
-          ? [185, 28, 28]
-          : [5, 150, 105];
-    }
-
-    // Estado
-    if (data.column.index === 3) {
-      const text = String(data.cell.raw);
-      data.cell.styles.fontStyle = "bold";
-
-      if (text === STATUS_LABEL.accepted) {
-        data.cell.styles.textColor = [5, 150, 105];
-      } else if (text === STATUS_LABEL.pending) {
-        data.cell.styles.textColor = [180, 83, 9];
-      } else if (text === "No afiliado") {
-        data.cell.styles.textColor = [107, 114, 128];
-      } else {
-        data.cell.styles.textColor = [185, 28, 28];
+      if (data.column.index === 2) {
+        const text = String(data.cell.raw);
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.textColor = text === "Sin stock" ? [185, 28, 28] : [5, 150, 105];
       }
-    }
-  },
-  didDrawPage: () => {
-    const pageCount = doc.getNumberOfPages();
-    const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.setFontSize(8);
-    doc.setTextColor(156, 163, 175);
+      if (data.column.index === 3) {
+        const text = String(data.cell.raw);
+        data.cell.styles.fontStyle = "bold";
 
-    doc.text(
-      `Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`,
-      pageWidth - marginX,
-      pageHeight - 22,
-      { align: "right" }
-    );
+        if (text === STATUS_LABEL.accepted) {
+          data.cell.styles.textColor = [5, 150, 105];
+        } else if (text === STATUS_LABEL.pending) {
+          data.cell.styles.textColor = [180, 83, 9];
+        } else if (text === "No afiliado") {
+          data.cell.styles.textColor = [107, 114, 128];
+        } else {
+          data.cell.styles.textColor = [185, 28, 28];
+        }
+      }
+    },
+    didDrawPage: () => {
+      const pageCount = doc.getNumberOfPages();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.text("Programa de Afiliados", marginX, pageHeight - 22);
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
 
-    doc.setDrawColor(229, 231, 235);
-    doc.line(
-      marginX,
-      pageHeight - 32,
-      pageWidth - marginX,
-      pageHeight - 32
-    );
-  },
-});
+      doc.text(
+        `Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`,
+        pageWidth - marginX,
+        pageHeight - 22,
+        { align: "right" }
+      );
+
+      doc.text("Programa de Afiliados", marginX, pageHeight - 22);
+
+      doc.setDrawColor(229, 231, 235);
+      doc.line(marginX, pageHeight - 32, pageWidth - marginX, pageHeight - 32);
+    },
+  });
+
   const fileSafeName = store.businessName
     .toLowerCase()
     .normalize("NFD")
@@ -444,6 +428,31 @@ function isApplicationUnavailable(application: AppItem): boolean {
   return false;
 }
 
+function NewPill({ show }: { show: boolean }): JSX.Element | null {
+  if (!show) return null;
+  return (
+    <span
+      className="affbuyer-new-pill"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        background: "#ef4444",
+        color: "#fff",
+        borderRadius: 999,
+        fontSize: "0.62rem",
+        fontWeight: 800,
+        padding: "1px 7px",
+        lineHeight: 1.6,
+        marginLeft: 4,
+        textTransform: "uppercase",
+        letterSpacing: "0.03em",
+      }}
+    >
+      Nuevo
+    </span>
+  );
+}
+
 function SellerCarnet({
   seller,
   buyerName,
@@ -469,8 +478,9 @@ function SellerCarnet({
         <p><span>Email</span> {seller.email}</p>
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
-      
-      <a href={buildWhatsAppLink(seller.phone, buyerName)}
+
+      <a
+        href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
         className="affbuyer-whatsapp-btn"
@@ -482,7 +492,6 @@ function SellerCarnet({
   );
 }
 
-/** Card de perfil propio del comprador, editable in-place. */
 function ProfileEditCard(): JSX.Element {
   const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [draft, setDraft] = useState<BuyerProfile | null>(null);
@@ -615,15 +624,17 @@ function ProfileEditCard(): JSX.Element {
   );
 }
 
-/** Pastilla numérica para pintar cantidad de pendientes en un tab */
-function TabCount({ value }: { value: number }): JSX.Element | null {
-  if (value <= 0) return null;
-  return <span className="affbuyer-tab-count">{value > 99 ? "99+" : value}</span>;
-}
-
 /* ============================ Vitrina de tiendas ============================ */
 
-function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId: string) => void }): JSX.Element {
+function StoreListCard({
+  store,
+  isNew,
+  onView,
+}: {
+  store: StoreCard;
+  isNew?: boolean;
+  onView: (sellerId: string) => void;
+}): JSX.Element {
   const initial = store.businessName?.[0]?.toUpperCase() ?? "?";
   const commissionLabel =
     store.commissionMin === store.commissionMax
@@ -631,7 +642,29 @@ function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId:
       : `${store.commissionMin}% - ${store.commissionMax}%`;
 
   return (
-    <div className="affbuyer-store-card">
+    <div className="affbuyer-store-card" style={{ position: "relative" }}>
+      {isNew && (
+        <span
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 3,
+            background: "#f97316",
+            color: "#fff",
+            borderRadius: 999,
+            fontSize: "0.62rem",
+            fontWeight: 800,
+            padding: "2px 8px",
+            textTransform: "uppercase",
+            letterSpacing: "0.03em",
+          }}
+        >
+          <Sparkles size={10} /> Nuevo
+        </span>
+      )}
       <div className="affbuyer-store-card-header">
         <div className="affbuyer-carnet-avatar">{initial}</div>
         <div>
@@ -665,6 +698,9 @@ function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId:
 /* ============================ Componente principal ============================ */
 
 export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.Element {
+  const { user } = useAuth();
+  const u = user as any;
+
   const [tab, setTab] = useState<MainTab>("tiendas");
 
   /* --- Badge de notificaciones (desglose por tab) --- */
@@ -674,6 +710,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     try {
       const data = await authFetch<NotificationBadge>("/notifications-badge");
       setBadge(data);
+      noteNewStoresSignal(data.newStores || 0);
     } catch {
       // silencioso: el badge no es crítico para el uso del dashboard
     }
@@ -685,7 +722,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     return () => clearInterval(interval);
   }, [loadBadge]);
 
-  /* --- Total de solicitudes aceptadas (para el badge "recién aceptada") --- */
+  /* --- Total de solicitudes aceptadas (para "Mis Ofertas") --- */
   const [acceptedTotal, setAcceptedTotal] = useState(0);
 
   const loadAcceptedTotal = useCallback(async () => {
@@ -703,13 +740,43 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     return () => clearInterval(interval);
   }, [loadAcceptedTotal]);
 
-  /* --- Badges expirables: 3 minutos y vuelven a 0, arrancando siempre desde 0. */
-  const expiringNewStores = useExpiringBadge("aff_buyer_new_stores_v1", badge.newStores);
-  const expiringAccepted = useExpiringBadge("aff_buyer_recently_accepted_v1", acceptedTotal);
+  /* --- Socket: cuando llega un evento en tiempo real, recalculamos todo
+   *     de una sin esperar los 30s de polling de arriba. --- */
+  const refreshAllBadges = useCallback(() => {
+    void loadBadge();
+    void loadAcceptedTotal();
+    setTiendasHasNew(hasUnseenNewStores());
+  }, [loadBadge, loadAcceptedTotal]);
+
+  useAffiliateNotifications({
+    userId: u?._id || u?.id,
+    role: "buyer",
+    onBadgeShouldRefresh: refreshAllBadges,
+  });
+
+  /* --- "Nuevo" por sección: comparan el conteo actual contra el último que
+   *     el usuario vio. No vencen por tiempo: al tocar la tab
+   *     correspondiente, se marca como visto y el chip desaparece hasta que
+   *     haya algo genuinamente nuevo. --- */
+  const [solicitudesHasNew, setSolicitudesHasNew] = useState(false);
+  useEffect(() => {
+    setSolicitudesHasNew(isSectionNew("pendingApplications", badge.pendingApplications));
+  }, [badge.pendingApplications]);
+
+  const [ofertasHasNew, setOfertasHasNew] = useState(false);
+  useEffect(() => {
+    setOfertasHasNew(isSectionNew("acceptedOffers", acceptedTotal));
+  }, [acceptedTotal]);
+
+  const [tiendasHasNew, setTiendasHasNew] = useState(false);
+  useEffect(() => {
+    setTiendasHasNew(hasUnseenNewStores());
+  }, [badge.newStores]);
 
   /* --- Tab: Tiendas (vitrina, 3 en 3) --- */
   const [storeSubTab, setStoreSubTab] = useState<StoreSubTab>("todas");
   const [stores, setStores] = useState<StoreCard[]>([]);
+  const [storeNewMap, setStoreNewMap] = useState<Record<string, boolean>>({});
   const [storesMeta, setStoresMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 3 });
   const [storesLoading, setStoresLoading] = useState(false);
   const [storesError, setStoresError] = useState("");
@@ -724,6 +791,12 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
       const data = await authFetch<{ items: StoreCard[] } & PaginationMeta>(`/stores?${query.toString()}`);
       setStores(data.items);
       setStoresMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
+      // ── El usuario está viendo la tab Tiendas de verdad: acá es donde se
+      //    "consume" el estado nuevo, tanto de cada tarjeta individual como
+      //    de la bandera pegajosa del perfil/tab.
+      setStoreNewMap(trackStoresAndGetNewMap(data.items));
+      markNewStoresSeen();
+      setTiendasHasNew(false);
     } catch (err) {
       setStoresError(errorMessage(err));
     } finally {
@@ -801,7 +874,6 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     }
   };
 
-  /** Descarga un PDF con el catálogo completo de la tienda (todas las páginas, no solo la visible). */
   const handleDownloadCatalog = async () => {
     if (!selectedSellerId) return;
     setGeneratingPdf(true);
@@ -859,13 +931,6 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
-  /**
-   * Lista de "Mis Ofertas" ya filtrada: los productos afiliados que el
-   * vendedor desactivó o se quedaron sin stock NO se muestran. Si una tienda
-   * se queda sin productos visibles por esto, la tienda entera se oculta.
-   * Requiere que el backend mande `offerActive` y `product.stock` en cada
-   * aplicación de /mis-ofertas; si no los manda, esto no filtra nada.
-   */
   const visibleStoreApps =
     tab === "mis-ofertas"
       ? storeApps
@@ -878,10 +943,6 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
   const hiddenByUnavailability = tab === "mis-ofertas" && storeApps.length > 0 && visibleStoreApps.length === 0;
 
-  /**
-   * Avisa una sola vez por sesión si se ocultaron productos de "Mis Ofertas"
-   * porque el vendedor los desactivó o se quedaron sin stock.
-   */
   const unavailableAlertShownRef = useRef(false);
 
   useEffect(() => {
@@ -904,7 +965,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
 
     const list = unavailable
       .slice(0, 6)
-      .map((u) => `<li><strong>${u.productName}</strong> (${u.sellerName}) — ${u.reason}</li>`)
+      .map((u2) => `<li><strong>${u2.productName}</strong> (${u2.sellerName}) — ${u2.reason}</li>`)
       .join("");
 
     void Swal.fire({
@@ -951,6 +1012,12 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
   useEffect(() => {
     void loadEarnings();
   }, [loadEarnings]);
+
+  const gananciasPendingCount = earnings ? earnings.stores.reduce((n, s) => n + s.pendingSales.length, 0) : 0;
+  const [gananciasHasNew, setGananciasHasNew] = useState(false);
+  useEffect(() => {
+    setGananciasHasNew(isSectionNew("pendingSales", gananciasPendingCount));
+  }, [gananciasPendingCount]);
 
   useEffect(() => {
     if (!earnings || alertShownRef.current) return;
@@ -1017,17 +1084,40 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
           className={`affbuyer-tab ${tab === "tiendas" ? "affbuyer-tab-active" : ""}`}
           onClick={() => { setTab("tiendas"); handleBackToStores(); }}
         >
-          <Store size={15} /> Tiendas <TabCount value={expiringNewStores} />
+          <Store size={15} /> Tiendas <NewPill show={tiendasHasNew} />
         </button>
-        <button type="button" className={`affbuyer-tab ${tab === "solicitudes" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("solicitudes")}>
-          <Clock size={15} /> Mis Solicitudes <TabCount value={badge.pendingApplications} />
+        <button
+          type="button"
+          className={`affbuyer-tab ${tab === "solicitudes" ? "affbuyer-tab-active" : ""}`}
+          onClick={() => {
+            setTab("solicitudes");
+            markSectionSeen("pendingApplications", badge.pendingApplications);
+            setSolicitudesHasNew(false);
+          }}
+        >
+          <Clock size={15} /> Mis Solicitudes <NewPill show={solicitudesHasNew} />
         </button>
-        <button type="button" className={`affbuyer-tab ${tab === "mis-ofertas" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("mis-ofertas")}>
-          <CheckCircle2 size={15} /> Mis Ofertas <TabCount value={expiringAccepted} />
+        <button
+          type="button"
+          className={`affbuyer-tab ${tab === "mis-ofertas" ? "affbuyer-tab-active" : ""}`}
+          onClick={() => {
+            setTab("mis-ofertas");
+            markSectionSeen("acceptedOffers", acceptedTotal);
+            setOfertasHasNew(false);
+          }}
+        >
+          <CheckCircle2 size={15} /> Mis Ofertas <NewPill show={ofertasHasNew} />
         </button>
-        <button type="button" className={`affbuyer-tab ${tab === "ganancias" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("ganancias")}>
-          <Wallet size={15} /> Ganancias
-          {earnings && earnings.urgentSales.length > 0 && <span className="affbuyer-tab-dot" />}
+        <button
+          type="button"
+          className={`affbuyer-tab ${tab === "ganancias" ? "affbuyer-tab-active" : ""}`}
+          onClick={() => {
+            setTab("ganancias");
+            markSectionSeen("pendingSales", gananciasPendingCount);
+            setGananciasHasNew(false);
+          }}
+        >
+          <Wallet size={15} /> Ganancias <NewPill show={gananciasHasNew} />
         </button>
       </div>
 
@@ -1083,7 +1173,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
           ) : (
             <div className="affbuyer-store-grid">
               {stores.map((store) => (
-                <StoreListCard key={store.sellerId} store={store} onView={handleViewStore} />
+                <StoreListCard key={store.sellerId} store={store} isNew={!!storeNewMap[store.sellerId]} onView={handleViewStore} />
               ))}
             </div>
           )}
@@ -1114,8 +1204,9 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                 <p><span>Teléfono</span> {storeDetail.phone}</p>
                 <p><span>Plazo de pago</span> {storeDetail.paymentTermDays} días</p>
               </div>
-              
-                <a href={buildWhatsAppLink(storeDetail.phone, buyerName)}
+
+              <a
+                href={buildWhatsAppLink(storeDetail.phone, buyerName)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="affbuyer-whatsapp-btn"
