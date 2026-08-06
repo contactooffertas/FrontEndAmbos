@@ -1,4 +1,9 @@
-/*app/styles/afiliados-comprador.css
+/* =====================================================================
+   app/styles/afiliados-comprador.css
+   Programa de Afiliados — Panel del Comprador
+   Identidad visual: navy (#1e3a5f) + azul (#4a90d9) + naranja CTA (#e8621e)
+   Tipografía: Playfair Display (headings) + DM Sans (body)
+   ===================================================================== */
 
 .affbuyer-dashboard {
   /* ---------- Paleta base (misma identidad, tonos ampliados) ---------- */
@@ -10,7 +15,7 @@
 
   --abd-blue-600: #3d7fc9;
   --abd-blue-500: #4a90d9;
-  --abd-blue-400: #7bacE3;
+  --abd-blue-400: #7bace3;
   --abd-blue-100: #e6f1fc;
   --abd-blue-050: #f4f9fe;
 
@@ -1137,10 +1142,6 @@
 .affbuyer-copy-link-btn:active {
   transform: translateY(0);
   box-shadow: 0 6px 14px rgba(232, 98, 30, 0.32);
-}
-.affbuyer-copy-link-btn:has(svg.lucide-check) {
-  background: linear-gradient(135deg, var(--abd-emerald-600), var(--abd-emerald-700));
-  box-shadow: 0 8px 18px rgba(15, 132, 98, 0.35);
 }
 
 /* =====================================================================
