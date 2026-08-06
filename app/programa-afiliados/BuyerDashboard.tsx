@@ -237,6 +237,14 @@ interface BuyerDashboardProps {
   buyerName: string;
 }
 
+/** ── NUEVO: desglose del badge de notificaciones para pintar contador por tab */
+interface NotificationBadge {
+  count: number;
+  pendingApplications: number;
+  urgentSales: number;
+  newStores: number;
+}
+
 /* ============================ Generación de PDF ============================ */
 
 /**
@@ -477,7 +485,7 @@ function SellerCarnet({
         <p><span>Email</span> {seller.email}</p>
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
-      <a
+      
         href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
@@ -623,6 +631,12 @@ function ProfileEditCard(): JSX.Element {
   );
 }
 
+/* ── NUEVO: pastilla numérica para pintar cantidad de pendientes en un tab */
+function TabCount({ value }: { value: number }): JSX.Element | null {
+  if (value <= 0) return null;
+  return <span className="affbuyer-tab-count">{value > 99 ? "99+" : value}</span>;
+}
+
 /* ============================ Vitrina de tiendas ============================ */
 
 function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId: string) => void }): JSX.Element {
@@ -668,6 +682,24 @@ function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId:
 
 export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.Element {
   const [tab, setTab] = useState<MainTab>("tiendas");
+
+  /* ── NUEVO: badge de notificaciones (desglose por tab) --- */
+  const [badge, setBadge] = useState<NotificationBadge>({ count: 0, pendingApplications: 0, urgentSales: 0, newStores: 0 });
+
+  const loadBadge = useCallback(async () => {
+    try {
+      const data = await authFetch<NotificationBadge>("/notifications-badge");
+      setBadge(data);
+    } catch {
+      // silencioso: el badge no es crítico para el uso del dashboard
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadBadge();
+    const interval = setInterval(() => void loadBadge(), 30_000);
+    return () => clearInterval(interval);
+  }, [loadBadge]);
 
   /* --- Tab: Tiendas (vitrina, 3 en 3) --- */
   const [storeSubTab, setStoreSubTab] = useState<StoreSubTab>("todas");
@@ -979,13 +1011,13 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
           className={`affbuyer-tab ${tab === "tiendas" ? "affbuyer-tab-active" : ""}`}
           onClick={() => { setTab("tiendas"); handleBackToStores(); }}
         >
-          <Store size={15} /> Tiendas
+          <Store size={15} /> Tiendas <TabCount value={badge.newStores} />
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "solicitudes" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("solicitudes")}>
-          <Clock size={15} /> Mis Solicitudes
+          <Clock size={15} /> Mis Solicitudes <TabCount value={badge.pendingApplications} />
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "mis-ofertas" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("mis-ofertas")}>
-          <CheckCircle2 size={15} /> Mis Ofertas
+          <CheckCircle2 size={15} /> Mis Ofertas <TabCount value={badge.urgentSales} />
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "ganancias" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("ganancias")}>
           <Wallet size={15} /> Ganancias
@@ -1076,7 +1108,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                 <p><span>Teléfono</span> {storeDetail.phone}</p>
                 <p><span>Plazo de pago</span> {storeDetail.paymentTermDays} días</p>
               </div>
-              <a
+              
                 href={buildWhatsAppLink(storeDetail.phone, buyerName)}
                 target="_blank"
                 rel="noopener noreferrer"
