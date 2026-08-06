@@ -469,7 +469,7 @@ function SellerCarnet({
         <p><span>Teléfono</span> {seller.phone}</p>
       </div>
       
-        href={buildWhatsAppLink(seller.phone, buyerName)}
+      <a href={buildWhatsAppLink(seller.phone, buyerName)}
         target="_blank"
         rel="noopener noreferrer"
         className="affbuyer-whatsapp-btn"
