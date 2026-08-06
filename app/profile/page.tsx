@@ -17,6 +17,9 @@ import { useAuth } from "../context/authContext";
 import { io, Socket } from "socket.io-client";
 import ReportModal from "../componentes/reportModal";
 import "../styles/profile.css";
+// ── Utilidades compartidas del Programa de Afiliados (viven en app/lib/,
+//    NO en app/hooks/ — ese es el hook useAffiliateNotifications.ts).
+import { isSectionNew, hasUnseenNewStores, noteNewStoresSignal } from "../hooks/affiliateNotifications";
 
 const API     = "https://new-backend-lovat.vercel.app/api";
 const WS_URL  = "https://renderbackendconsocket.onrender.com";
@@ -26,7 +29,7 @@ const SECURITY_SEEN_KEY = "profile_security_seen_v1";
 // El usuario tiene que moverse al menos esto antes de refrescar.
 const NEARBY_FETCH_THRESHOLD_METERS = 100;
 
-// ── NUEVO: cada cuánto se consulta el badge del programa de afiliados ────────
+// ── cada cuánto se consulta el badge del programa de afiliados ────────
 const AFFILIATE_BADGE_INTERVAL_MS = 30_000;
 
 const RADIUS_OPTIONS = [
@@ -50,7 +53,7 @@ interface MyReport        { _id: string; targetType: "product"|"business"; targe
 interface ReportOnContent { _id: string; targetType: "product"|"business"; targetName: string; status: "pending"|"reviewed"|"dismissed"|"action_taken"; category: string; adminNote?: string; adminAction?: string; reason: string; detectedKeywords: string[]; createdAt: string; resolvedAt?: string; autoBlocked: boolean; }
 interface Announcement    { _id: string; title: string; message: string; audience: "all"|"seller"|"buyer"; durationHours: number; link?: string; createdAt: string; expiresAt: string; }
 
-// ── NUEVO: forma del badge de notificaciones del Programa de Afiliados.
+// ── Forma del badge de notificaciones del Programa de Afiliados.
 //    El backend puede mandar distintos campos de desglose según el rol
 //    (seller: pendingApplications/urgentOrDisputed; buyer: pendingApplications/
 //    urgentSales/newStores). El campo "count" es opcional/best-effort: si no
@@ -332,7 +335,12 @@ export default function ProfilePage() {
   const [bannerOpen,          setBannerOpen]          = useState(false);
   const [glowActive,          setGlowActive]          = useState(false);
   const [annsLoaded,          setAnnsLoaded]          = useState(false);
-  const [affiliateBadge,      setAffiliateBadge]      = useState(0); // ── NUEVO
+  // ── Badge del Programa de Afiliados. Para "seller" seguimos usando un
+  //    número (cantidad real de solicitudes/pagos en disputa). Para "buyer"
+  //    NO mostramos cantidad: solo si hay algo nuevo sin ver (booleano),
+  //    calculado igual que en BuyerDashboard con isSectionNew/hasUnseenNewStores.
+  const [affiliateBadge,       setAffiliateBadge]       = useState(0);
+  const [affiliateBuyerHasNew, setAffiliateBuyerHasNew] = useState(false);
 
   useEffect(() => { if (!loading && !user) router.push("/login"); }, [user, loading, router]);
   useEffect(() => { if (user) { setProfileName(user.name); setProfileEmail(user.email); } }, [user?.id]);
@@ -455,17 +463,22 @@ export default function ProfilePage() {
 
   useEffect(() => { if (user) loadConvs(); }, [user?.id, loadConvs]);
 
-  // ── NUEVO: badge del Programa de Afiliados (solicitudes/pagos urgentes).
+  // ── Badge del Programa de Afiliados (solicitudes/pagos urgentes).
   //    Pega a /affiliates/seller/notifications-badge o /affiliates/buyer/...
   //    según el rol, cada 30s. Nunca rompe la pantalla: si falla, se queda en 0.
   //
-  //    FIX: para "buyer" el backend puede no mandar un "count" top-level
-  //    confiable (o mandarlo en 0) aunque sí manda el desglose por tab
-  //    (pendingApplications / urgentSales / newStores — los mismos campos
-  //    que ya usa BuyerDashboard para pintar los contadores de cada pestaña).
-  //    Antes esto dejaba el botón sin badge para compradores. Ahora, si
-  //    "count" no viene como número > 0, lo calculamos sumando el desglose
-  //    disponible según el rol.
+  //    SELLER: mostramos cantidad real (pendingApplications + urgentOrDisputed,
+  //    o "count" del backend si viene con valor > 0).
+  //
+  //    BUYER: acá está el cambio pedido — no mostramos NINGÚN número en el
+  //    perfil, solo si hay algo nuevo sin ver. Para decidir eso usamos las
+  //    mismas reglas que ya tiene BuyerDashboard (sin ventana de tiempo,
+  //    comparando contra lo último que el usuario marcó como visto en cada
+  //    sección): isSectionNew("pendingApplications", ...), 
+  //    isSectionNew("urgentSales", ...) y hasUnseenNewStores() para tiendas
+  //    nuevas. noteNewStoresSignal() deja prendida la bandera pegajosa de
+  //    "tiendas nuevas" si el backend reporta alguna, igual que hace el
+  //    dashboard del comprador.
   const loadAffiliateBadge = useCallback(async () => {
     const token = getToken(); if (!token || !user) return;
     const u = user as any;
@@ -474,18 +487,24 @@ export default function ProfilePage() {
       const res = await fetch(`${API}/affiliates/${path}/notifications-badge`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) { setAffiliateBadge(0); return; }
+      if (!res.ok) { setAffiliateBadge(0); setAffiliateBuyerHasNew(false); return; }
       const data: AffiliateNotificationBadge = await res.json();
 
-      const fallbackCount =
-        path === "seller"
-          ? (data.pendingApplications || 0) + (data.urgentOrDisputed || 0)
-          : (data.pendingApplications || 0) + (data.urgentSales || 0) + (data.newStores || 0);
-
-      const finalCount = typeof data.count === "number" && data.count > 0 ? data.count : fallbackCount;
-      setAffiliateBadge(finalCount);
+      if (path === "seller") {
+        const fallbackCount = (data.pendingApplications || 0) + (data.urgentOrDisputed || 0);
+        const finalCount = typeof data.count === "number" && data.count > 0 ? data.count : fallbackCount;
+        setAffiliateBadge(finalCount);
+      } else {
+        noteNewStoresSignal(data.newStores || 0);
+        const hasNew =
+          isSectionNew("pendingApplications", data.pendingApplications || 0) ||
+          isSectionNew("urgentSales", data.urgentSales || 0) ||
+          hasUnseenNewStores();
+        setAffiliateBuyerHasNew(hasNew);
+      }
     } catch {
       setAffiliateBadge(0);
+      setAffiliateBuyerHasNew(false);
     }
   }, [user]);
 
@@ -537,8 +556,21 @@ export default function ProfilePage() {
     socket.on("product_deleted_admin",(data:any) => { setReportNotifs(p=>[{ id:Date.now().toString(), message:data.message, type:"error" },...p.slice(0,4)]); });
     socket.on("new_announcement",    (ann:Announcement) => { setAnnouncements(p => p.some(a=>a._id===ann._id)?p:[ann,...p]); setGlowActive(true); setTimeout(()=>setGlowActive(false),8000); });
     socket.on("subscription_expiring",(data:any) => { setReportNotifs(p=>[{ id:Date.now().toString(), message:data.message, type:"warning" },...p.slice(0,4)]); });
+    // ── Eventos en tiempo real del Programa de Afiliados (comprador): igual
+    //    que hace BuyerDashboard, si llega alguno de estos, forzamos que el
+    //    badge del perfil vuelva a evaluar "hay algo nuevo" en el próximo
+    //    poll (bumpSectionNew ya lo hace bajar el "último visto" un escalón
+    //    en el propio evento — acá solo necesitamos refrescar el badge del
+    //    perfil sin esperar los 30s).
+    if ((user as any)?.role !== "seller") {
+      const bumpBuyerBadge = () => { void loadAffiliateBadge(); };
+      socket.on("affiliate_new_store", bumpBuyerBadge);
+      socket.on("affiliate_application_decided", bumpBuyerBadge);
+      socket.on("affiliate_new_sale", bumpBuyerBadge);
+      socket.on("affiliate_payment_marked", bumpBuyerBadge);
+    }
     return () => { clearInterval(interval); socket.disconnect(); };
-  }, [user?.id, loadConvs]);
+  }, [user?.id, loadConvs, loadAffiliateBadge]);
 
   if (loading || !user) return null;
 
@@ -660,6 +692,9 @@ export default function ProfilePage() {
   const radiusLabel          = RADIUS_OPTIONS.find(o=>o.value===selectedRadius)?.label||"3 km";
   const pendingMyReports     = myReports.filter(r=>r.status==="pending").length;
   const pendingContentReports= contentReports.filter(r=>r.status==="pending").length;
+  const isSeller              = u.role === "seller";
+  const showAffiliateNumeric  = isSeller && affiliateBadge > 0;
+  const showAffiliateNewLabel = !isSeller && affiliateBuyerHasNew;
 
   return (
     <MainLayout>
@@ -731,13 +766,23 @@ export default function ProfilePage() {
              boxShadow: "0 6px 18px rgba(249,115,22,.35)",
              transition: "0.25s",}}>
               <Handshake size={18} color="#f59e0b" /> Programa de Afiliados
-              {/* ── NUEVO: badge de solicitudes/pagos pendientes del programa de afiliados */}
-              {affiliateBadge > 0 && (
+              {/* ── Badge del programa de afiliados: número para vendedor,
+                  etiqueta "Nuevo" para comprador (sin cantidades) */}
+              {showAffiliateNumeric && (
                 <span style={{
                   background:"#ef4444", color:"#fff", borderRadius:999,
                   fontSize:"0.72rem", fontWeight:800, padding:"1px 7px", lineHeight:1.6,
                 }}>
                   {affiliateBadge > 99 ? "99+" : affiliateBadge}
+                </span>
+              )}
+              {showAffiliateNewLabel && (
+                <span style={{
+                  background:"#ef4444", color:"#fff", borderRadius:999,
+                  fontSize:"0.68rem", fontWeight:800, padding:"1px 8px", lineHeight:1.6,
+                  textTransform:"uppercase", letterSpacing:"0.03em",
+                }}>
+                  Nuevo
                 </span>
               )}
               </Link>
