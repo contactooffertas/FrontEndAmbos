@@ -5,7 +5,7 @@ import { useEffect, useRef, useCallback } from "react";
 import {
   bumpSectionNew,
   markNewStoreSignalSticky,
-} from "../lib/affiliateNotifications";
+} from "../hooks/affiliateNotifications";
 
 type AffiliateRole = "seller" | "buyer";
 
