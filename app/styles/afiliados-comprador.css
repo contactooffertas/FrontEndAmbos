@@ -1,29 +1,23 @@
-/* =====================================================================
-   app/styles/afiliados-comprador.css
+/* Paleta de marca: negro casi puro + naranja, sin azul */
 .affbuyer-dashboard {
-  /* ---------- Naranja de marca (tomado de la captura) ---------- */
   --abd-orange-800: #9c3d0a;
   --abd-orange-700: #c9500e;
-  --abd-orange-600: #f2650f;   /* naranja de marca principal */
+  --abd-orange-600: #f2650f;
   --abd-orange-500: #f57c34;
   --abd-orange-400: #f89a60;
   --abd-orange-100: #fde3cf;
   --abd-orange-050: #fef3ea;
-  /* ---------- Superficies oscuras de marca (banner, íconos) ---------- */
   --abd-ink-950: #121318;
   --abd-ink-900: #1b1c22;
   --abd-ink-800: #2a2c34;
-  /* ---------- Texto y neutros ---------- */
-  --abd-text-900: #14151b;   /* títulos */
-  --abd-text-700: #3f4550;   /* texto secundario */
-  --abd-text-500: #74808a;   /* labels, metadatos */
+  --abd-text-900: #14151b;
+  --abd-text-700: #3f4550;
+  --abd-text-500: #74808a;
   --abd-text-300: #a7afb8;
-
   --abd-line: #e4e6e9;
   --abd-line-soft: #edeff1;
   --abd-surface: #ffffff;
-  --abd-surface-muted: #f2f3f5;   /* fondo de inputs (color real medido) */
-  /* ---------- Estados semánticos (sin azul; el rojo se resuelve en granate de marca) ---------- */
+  --abd-surface-muted: #f2f3f5;
   --abd-garnet-800: #6c1c30;
   --abd-garnet-700: #862339;
   --abd-garnet-600: #a52c46;
@@ -45,7 +39,6 @@
   --abd-radius-pill: 999px;
   --abd-font-display: "Playfair Display", Georgia, "Times New Roman", serif;
   --abd-font-body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
   font-family: var(--abd-font-body);
   color: var(--abd-text-900);
   max-width: 1180px;
@@ -56,7 +49,6 @@
   gap: 28px;
   -webkit-font-smoothing: antialiased;
 }
-
 .affbuyer-dashboard * {
   box-sizing: border-box;
 }
@@ -67,11 +59,7 @@
   background: var(--abd-orange-100);
   color: var(--abd-text-900);
 }
-
-/* =====================================================================
-   Utilidades: loading / error / empty
-   ===================================================================== */
-
+/* Estados: cargando / error / vacio */
 .affbuyer-loading {
   display: flex;
   align-items: center;
@@ -82,7 +70,6 @@
   font-weight: 500;
   justify-content: center;
 }
-
 .affbuyer-spin {
   animation: affbuyer-spin 0.9s linear infinite;
   color: var(--abd-orange-600);
@@ -90,7 +77,6 @@
 @keyframes affbuyer-spin {
   to { transform: rotate(360deg); }
 }
-
 .affbuyer-error {
   background: var(--abd-garnet-050);
   border: 1px solid var(--abd-garnet-100);
@@ -102,7 +88,6 @@
   border-left: 3px solid var(--abd-garnet-600);
   margin-bottom: 14px;
 }
-
 .affbuyer-empty {
   text-align: center;
   color: var(--abd-text-500);
@@ -112,12 +97,7 @@
   border: 1px dashed var(--abd-line);
   border-radius: var(--abd-radius-md);
 }
-
-/* =====================================================================
-   Panel base — tarjeta limpia, sin barras de color (así son las tarjetas
-   reales del sitio: blanco, borde fino gris, sombra suave, sin adornos).
-   ===================================================================== */
-
+/* Tarjetas: blancas, borde gris fino, sin barras de color */
 .affbuyer-panel {
   background: var(--abd-surface);
   border: 1px solid var(--abd-line);
@@ -125,11 +105,6 @@
   padding: 28px;
   box-shadow: var(--abd-shadow-xs);
 }
-
-/* =====================================================================
-   Tarjeta de perfil
-   ===================================================================== */
-
 .affbuyer-profile-card {
   background: var(--abd-surface);
   border: 1px solid var(--abd-line);
@@ -137,7 +112,6 @@
   padding: 26px 28px;
   box-shadow: var(--abd-shadow-xs);
 }
-
 .affbuyer-profile-header {
   display: flex;
   align-items: center;
@@ -146,7 +120,6 @@
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
-
 .affbuyer-profile-title {
   font-family: var(--abd-font-display);
   font-size: 1.3rem;
@@ -155,14 +128,11 @@
   letter-spacing: -0.01em;
   margin: 0;
 }
-
 .affbuyer-profile-actions {
   display: flex;
   gap: 10px;
 }
-
-/* Botón secundario tipo "Editar" del sitio: blanco, borde gris fino,
-   texto oscuro. Es la base de todos los botones no-CTA. */
+/* Botones secundarios (estilo Editar) */
 .affbuyer-edit-btn,
 .affbuyer-cancel-btn,
 .affbuyer-download-btn {
@@ -188,9 +158,7 @@
   border-color: var(--abd-garnet-500);
   color: var(--abd-garnet-600);
 }
-
-/* Botón primario / CTA: naranja sólido de marca — reservado para
-   acciones que confirman o avanzan (Guardar, Aplicar, Ver tienda...). */
+/* Boton primario: naranja solido */
 .affbuyer-save-btn {
   display: inline-flex;
   align-items: center;
@@ -218,7 +186,6 @@
   cursor: not-allowed;
   transform: none;
 }
-
 .affbuyer-profile-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -237,7 +204,6 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
 .affbuyer-profile-grid input {
   border: 1px solid transparent;
   border-radius: var(--abd-radius-sm);
@@ -258,19 +224,12 @@
   border-color: var(--abd-orange-500);
   box-shadow: 0 0 0 3px var(--abd-orange-100);
 }
-
-/* =====================================================================
-   Tabs principales — replican la barra real del sitio: pastillas planas
-   sueltas, sin contenedor. Inactiva = ícono + texto gris, sin fondo.
-   Activa = pastilla naranja sólida (igual que "Ofertas" en la captura).
-   ===================================================================== */
-
+/* Tabs planas, igual que la referencia */
 .affbuyer-tabs {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
-
 .affbuyer-tab {
   display: inline-flex;
   align-items: center;
@@ -296,7 +255,6 @@
 .affbuyer-tab:hover svg {
   color: var(--abd-orange-600);
 }
-
 .affbuyer-tab-active {
   color: #fff;
   background: var(--abd-orange-600);
@@ -309,18 +267,13 @@
   background: var(--abd-orange-700);
   color: #fff;
 }
-
-/* =====================================================================
-   Subtabs (dentro de Tiendas) — mismo lenguaje, un escalón más chico
-   ===================================================================== */
-
+/* Subtabs, mismo estilo mas chico */
 .affbuyer-subtabs {
   display: flex;
   gap: 8px;
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
-
 .affbuyer-subtab {
   display: inline-flex;
   align-items: center;
@@ -350,11 +303,7 @@
   border-color: var(--abd-orange-700);
   color: #fff;
 }
-
-/* =====================================================================
-   Buscador
-   ===================================================================== */
-
+/* Buscador */
 .affbuyer-search {
   display: flex;
   align-items: center;
@@ -390,17 +339,12 @@
 .affbuyer-search input::placeholder {
   color: var(--abd-text-300);
 }
-
-/* =====================================================================
-   Grilla de tiendas + tarjeta de tienda
-   ===================================================================== */
-
+/* Grilla y tarjeta de tienda */
 .affbuyer-store-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
 }
-
 .affbuyer-store-card {
   position: relative;
   display: flex;
@@ -418,7 +362,6 @@
   box-shadow: var(--abd-shadow-md);
   border-color: var(--abd-orange-400);
 }
-
 .affbuyer-new-flag {
   position: absolute;
   top: -9px;
@@ -436,13 +379,11 @@
   border-radius: var(--abd-radius-pill);
   box-shadow: var(--abd-shadow-orange);
 }
-
 .affbuyer-store-card-header {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .affbuyer-category-badge {
   align-self: flex-start;
   background: var(--abd-neutral-chip-bg);
@@ -454,7 +395,6 @@
   padding: 4px 10px;
   border-radius: var(--abd-radius-pill);
 }
-
 .affbuyer-store-stats {
   display: flex;
   gap: 18px;
@@ -472,7 +412,6 @@
 .affbuyer-store-stat svg {
   color: var(--abd-orange-600);
 }
-
 .affbuyer-view-store-btn {
   margin-top: 4px;
   display: inline-flex;
@@ -493,13 +432,7 @@
   background: var(--abd-orange-700);
   transform: translateY(-1px);
 }
-
-/* =====================================================================
-   Avatares / carnet de vendedor
-   Réplica del "ícono de negocio" del sitio: caja oscura casi negra
-   con el trazo/inicial en naranja.
-   ===================================================================== */
-
+/* Avatar tipo icono de negocio */
 .affbuyer-carnet-avatar {
   width: 46px;
   height: 46px;
@@ -515,7 +448,6 @@
   background: linear-gradient(160deg, var(--abd-ink-900), var(--abd-ink-950));
   border: 1px solid rgba(242, 101, 15, 0.35);
 }
-
 .affbuyer-carnet-avatar-img {
   padding: 0;
   overflow: hidden;
@@ -528,7 +460,6 @@
   height: 100%;
   object-fit: cover;
 }
-
 .affbuyer-avatar-sm {
   width: 34px;
   height: 34px;
@@ -538,7 +469,6 @@
 .affbuyer-avatar-sm.affbuyer-carnet-avatar-img {
   border-radius: 50%;
 }
-
 .affbuyer-avatar-lg {
   width: 64px;
   height: 64px;
@@ -548,13 +478,11 @@
 .affbuyer-avatar-lg.affbuyer-carnet-avatar-img {
   border-radius: 50%;
 }
-
 .affbuyer-carnet-header {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .affbuyer-carnet-name {
   font-family: var(--abd-font-display);
   font-weight: 700;
@@ -595,7 +523,6 @@
   letter-spacing: 0.04em;
   margin-right: 6px;
 }
-
 .affbuyer-carnet {
   display: flex;
   flex-direction: column;
@@ -606,15 +533,12 @@
   padding: 20px;
   box-shadow: var(--abd-shadow-xs);
 }
-
 .affbuyer-carnet-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 18px;
 }
-
-/* WhatsApp: excepción de marca reconocible a propósito (verde WhatsApp),
-   tratada de forma sobria para no competir con el naranja de marca. */
+/* WhatsApp: excepcion de marca, verde sobrio */
 .affbuyer-whatsapp-btn {
   display: inline-flex;
   align-items: center;
@@ -635,12 +559,7 @@
   color: #fff;
   transform: translateY(-1px);
 }
-
-/* =====================================================================
-   Estados / badges — sin azul: neutro para "informativo", granate de
-   marca para alerta, esmeralda para confirmado/disponible.
-   ===================================================================== */
-
+/* Badges de estado (sin azul) */
 .affbuyer-status-badge {
   display: inline-flex;
   align-items: center;
@@ -670,7 +589,6 @@
   background: var(--abd-garnet-700);
   color: #fff;
 }
-
 .affbuyer-stock-badge {
   display: inline-flex;
   align-items: center;
@@ -688,7 +606,6 @@
   background: var(--abd-garnet-050);
   color: var(--abd-garnet-600);
 }
-
 .affbuyer-new-pill {
   display: inline-flex;
   align-items: center;
@@ -713,11 +630,6 @@
   background: var(--abd-orange-050);
   color: var(--abd-orange-700);
 }
-
-/* =====================================================================
-   Detalle de tienda + toolbar + catálogo
-   ===================================================================== */
-
 .affbuyer-back-btn {
   display: inline-flex;
   align-items: center;
@@ -736,7 +648,6 @@
   color: var(--abd-orange-600);
   gap: 10px;
 }
-
 .affbuyer-store-detail-header {
   display: flex;
   flex-direction: column;
@@ -760,7 +671,6 @@
   letter-spacing: 0.04em;
   margin-right: 6px;
 }
-
 .affbuyer-store-detail-toolbar {
   display: flex;
   align-items: center;
@@ -773,7 +683,6 @@
   min-width: 220px;
   margin-bottom: 0;
 }
-
 .affbuyer-offer-list {
   display: flex;
   flex-direction: column;
@@ -832,7 +741,6 @@
   color: var(--abd-orange-700);
   margin: 0;
 }
-
 .affbuyer-apply-btn {
   display: inline-flex;
   align-items: center;
@@ -858,11 +766,6 @@
   cursor: not-allowed;
   transform: none;
 }
-
-/* =====================================================================
-   Paginación
-   ===================================================================== */
-
 .affbuyer-pagination {
   display: flex;
   align-items: center;
@@ -897,17 +800,11 @@
   font-weight: 600;
   color: var(--abd-text-500);
 }
-
-/* =====================================================================
-   Aplicaciones / ofertas del comprador
-   ===================================================================== */
-
 .affbuyer-application-footer {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
 .affbuyer-amount-box {
   display: flex;
   flex-direction: column;
@@ -934,7 +831,6 @@
 .affbuyer-amount-pending {
   color: var(--abd-orange-700);
 }
-
 .affbuyer-store-app-list {
   display: flex;
   flex-direction: column;
@@ -950,7 +846,6 @@
   border-radius: var(--abd-radius-sm);
   background: var(--abd-surface);
 }
-
 .affbuyer-application-meta {
   display: flex;
   align-items: center;
@@ -970,7 +865,6 @@
 .affbuyer-application-meta p {
   margin: 0;
 }
-
 .affbuyer-rating {
   display: inline-flex;
   gap: 1px;
@@ -982,9 +876,7 @@
   color: var(--abd-orange-500);
   fill: var(--abd-orange-500);
 }
-
-/* Copiar link: acción importante — CTA naranja sólido, la misma jerarquía
-   visual que "Ofertas" en la referencia, para que no pase desapercibido. */
+/* Copiar link: CTA naranja, accion importante */
 .affbuyer-copy-link-btn {
   display: inline-flex;
   align-items: center;
@@ -1010,18 +902,13 @@
 .affbuyer-copy-link-btn:active {
   transform: translateY(0);
 }
-
-/* =====================================================================
-   Ganancias — resumen
-   ===================================================================== */
-
+/* Resumen de ganancias */
 .affbuyer-earnings-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .affbuyer-earnings-card {
   position: relative;
   padding: 20px;
@@ -1050,7 +937,6 @@
   background: linear-gradient(150deg, var(--abd-emerald-600), var(--abd-emerald-700));
   border-color: transparent;
 }
-
 .affbuyer-earnings-label {
   font-size: 0.76rem;
   font-weight: 700;
@@ -1066,11 +952,7 @@
   margin: 0;
   position: relative;
 }
-
-/* =====================================================================
-   Ganancias — por tienda
-   ===================================================================== */
-
+/* Ganancias por tienda */
 .affbuyer-store-earnings-list {
   display: flex;
   flex-direction: column;
@@ -1101,7 +983,6 @@
 .affbuyer-store-earnings-totals strong {
   color: var(--abd-text-900);
 }
-
 .affbuyer-sales-list {
   display: flex;
   flex-direction: column;
@@ -1178,7 +1059,6 @@
   font-size: 0.74rem;
   color: var(--abd-text-500);
 }
-
 .affbuyer-sale-row-urgent {
   border-color: var(--abd-garnet-500);
   background: var(--abd-garnet-050);
@@ -1194,7 +1074,6 @@
   border-color: var(--abd-emerald-100);
   grid-template-columns: 1.4fr 1fr 0.9fr auto;
 }
-
 .affbuyer-paid-actions {
   display: flex;
   align-items: center;
@@ -1213,7 +1092,6 @@
 .affbuyer-proof-link:hover {
   text-decoration: underline;
 }
-
 .affbuyer-reject-payment-btn {
   display: inline-flex;
   align-items: center;
@@ -1237,11 +1115,7 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
-
-/* =====================================================================
-   Historial (paidSales, <details>)
-   ===================================================================== */
-
+/* Historial de pagos */
 .affbuyer-history-section {
   margin-top: 14px;
   border-top: 1px solid var(--abd-line-soft);
@@ -1266,18 +1140,13 @@
 .affbuyer-history-section[open] .affbuyer-history-title {
   margin-bottom: 12px;
 }
-
-/* =====================================================================
-   Responsive
-   ===================================================================== */
-
+/* Responsive */
 @media (max-width: 960px) {
   .affbuyer-store-grid { grid-template-columns: repeat(2, 1fr); }
   .affbuyer-carnet-grid { grid-template-columns: 1fr; }
   .affbuyer-profile-grid { grid-template-columns: repeat(2, 1fr); }
   .affbuyer-earnings-summary { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 640px) {
   .affbuyer-dashboard { padding: 20px 14px 72px; gap: 20px; }
   .affbuyer-panel, .affbuyer-profile-card { padding: 18px; }
