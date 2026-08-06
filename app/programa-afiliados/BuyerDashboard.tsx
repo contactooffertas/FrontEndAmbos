@@ -101,6 +101,7 @@ interface SellerCardData {
   phone: string;
   description: string;
   paymentTermDays?: number | null;
+  logo?: string | null;
 }
 
 interface ProductBasic {
@@ -127,6 +128,7 @@ interface StoreCard {
   commissionMin: number;
   commissionMax: number;
   joinedAt: string;
+  logo?: string | null;
 }
 
 interface StoreProductItem {
@@ -144,6 +146,7 @@ interface StoreDetail {
   phone: string;
   description: string;
   paymentTermDays: number;
+  logo?: string | null;
 }
 
 interface AppItem {
@@ -453,6 +456,34 @@ function NewPill({ show }: { show: boolean }): JSX.Element | null {
   );
 }
 
+/**
+ * Muestra el logo real del negocio cuando está disponible.
+ * Si no hay logo, cae de nuevo a la inicial del nombre (comportamiento anterior).
+ */
+function BusinessLogo({
+  logo,
+  name,
+  className = "affbuyer-carnet-avatar",
+}: {
+  logo?: string | null;
+  name: string;
+  className?: string;
+}): JSX.Element {
+  const initial = name?.[0]?.toUpperCase() ?? "?";
+  if (logo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logo}
+        alt={name}
+        className={className}
+        style={{ objectFit: "cover" }}
+      />
+    );
+  }
+  return <div className={className}>{initial}</div>;
+}
+
 function SellerCarnet({
   seller,
   buyerName,
@@ -462,11 +493,10 @@ function SellerCarnet({
   buyerName: string;
   footer: JSX.Element;
 }): JSX.Element {
-  const initial = seller.businessName?.[0]?.toUpperCase() ?? "?";
   return (
     <div className="affbuyer-carnet">
       <div className="affbuyer-carnet-header">
-        <div className="affbuyer-carnet-avatar">{initial}</div>
+        <BusinessLogo logo={seller.logo} name={seller.businessName} />
         <div>
           <p className="affbuyer-carnet-name">{seller.businessName}</p>
           <p className="affbuyer-carnet-contact">{seller.contactName}</p>
@@ -635,7 +665,6 @@ function StoreListCard({
   isNew?: boolean;
   onView: (sellerId: string) => void;
 }): JSX.Element {
-  const initial = store.businessName?.[0]?.toUpperCase() ?? "?";
   const commissionLabel =
     store.commissionMin === store.commissionMax
       ? `${store.commissionMin}%`
@@ -666,7 +695,7 @@ function StoreListCard({
         </span>
       )}
       <div className="affbuyer-store-card-header">
-        <div className="affbuyer-carnet-avatar">{initial}</div>
+        <BusinessLogo logo={store.logo} name={store.businessName} />
         <div>
           <p className="affbuyer-carnet-name">{store.businessName}</p>
           <p className="affbuyer-carnet-contact">{store.contactName}</p>
@@ -1192,7 +1221,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
           {storeDetail && (
             <div className="affbuyer-store-detail-header">
               <div className="affbuyer-carnet-header">
-                <div className="affbuyer-carnet-avatar">{storeDetail.businessName?.[0]?.toUpperCase() ?? "?"}</div>
+                <BusinessLogo logo={storeDetail.logo} name={storeDetail.businessName} />
                 <div>
                   <p className="affbuyer-carnet-name">{storeDetail.businessName}</p>
                   <p className="affbuyer-carnet-contact">{storeDetail.contactName}</p>
@@ -1427,7 +1456,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                       <div key={group.sellerId} className="affbuyer-store-earnings-block">
                         <div className="affbuyer-store-earnings-header">
                           <div className="affbuyer-carnet-header">
-                            <div className="affbuyer-carnet-avatar">{group.seller.businessName?.[0]?.toUpperCase() ?? "?"}</div>
+                            <BusinessLogo logo={group.seller.logo} name={group.seller.businessName} />
                             <div>
                               <p className="affbuyer-carnet-name">{group.seller.businessName}</p>
                               <p className="affbuyer-carnet-contact">{group.seller.contactName}</p>
