@@ -247,17 +247,6 @@ interface NotificationBadge {
 
 /* ============================ Generación de PDF ============================ */
 
-/**
- * Genera un catálogo PDF profesional para una tienda.
- * Reglas de stock: si el comprador está afiliado (applicationStatus === "accepted")
- * al producto puntual, se muestra el stock real. Si no está afiliado a ESE producto,
- * se muestra "Sin stock" independientemente del stock real, para no exponer
- * disponibilidad a quien todavía no tiene la oferta aceptada.
- *
- * NOTA: el catálogo NO incluye la comisión del afiliado. Es un dato interno
- * del comprador/afiliado y no tiene que figurar en un PDF que se puede
- * compartir con terceros (ej. para mostrarle el catálogo a un cliente).
- */
 function generateStoreCatalogPdf(store: StoreDetail, items: StoreProductItem[]): void {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -447,12 +436,6 @@ function StockBadge({ item }: { item: StoreProductItem }): JSX.Element {
   );
 }
 
-/**
- * Un producto afiliado se considera "no disponible" cuando el vendedor
- * desactivó la oferta o el stock llegó a cero. Estos productos se ocultan de
- * "Mis Ofertas" (ver visibleStoreApps más abajo) para que el afiliado no siga
- * compartiendo un link que, si vende, no le va a generar comisión.
- */
 function isApplicationUnavailable(application: AppItem): boolean {
   if (application.status !== "accepted" || !application.product) return false;
   if (application.offerActive === false) return true;
@@ -1109,7 +1092,7 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
                 <p><span>Plazo de pago</span> {storeDetail.paymentTermDays} días</p>
               </div>
               
-                href={buildWhatsAppLink(storeDetail.phone, buyerName)}
+                <a href={buildWhatsAppLink(storeDetail.phone, buyerName)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="affbuyer-whatsapp-btn"
