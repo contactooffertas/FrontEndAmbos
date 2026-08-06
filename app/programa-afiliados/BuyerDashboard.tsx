@@ -11,6 +11,7 @@ import {
   Wallet, Pencil, X, Save, FileText, XOctagon, History, Store, Sparkles,
   Users, ArrowLeft, Percent, Download, Boxes,
 } from "lucide-react";
+import { useExpiringBadge } from "../hooks/useExpiringBadge";
 import "../styles/afiliados-comprador.css";
 
 const API = "https://new-backend-lovat.vercel.app/api/affiliates/buyer";
@@ -237,7 +238,7 @@ interface BuyerDashboardProps {
   buyerName: string;
 }
 
-/** ── NUEVO: desglose del badge de notificaciones para pintar contador por tab */
+/** Desglose del badge de notificaciones para pintar contador por tab */
 interface NotificationBadge {
   count: number;
   pendingApplications: number;
@@ -614,7 +615,7 @@ function ProfileEditCard(): JSX.Element {
   );
 }
 
-/* ── NUEVO: pastilla numérica para pintar cantidad de pendientes en un tab */
+/** Pastilla numérica para pintar cantidad de pendientes en un tab */
 function TabCount({ value }: { value: number }): JSX.Element | null {
   if (value <= 0) return null;
   return <span className="affbuyer-tab-count">{value > 99 ? "99+" : value}</span>;
@@ -666,7 +667,7 @@ function StoreListCard({ store, onView }: { store: StoreCard; onView: (sellerId:
 export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.Element {
   const [tab, setTab] = useState<MainTab>("tiendas");
 
-  /* ── NUEVO: badge de notificaciones (desglose por tab) --- */
+  /* --- Badge de notificaciones (desglose por tab) --- */
   const [badge, setBadge] = useState<NotificationBadge>({ count: 0, pendingApplications: 0, urgentSales: 0, newStores: 0 });
 
   const loadBadge = useCallback(async () => {
@@ -683,6 +684,28 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
     const interval = setInterval(() => void loadBadge(), 30_000);
     return () => clearInterval(interval);
   }, [loadBadge]);
+
+  /* --- Total de solicitudes aceptadas (para el badge "recién aceptada") --- */
+  const [acceptedTotal, setAcceptedTotal] = useState(0);
+
+  const loadAcceptedTotal = useCallback(async () => {
+    try {
+      const data = await authFetch<{ total: number }>("/mis-ofertas?page=1&limit=1&status=accepted");
+      setAcceptedTotal(typeof data.total === "number" ? data.total : 0);
+    } catch {
+      // silencioso
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAcceptedTotal();
+    const interval = setInterval(() => void loadAcceptedTotal(), 30_000);
+    return () => clearInterval(interval);
+  }, [loadAcceptedTotal]);
+
+  /* --- Badges expirables: 3 minutos y vuelven a 0, arrancando siempre desde 0. */
+  const expiringNewStores = useExpiringBadge("aff_buyer_new_stores_v1", badge.newStores);
+  const expiringAccepted = useExpiringBadge("aff_buyer_recently_accepted_v1", acceptedTotal);
 
   /* --- Tab: Tiendas (vitrina, 3 en 3) --- */
   const [storeSubTab, setStoreSubTab] = useState<StoreSubTab>("todas");
@@ -994,13 +1017,13 @@ export default function BuyerDashboard({ buyerName }: BuyerDashboardProps): JSX.
           className={`affbuyer-tab ${tab === "tiendas" ? "affbuyer-tab-active" : ""}`}
           onClick={() => { setTab("tiendas"); handleBackToStores(); }}
         >
-          <Store size={15} /> Tiendas <TabCount value={badge.newStores} />
+          <Store size={15} /> Tiendas <TabCount value={expiringNewStores} />
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "solicitudes" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("solicitudes")}>
           <Clock size={15} /> Mis Solicitudes <TabCount value={badge.pendingApplications} />
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "mis-ofertas" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("mis-ofertas")}>
-          <CheckCircle2 size={15} /> Mis Ofertas <TabCount value={badge.urgentSales} />
+          <CheckCircle2 size={15} /> Mis Ofertas <TabCount value={expiringAccepted} />
         </button>
         <button type="button" className={`affbuyer-tab ${tab === "ganancias" ? "affbuyer-tab-active" : ""}`} onClick={() => setTab("ganancias")}>
           <Wallet size={15} /> Ganancias
