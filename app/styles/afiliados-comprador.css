@@ -1,72 +1,53 @@
 /* =====================================================================
    app/styles/afiliados-comprador.css
-   Programa de Afiliados — Panel del Comprador
-   Identidad visual: navy (#1e3a5f) + azul (#4a90d9) + naranja CTA (#e8621e)
-   Tipografía: Playfair Display (headings) + DM Sans (body)
-   ===================================================================== */
-
 .affbuyer-dashboard {
-  /* ---------- Paleta base (misma identidad, tonos ampliados) ---------- */
-  --abd-navy-900: #14263f;
-  --abd-navy-800: #1e3a5f;
-  --abd-navy-700: #2b4d76;
-  --abd-navy-600: #3d6394;
-  --abd-navy-050: #eef3f8;
+  /* ---------- Naranja de marca (tomado de la captura) ---------- */
+  --abd-orange-800: #9c3d0a;
+  --abd-orange-700: #c9500e;
+  --abd-orange-600: #f2650f;   /* naranja de marca principal */
+  --abd-orange-500: #f57c34;
+  --abd-orange-400: #f89a60;
+  --abd-orange-100: #fde3cf;
+  --abd-orange-050: #fef3ea;
+  /* ---------- Superficies oscuras de marca (banner, íconos) ---------- */
+  --abd-ink-950: #121318;
+  --abd-ink-900: #1b1c22;
+  --abd-ink-800: #2a2c34;
+  /* ---------- Texto y neutros ---------- */
+  --abd-text-900: #14151b;   /* títulos */
+  --abd-text-700: #3f4550;   /* texto secundario */
+  --abd-text-500: #74808a;   /* labels, metadatos */
+  --abd-text-300: #a7afb8;
 
-  --abd-blue-600: #3d7fc9;
-  --abd-blue-500: #4a90d9;
-  --abd-blue-400: #7bace3;
-  --abd-blue-100: #e6f1fc;
-  --abd-blue-050: #f4f9fe;
-
-  --abd-orange-800: #a8410f;
-  --abd-orange-700: #c94f14;
-  --abd-orange-600: #e8621e;
-  --abd-orange-500: #f0813f;
-  --abd-orange-100: #fde6d6;
-  --abd-orange-050: #fff5ee;
-
-  /* "Rojo" reinterpretado dentro de la identidad: granate cálido,
-     hermano del naranja en el círculo cromático, nunca rojo semáforo. */
+  --abd-line: #e4e6e9;
+  --abd-line-soft: #edeff1;
+  --abd-surface: #ffffff;
+  --abd-surface-muted: #f2f3f5;   /* fondo de inputs (color real medido) */
+  /* ---------- Estados semánticos (sin azul; el rojo se resuelve en granate de marca) ---------- */
   --abd-garnet-800: #6c1c30;
   --abd-garnet-700: #862339;
   --abd-garnet-600: #a52c46;
-  --abd-garnet-500: #c23f5b;
   --abd-garnet-100: #f7e2e7;
   --abd-garnet-050: #fbf0f2;
-
   --abd-emerald-700: #0f6b4d;
   --abd-emerald-600: #158462;
   --abd-emerald-100: #e0f3ea;
   --abd-emerald-050: #f1faf5;
-
-  --abd-ink-900: #16202e;
-  --abd-ink-700: #3d4a5c;
-  --abd-ink-500: #6c7789;
-  --abd-ink-300: #9aa4b2;
-
-  --abd-line: #e3e8f0;
-  --abd-line-soft: #edf1f6;
-  --abd-surface: #ffffff;
-  --abd-surface-muted: #f7f9fc;
-
-  --abd-shadow-xs: 0 1px 2px rgba(20, 38, 63, 0.06);
-  --abd-shadow-sm: 0 4px 12px rgba(20, 38, 63, 0.07);
-  --abd-shadow-md: 0 10px 28px rgba(20, 38, 63, 0.10);
-  --abd-shadow-lg: 0 20px 48px rgba(20, 38, 63, 0.16);
-
+  --abd-neutral-chip-bg: #f1f2f4;
+  --abd-neutral-chip-text: var(--abd-text-700);
+  --abd-shadow-xs: 0 1px 2px rgba(18, 19, 24, 0.06);
+  --abd-shadow-sm: 0 4px 12px rgba(18, 19, 24, 0.07);
+  --abd-shadow-md: 0 10px 26px rgba(18, 19, 24, 0.10);
+  --abd-shadow-orange: 0 8px 20px rgba(242, 101, 15, 0.32);
   --abd-radius-sm: 10px;
   --abd-radius-md: 16px;
-  --abd-radius-lg: 24px;
+  --abd-radius-lg: 22px;
   --abd-radius-pill: 999px;
-
-  --abd-accent-bar: linear-gradient(90deg, var(--abd-navy-800) 0%, var(--abd-navy-600) 38%, var(--abd-orange-600) 100%);
-
   --abd-font-display: "Playfair Display", Georgia, "Times New Roman", serif;
   --abd-font-body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   font-family: var(--abd-font-body);
-  color: var(--abd-ink-900);
+  color: var(--abd-text-900);
   max-width: 1180px;
   margin: 0 auto;
   padding: 32px 20px 96px;
@@ -79,14 +60,12 @@
 .affbuyer-dashboard * {
   box-sizing: border-box;
 }
-
 .affbuyer-dashboard button {
   font-family: inherit;
 }
-
 .affbuyer-dashboard ::selection {
   background: var(--abd-orange-100);
-  color: var(--abd-navy-900);
+  color: var(--abd-text-900);
 }
 
 /* =====================================================================
@@ -98,7 +77,7 @@
   align-items: center;
   gap: 10px;
   padding: 28px 12px;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   font-size: 0.92rem;
   font-weight: 500;
   justify-content: center;
@@ -108,7 +87,6 @@
   animation: affbuyer-spin 0.9s linear infinite;
   color: var(--abd-orange-600);
 }
-
 @keyframes affbuyer-spin {
   to { transform: rotate(360deg); }
 }
@@ -127,7 +105,7 @@
 
 .affbuyer-empty {
   text-align: center;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   font-size: 0.92rem;
   padding: 40px 20px;
   background: var(--abd-surface-muted);
@@ -136,28 +114,16 @@
 }
 
 /* =====================================================================
-   Panel base (usado como contenedor de cada tab)
-   Barra superior degradada navy → naranja: firma visual del panel.
+   Panel base — tarjeta limpia, sin barras de color (así son las tarjetas
+   reales del sitio: blanco, borde fino gris, sombra suave, sin adornos).
    ===================================================================== */
 
 .affbuyer-panel {
-  position: relative;
   background: var(--abd-surface);
   border: 1px solid var(--abd-line);
   border-radius: var(--abd-radius-lg);
   padding: 28px;
-  box-shadow: var(--abd-shadow-sm);
-  overflow: hidden;
-}
-
-.affbuyer-panel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--abd-accent-bar);
+  box-shadow: var(--abd-shadow-xs);
 }
 
 /* =====================================================================
@@ -165,24 +131,11 @@
    ===================================================================== */
 
 .affbuyer-profile-card {
-  position: relative;
-  background: linear-gradient(180deg, var(--abd-navy-050) 0%, var(--abd-surface) 120px);
+  background: var(--abd-surface);
   border: 1px solid var(--abd-line);
   border-radius: var(--abd-radius-lg);
   padding: 26px 28px;
-  box-shadow: var(--abd-shadow-sm);
-  overflow: hidden;
-}
-
-.affbuyer-profile-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: var(--abd-accent-bar);
-  box-shadow: 0 2px 10px rgba(232, 98, 30, 0.25);
+  box-shadow: var(--abd-shadow-xs);
 }
 
 .affbuyer-profile-header {
@@ -198,7 +151,7 @@
   font-family: var(--abd-font-display);
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
   letter-spacing: -0.01em;
   margin: 0;
 }
@@ -208,9 +161,11 @@
   gap: 10px;
 }
 
+/* Botón secundario tipo "Editar" del sitio: blanco, borde gris fino,
+   texto oscuro. Es la base de todos los botones no-CTA. */
 .affbuyer-edit-btn,
 .affbuyer-cancel-btn,
-.affbuyer-save-btn {
+.affbuyer-download-btn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -219,44 +174,47 @@
   font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform .16s ease, box-shadow .16s ease, background .18s ease, color .18s ease;
-  border: 1px solid transparent;
-}
-
-.affbuyer-edit-btn {
+  border: 1.5px solid var(--abd-line);
   background: var(--abd-surface);
-  border-color: var(--abd-navy-800);
-  color: var(--abd-navy-800);
+  color: var(--abd-text-700);
+  transition: border-color .16s ease, color .16s ease, background .16s ease, transform .16s ease;
 }
-.affbuyer-edit-btn:hover {
-  background: var(--abd-navy-800);
-  color: #fff;
-  transform: translateY(-1px);
-}
-
-.affbuyer-cancel-btn {
-  background: var(--abd-surface);
-  border-color: var(--abd-line);
-  color: var(--abd-ink-500);
+.affbuyer-edit-btn:hover,
+.affbuyer-download-btn:hover {
+  border-color: var(--abd-ink-950);
+  color: var(--abd-ink-950);
 }
 .affbuyer-cancel-btn:hover {
   border-color: var(--abd-garnet-500);
   color: var(--abd-garnet-600);
 }
 
+/* Botón primario / CTA: naranja sólido de marca — reservado para
+   acciones que confirman o avanzan (Guardar, Aplicar, Ver tienda...). */
 .affbuyer-save-btn {
-  background: linear-gradient(135deg, var(--abd-navy-800), var(--abd-navy-600));
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--abd-radius-pill);
+  border: none;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--abd-orange-600);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(30, 58, 95, 0.28);
+  box-shadow: var(--abd-shadow-orange);
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
 .affbuyer-save-btn:hover {
+  background: var(--abd-orange-700);
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(30, 58, 95, 0.34);
 }
 .affbuyer-edit-btn:disabled,
 .affbuyer-cancel-btn:disabled,
-.affbuyer-save-btn:disabled {
-  opacity: 0.6;
+.affbuyer-save-btn:disabled,
+.affbuyer-download-btn:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none;
 }
@@ -266,117 +224,94 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-
 .affbuyer-profile-grid-full {
   grid-column: 1 / -1;
 }
-
 .affbuyer-profile-grid label {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 0.76rem;
   font-weight: 700;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .affbuyer-profile-grid input {
-  border: 1px solid var(--abd-line);
+  border: 1px solid transparent;
   border-radius: var(--abd-radius-sm);
   padding: 10px 12px;
   font-size: 0.92rem;
   font-weight: 500;
-  color: var(--abd-ink-900);
-  background: var(--abd-surface);
+  color: var(--abd-text-900);
+  background: var(--abd-surface-muted);
   transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-
 .affbuyer-profile-grid input:disabled {
-  background: var(--abd-surface-muted);
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
   cursor: default;
 }
-
 .affbuyer-profile-grid input:not(:disabled):focus {
   outline: none;
-  border-color: var(--abd-blue-500);
-  box-shadow: 0 0 0 3px var(--abd-blue-100);
   background: #fff;
+  border-color: var(--abd-orange-500);
+  box-shadow: 0 0 0 3px var(--abd-orange-100);
 }
 
 /* =====================================================================
-   Tabs principales
+   Tabs principales — replican la barra real del sitio: pastillas planas
+   sueltas, sin contenedor. Inactiva = ícono + texto gris, sin fondo.
+   Activa = pastilla naranja sólida (igual que "Ofertas" en la captura).
    ===================================================================== */
 
 .affbuyer-tabs {
   display: flex;
-  gap: 4px;
-  background: var(--abd-surface);
-  border: 1px solid var(--abd-line);
-  border-radius: var(--abd-radius-md);
-  padding: 6px;
-  box-shadow: var(--abd-shadow-xs);
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .affbuyer-tab {
-  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 18px;
+  padding: 11px 20px;
   border: none;
   background: transparent;
-  border-radius: calc(var(--abd-radius-md) - 6px);
+  border-radius: var(--abd-radius-pill);
   font-weight: 700;
   font-size: 0.9rem;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   cursor: pointer;
-  transition: color .18s ease, background .18s ease;
+  transition: color .16s ease, background .16s ease;
 }
-
 .affbuyer-tab svg {
-  color: var(--abd-ink-300);
-  transition: color .18s ease;
+  color: var(--abd-text-300);
+  transition: color .16s ease;
 }
-
 .affbuyer-tab:hover {
-  color: var(--abd-navy-800);
-  background: var(--abd-blue-050);
+  background: var(--abd-surface-muted);
+  color: var(--abd-text-900);
 }
 .affbuyer-tab:hover svg {
-  color: var(--abd-blue-500);
+  color: var(--abd-orange-600);
 }
 
 .affbuyer-tab-active {
   color: #fff;
-  background: linear-gradient(135deg, var(--abd-navy-800) 0%, var(--abd-navy-700) 100%);
-  box-shadow: 0 8px 18px rgba(30, 58, 95, 0.30);
+  background: var(--abd-orange-600);
+  box-shadow: var(--abd-shadow-orange);
 }
-
-.affbuyer-tab-active::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 4px;
-  height: 2.5px;
-  border-radius: 2px;
-  background: var(--abd-orange-500);
-}
-
 .affbuyer-tab-active svg {
-  color: var(--abd-orange-500);
+  color: #fff;
 }
-
 .affbuyer-tab-active:hover {
-  background: linear-gradient(135deg, var(--abd-navy-800) 0%, var(--abd-navy-700) 100%);
+  background: var(--abd-orange-700);
+  color: #fff;
 }
 
 /* =====================================================================
-   Subtabs (dentro de Tiendas)
+   Subtabs (dentro de Tiendas) — mismo lenguaje, un escalón más chico
    ===================================================================== */
 
 .affbuyer-subtabs {
@@ -394,27 +329,25 @@
   border-radius: var(--abd-radius-pill);
   border: 1.5px solid var(--abd-line);
   background: var(--abd-surface);
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
   font-weight: 600;
   font-size: 0.84rem;
   cursor: pointer;
   transition: all .16s ease;
 }
-
 .affbuyer-subtab:hover {
-  border-color: var(--abd-blue-400);
-  color: var(--abd-blue-600);
-  background: var(--abd-blue-050);
+  border-color: var(--abd-orange-400);
+  color: var(--abd-orange-600);
 }
-
 .affbuyer-subtab-active {
-  border-color: var(--abd-blue-500);
-  background: var(--abd-blue-500);
+  border-color: var(--abd-orange-600);
+  background: var(--abd-orange-600);
   color: #fff;
-  box-shadow: 0 6px 14px rgba(74, 144, 217, 0.32);
+  box-shadow: var(--abd-shadow-orange);
 }
 .affbuyer-subtab-active:hover {
-  background: var(--abd-blue-600);
+  background: var(--abd-orange-700);
+  border-color: var(--abd-orange-700);
   color: #fff;
 }
 
@@ -427,38 +360,35 @@
   align-items: center;
   gap: 10px;
   background: var(--abd-surface-muted);
-  border: 1.5px solid var(--abd-line);
+  border: 1.5px solid transparent;
   border-radius: var(--abd-radius-pill);
   padding: 10px 16px;
   margin-bottom: 20px;
   transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-
 .affbuyer-search svg {
-  color: var(--abd-ink-300);
+  color: var(--abd-text-300);
   flex-shrink: 0;
 }
-
 .affbuyer-search:focus-within {
-  border-color: var(--abd-blue-500);
-  box-shadow: 0 0 0 4px var(--abd-blue-100);
   background: #fff;
+  border-color: var(--abd-orange-500);
+  box-shadow: 0 0 0 4px var(--abd-orange-100);
 }
 .affbuyer-search:focus-within svg {
-  color: var(--abd-blue-500);
+  color: var(--abd-orange-600);
 }
-
 .affbuyer-search input {
   border: none;
   background: transparent;
   outline: none;
   width: 100%;
   font-size: 0.92rem;
-  color: var(--abd-ink-900);
+  color: var(--abd-text-900);
   font-weight: 500;
 }
 .affbuyer-search input::placeholder {
-  color: var(--abd-ink-300);
+  color: var(--abd-text-300);
 }
 
 /* =====================================================================
@@ -481,29 +411,12 @@
   border-radius: var(--abd-radius-md);
   padding: 20px;
   box-shadow: var(--abd-shadow-xs);
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-
-.affbuyer-store-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 18px;
-  right: 18px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--abd-accent-bar);
-  opacity: 0;
-  transition: opacity .2s ease;
-}
-
 .affbuyer-store-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--abd-shadow-md);
-  border-color: var(--abd-blue-400);
-}
-.affbuyer-store-card:hover::before {
-  opacity: 1;
+  border-color: var(--abd-orange-400);
 }
 
 .affbuyer-new-flag {
@@ -513,7 +426,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(135deg, var(--abd-orange-600), var(--abd-orange-700));
+  background: var(--abd-orange-600);
   color: #fff;
   font-size: 0.68rem;
   font-weight: 800;
@@ -521,7 +434,7 @@
   text-transform: uppercase;
   padding: 5px 10px;
   border-radius: var(--abd-radius-pill);
-  box-shadow: 0 6px 14px rgba(232, 98, 30, 0.4);
+  box-shadow: var(--abd-shadow-orange);
 }
 
 .affbuyer-store-card-header {
@@ -532,15 +445,14 @@
 
 .affbuyer-category-badge {
   align-self: flex-start;
-  background: var(--abd-blue-050);
-  color: var(--abd-blue-600);
+  background: var(--abd-neutral-chip-bg);
+  color: var(--abd-neutral-chip-text);
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 4px 10px;
   border-radius: var(--abd-radius-pill);
-  border: 1px solid var(--abd-blue-100);
 }
 
 .affbuyer-store-stats {
@@ -549,14 +461,13 @@
   padding-top: 4px;
   border-top: 1px solid var(--abd-line-soft);
 }
-
 .affbuyer-store-stat {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
 }
 .affbuyer-store-stat svg {
   color: var(--abd-orange-600);
@@ -571,26 +482,28 @@
   padding: 10px 16px;
   border-radius: var(--abd-radius-sm);
   border: none;
-  background: var(--abd-navy-800);
+  background: var(--abd-orange-600);
   color: #fff;
   font-weight: 700;
   font-size: 0.86rem;
   cursor: pointer;
-  transition: background .18s ease, transform .16s ease;
+  transition: background .16s ease, transform .16s ease;
 }
 .affbuyer-view-store-btn:hover {
-  background: var(--abd-navy-700);
+  background: var(--abd-orange-700);
   transform: translateY(-1px);
 }
 
 /* =====================================================================
    Avatares / carnet de vendedor
+   Réplica del "ícono de negocio" del sitio: caja oscura casi negra
+   con el trazo/inicial en naranja.
    ===================================================================== */
 
 .affbuyer-carnet-avatar {
   width: 46px;
   height: 46px;
-  border-radius: 50%;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -598,14 +511,15 @@
   font-family: var(--abd-font-display);
   font-weight: 700;
   font-size: 1.1rem;
-  color: #fff;
-  background: linear-gradient(135deg, var(--abd-navy-800), var(--abd-blue-500));
-  box-shadow: 0 4px 10px rgba(30, 58, 95, 0.25);
+  color: var(--abd-orange-500);
+  background: linear-gradient(160deg, var(--abd-ink-900), var(--abd-ink-950));
+  border: 1px solid rgba(242, 101, 15, 0.35);
 }
 
 .affbuyer-carnet-avatar-img {
   padding: 0;
   overflow: hidden;
+  border-radius: 50%;
   background: var(--abd-surface-muted);
   border: 1px solid var(--abd-line);
 }
@@ -619,12 +533,20 @@
   width: 34px;
   height: 34px;
   font-size: 0.88rem;
+  border-radius: 10px;
+}
+.affbuyer-avatar-sm.affbuyer-carnet-avatar-img {
+  border-radius: 50%;
 }
 
 .affbuyer-avatar-lg {
   width: 64px;
   height: 64px;
   font-size: 1.5rem;
+  border-radius: 18px;
+}
+.affbuyer-avatar-lg.affbuyer-carnet-avatar-img {
+  border-radius: 50%;
 }
 
 .affbuyer-carnet-header {
@@ -637,40 +559,36 @@
   font-family: var(--abd-font-display);
   font-weight: 700;
   font-size: 1.05rem;
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
   margin: 0;
   line-height: 1.25;
 }
-
 .affbuyer-carnet-contact {
   font-size: 0.82rem;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   margin: 2px 0 0;
   font-weight: 500;
 }
-
 .affbuyer-carnet-description {
   font-size: 0.86rem;
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
   line-height: 1.5;
   margin: 0;
 }
-
 .affbuyer-carnet-divider {
   height: 1px;
   background: var(--abd-line-soft);
   margin: 4px 0;
 }
-
 .affbuyer-carnet-details {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 0.84rem;
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
 }
 .affbuyer-carnet-details span {
-  color: var(--abd-ink-300);
+  color: var(--abd-text-300);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.68rem;
@@ -695,8 +613,8 @@
   gap: 18px;
 }
 
-/* WhatsApp: se mantiene reconocible (verde de marca) pero sobrio,
-   integrado como botón secundario dentro de la identidad del panel. */
+/* WhatsApp: excepción de marca reconocible a propósito (verde WhatsApp),
+   tratada de forma sobria para no competir con el naranja de marca. */
 .affbuyer-whatsapp-btn {
   display: inline-flex;
   align-items: center;
@@ -710,7 +628,7 @@
   font-weight: 700;
   font-size: 0.86rem;
   text-decoration: none;
-  transition: background .18s ease, color .18s ease, transform .16s ease;
+  transition: background .16s ease, color .16s ease, transform .16s ease;
 }
 .affbuyer-whatsapp-btn:hover {
   background: #1fae59;
@@ -719,7 +637,8 @@
 }
 
 /* =====================================================================
-   Estados / badges
+   Estados / badges — sin azul: neutro para "informativo", granate de
+   marca para alerta, esmeralda para confirmado/disponible.
    ===================================================================== */
 
 .affbuyer-status-badge {
@@ -733,29 +652,23 @@
   letter-spacing: 0.03em;
   width: fit-content;
 }
-
 .affbuyer-status-pending {
-  background: var(--abd-blue-050);
-  color: var(--abd-blue-600);
-  border: 1px solid var(--abd-blue-100);
+  background: var(--abd-neutral-chip-bg);
+  color: var(--abd-text-700);
 }
-
 .affbuyer-status-accepted {
   background: var(--abd-emerald-050);
   color: var(--abd-emerald-700);
   border: 1px solid var(--abd-emerald-100);
 }
-
 .affbuyer-status-rejected {
   background: var(--abd-garnet-050);
   color: var(--abd-garnet-700);
   border: 1px solid var(--abd-garnet-100);
 }
-
 .affbuyer-status-blocked {
   background: var(--abd-garnet-700);
   color: #fff;
-  border: 1px solid var(--abd-garnet-800);
 }
 
 .affbuyer-stock-badge {
@@ -767,12 +680,10 @@
   font-size: 0.7rem;
   font-weight: 700;
 }
-
 .affbuyer-stock-badge-available {
   background: var(--abd-emerald-050);
   color: var(--abd-emerald-700);
 }
-
 .affbuyer-stock-badge-none {
   background: var(--abd-garnet-050);
   color: var(--abd-garnet-600);
@@ -790,9 +701,7 @@
   letter-spacing: 0.03em;
   background: var(--abd-orange-600);
   color: #fff;
-  box-shadow: 0 3px 8px rgba(232, 98, 30, 0.4);
 }
-
 .affbuyer-new-badge {
   display: inline-block;
   margin-left: 8px;
@@ -801,8 +710,8 @@
   font-size: 0.62rem;
   font-weight: 800;
   text-transform: uppercase;
-  background: var(--abd-blue-100);
-  color: var(--abd-blue-600);
+  background: var(--abd-orange-050);
+  color: var(--abd-orange-700);
 }
 
 /* =====================================================================
@@ -815,7 +724,7 @@
   gap: 7px;
   border: none;
   background: transparent;
-  color: var(--abd-navy-700);
+  color: var(--abd-text-700);
   font-weight: 700;
   font-size: 0.86rem;
   cursor: pointer;
@@ -836,16 +745,15 @@
   margin-bottom: 20px;
   border-bottom: 1px solid var(--abd-line-soft);
 }
-
 .affbuyer-store-detail-info {
   display: flex;
   gap: 24px;
   flex-wrap: wrap;
   font-size: 0.86rem;
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
 }
 .affbuyer-store-detail-info span {
-  color: var(--abd-ink-300);
+  color: var(--abd-text-300);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.68rem;
@@ -866,39 +774,11 @@
   margin-bottom: 0;
 }
 
-.affbuyer-download-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--abd-radius-pill);
-  border: 1.5px solid var(--abd-navy-800);
-  background: var(--abd-surface);
-  color: var(--abd-navy-800);
-  font-weight: 700;
-  font-size: 0.84rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background .18s ease, color .18s ease, transform .16s ease, box-shadow .18s ease;
-}
-.affbuyer-download-btn:hover {
-  background: var(--abd-navy-800);
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(30, 58, 95, 0.28);
-}
-.affbuyer-download-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
 .affbuyer-offer-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .affbuyer-offer-row {
   display: flex;
   align-items: center;
@@ -911,17 +791,15 @@
   transition: border-color .16s ease, box-shadow .16s ease;
 }
 .affbuyer-offer-row:hover {
-  border-color: var(--abd-blue-400);
+  border-color: var(--abd-orange-400);
   box-shadow: var(--abd-shadow-xs);
 }
-
 .affbuyer-offer-info {
   display: flex;
   align-items: center;
   gap: 14px;
   min-width: 0;
 }
-
 .affbuyer-offer-thumb {
   width: 54px;
   height: 54px;
@@ -931,27 +809,23 @@
   border: 1px solid var(--abd-line);
   background: var(--abd-surface-muted);
 }
-
 .affbuyer-offer-thumb-empty {
-  background: linear-gradient(135deg, var(--abd-navy-050), var(--abd-blue-050));
+  background: linear-gradient(135deg, var(--abd-ink-950), var(--abd-ink-800));
 }
-
 .affbuyer-offer-name {
   font-weight: 700;
   font-size: 0.94rem;
-  color: var(--abd-ink-900);
+  color: var(--abd-text-900);
   margin: 0 0 4px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
 }
-
 .affbuyer-offer-meta-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .affbuyer-offer-commission {
   font-size: 0.82rem;
   font-weight: 700;
@@ -966,21 +840,21 @@
   padding: 9px 16px;
   border-radius: var(--abd-radius-pill);
   border: none;
-  background: linear-gradient(135deg, var(--abd-orange-600), var(--abd-orange-700));
+  background: var(--abd-orange-600);
   color: #fff;
   font-weight: 700;
   font-size: 0.84rem;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 6px 14px rgba(232, 98, 30, 0.3);
-  transition: transform .16s ease, box-shadow .16s ease;
+  box-shadow: var(--abd-shadow-orange);
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
 .affbuyer-apply-btn:hover {
+  background: var(--abd-orange-700);
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(232, 98, 30, 0.38);
 }
 .affbuyer-apply-btn:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
@@ -996,7 +870,6 @@
   gap: 14px;
   margin-top: 22px;
 }
-
 .affbuyer-page-btn {
   display: inline-flex;
   align-items: center;
@@ -1006,24 +879,23 @@
   border-radius: 50%;
   border: 1.5px solid var(--abd-line);
   background: var(--abd-surface);
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
   cursor: pointer;
   transition: all .16s ease;
 }
 .affbuyer-page-btn:hover:not(:disabled) {
-  background: var(--abd-navy-800);
-  border-color: var(--abd-navy-800);
+  background: var(--abd-orange-600);
+  border-color: var(--abd-orange-600);
   color: #fff;
 }
 .affbuyer-page-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
 .affbuyer-page-info {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
 }
 
 /* =====================================================================
@@ -1041,23 +913,20 @@
   flex-direction: column;
   gap: 6px;
   background: var(--abd-surface-muted);
-  border: 1px solid var(--abd-line-soft);
   border-radius: var(--abd-radius-sm);
   padding: 12px 14px;
 }
-
 .affbuyer-amount-line {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 0.82rem;
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
   margin: 0;
 }
-
 .affbuyer-amount-value {
   font-weight: 800;
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
 }
 .affbuyer-amount-positive {
   color: var(--abd-emerald-700);
@@ -1071,7 +940,6 @@
   flex-direction: column;
   gap: 10px;
 }
-
 .affbuyer-store-app-item-card {
   display: flex;
   align-items: center;
@@ -1089,10 +957,10 @@
   gap: 14px;
   flex-wrap: wrap;
   font-size: 0.8rem;
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
 }
 .affbuyer-application-meta span {
-  color: var(--abd-ink-300);
+  color: var(--abd-text-300);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.66rem;
@@ -1115,9 +983,8 @@
   fill: var(--abd-orange-500);
 }
 
-/* ---- Copiar link: acción clave, antes apagada — ahora es el CTA
-   más visible de la tarjeta, con relleno sólido, sombra y estado
-   "Copiado" en verde esmeralda para feedback inmediato. ---- */
+/* Copiar link: acción importante — CTA naranja sólido, la misma jerarquía
+   visual que "Ofertas" en la referencia, para que no pase desapercibido. */
 .affbuyer-copy-link-btn {
   display: inline-flex;
   align-items: center;
@@ -1125,23 +992,23 @@
   padding: 10px 18px;
   border: none;
   border-radius: var(--abd-radius-pill);
-  background: linear-gradient(135deg, var(--abd-orange-600) 0%, var(--abd-orange-700) 100%);
+  background: var(--abd-orange-600);
   color: #fff;
   font-weight: 800;
   font-size: 0.84rem;
   letter-spacing: 0.01em;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 8px 18px rgba(232, 98, 30, 0.35);
-  transition: transform .18s ease, box-shadow .18s ease, background .2s ease;
+  box-shadow: var(--abd-shadow-orange);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .affbuyer-copy-link-btn:hover {
+  background: var(--abd-orange-700);
   transform: translateY(-2px);
-  box-shadow: 0 12px 26px rgba(232, 98, 30, 0.44);
+  box-shadow: 0 12px 26px rgba(242, 101, 15, 0.4);
 }
 .affbuyer-copy-link-btn:active {
   transform: translateY(0);
-  box-shadow: 0 6px 14px rgba(232, 98, 30, 0.32);
 }
 
 /* =====================================================================
@@ -1159,10 +1026,11 @@
   position: relative;
   padding: 20px;
   border-radius: var(--abd-radius-md);
-  background: linear-gradient(135deg, var(--abd-navy-800), var(--abd-navy-600));
   color: #fff;
   overflow: hidden;
   box-shadow: var(--abd-shadow-md);
+  background: linear-gradient(150deg, var(--abd-ink-900), var(--abd-ink-950));
+  border: 1px solid rgba(242, 101, 15, 0.25);
 }
 .affbuyer-earnings-card::after {
   content: "";
@@ -1172,15 +1040,15 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(242, 101, 15, 0.12);
 }
-
 .affbuyer-earnings-card-pending {
-  background: linear-gradient(135deg, var(--abd-orange-600), var(--abd-orange-800));
+  background: linear-gradient(150deg, var(--abd-orange-600), var(--abd-orange-800));
+  border-color: transparent;
 }
-
 .affbuyer-earnings-card-collected {
-  background: linear-gradient(135deg, var(--abd-emerald-600), var(--abd-emerald-700));
+  background: linear-gradient(150deg, var(--abd-emerald-600), var(--abd-emerald-700));
+  border-color: transparent;
 }
 
 .affbuyer-earnings-label {
@@ -1191,7 +1059,6 @@
   opacity: 0.85;
   margin: 0 0 8px;
 }
-
 .affbuyer-earnings-value {
   font-family: var(--abd-font-display);
   font-size: 1.75rem;
@@ -1209,14 +1076,12 @@
   flex-direction: column;
   gap: 18px;
 }
-
 .affbuyer-store-earnings-block {
   border: 1px solid var(--abd-line);
   border-radius: var(--abd-radius-md);
   padding: 18px;
   background: var(--abd-surface);
 }
-
 .affbuyer-store-earnings-header {
   display: flex;
   align-items: center;
@@ -1227,15 +1092,14 @@
   margin-bottom: 14px;
   border-bottom: 1px solid var(--abd-line-soft);
 }
-
 .affbuyer-store-earnings-totals {
   display: flex;
   gap: 18px;
   font-size: 0.82rem;
-  color: var(--abd-ink-700);
+  color: var(--abd-text-700);
 }
 .affbuyer-store-earnings-totals strong {
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
 }
 
 .affbuyer-sales-list {
@@ -1243,7 +1107,6 @@
   flex-direction: column;
   gap: 10px;
 }
-
 .affbuyer-sale-row {
   display: grid;
   grid-template-columns: 1.6fr 1fr 1fr;
@@ -1254,27 +1117,23 @@
   border-radius: var(--abd-radius-sm);
   background: var(--abd-surface-muted);
 }
-
 .affbuyer-sale-product {
   font-weight: 700;
   font-size: 0.88rem;
-  color: var(--abd-ink-900);
+  color: var(--abd-text-900);
   margin: 0;
 }
-
 .affbuyer-sale-seller {
   font-size: 0.78rem;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   margin: 2px 0 0;
 }
-
 .affbuyer-dispute-note {
   font-size: 0.76rem;
   font-weight: 700;
   color: var(--abd-garnet-700);
   margin: 4px 0 0;
 }
-
 .affbuyer-sale-amounts {
   display: flex;
   flex-direction: column;
@@ -1282,47 +1141,42 @@
 }
 .affbuyer-sale-total {
   font-size: 0.78rem;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
   margin: 0;
 }
 .affbuyer-sale-commission {
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
   margin: 0;
 }
-
 .affbuyer-sale-due {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
 }
-
 .affbuyer-due-badge {
   display: inline-flex;
   padding: 4px 11px;
   border-radius: var(--abd-radius-pill);
   font-size: 0.72rem;
   font-weight: 800;
-  background: var(--abd-blue-050);
-  color: var(--abd-blue-600);
+  background: var(--abd-neutral-chip-bg);
+  color: var(--abd-text-700);
 }
-
 .affbuyer-due-badge-urgent {
   background: var(--abd-garnet-600);
   color: #fff;
   box-shadow: 0 4px 10px rgba(165, 44, 70, 0.35);
 }
-
 .affbuyer-due-badge-paid {
   background: var(--abd-emerald-100);
   color: var(--abd-emerald-700);
 }
-
 .affbuyer-due-date {
   font-size: 0.74rem;
-  color: var(--abd-ink-500);
+  color: var(--abd-text-500);
 }
 
 .affbuyer-sale-row-urgent {
@@ -1330,13 +1184,11 @@
   background: var(--abd-garnet-050);
   box-shadow: inset 3px 0 0 var(--abd-garnet-600);
 }
-
 .affbuyer-sale-row-disputed {
   border-style: dashed;
   border-color: var(--abd-garnet-600);
   background: var(--abd-garnet-050);
 }
-
 .affbuyer-sale-row-paid {
   background: var(--abd-emerald-050);
   border-color: var(--abd-emerald-100);
@@ -1349,14 +1201,13 @@
   gap: 10px;
   justify-content: flex-end;
 }
-
 .affbuyer-proof-link {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--abd-blue-600);
+  color: var(--abd-orange-700);
   text-decoration: none;
 }
 .affbuyer-proof-link:hover {
@@ -1396,14 +1247,13 @@
   border-top: 1px solid var(--abd-line-soft);
   padding-top: 14px;
 }
-
 .affbuyer-history-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 700;
   font-size: 0.86rem;
-  color: var(--abd-navy-800);
+  color: var(--abd-text-900);
   cursor: pointer;
   list-style: none;
 }
@@ -1411,9 +1261,8 @@
   display: none;
 }
 .affbuyer-history-title svg {
-  color: var(--abd-blue-500);
+  color: var(--abd-orange-600);
 }
-
 .affbuyer-history-section[open] .affbuyer-history-title {
   margin-bottom: 12px;
 }
@@ -1423,69 +1272,25 @@
    ===================================================================== */
 
 @media (max-width: 960px) {
-  .affbuyer-store-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .affbuyer-carnet-grid {
-    grid-template-columns: 1fr;
-  }
-  .affbuyer-profile-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .affbuyer-earnings-summary {
-    grid-template-columns: 1fr;
-  }
+  .affbuyer-store-grid { grid-template-columns: repeat(2, 1fr); }
+  .affbuyer-carnet-grid { grid-template-columns: 1fr; }
+  .affbuyer-profile-grid { grid-template-columns: repeat(2, 1fr); }
+  .affbuyer-earnings-summary { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-  .affbuyer-dashboard {
-    padding: 20px 14px 72px;
-    gap: 20px;
-  }
-  .affbuyer-panel,
-  .affbuyer-profile-card {
-    padding: 18px;
-  }
-  .affbuyer-store-grid {
-    grid-template-columns: 1fr;
-  }
-  .affbuyer-profile-grid {
-    grid-template-columns: 1fr;
-  }
-  .affbuyer-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-  }
-  .affbuyer-tab {
-    white-space: nowrap;
-  }
-  .affbuyer-offer-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .affbuyer-apply-btn {
-    align-self: stretch;
-    justify-content: center;
-  }
-  .affbuyer-sale-row {
-    grid-template-columns: 1fr;
-    align-items: flex-start;
-  }
-  .affbuyer-sale-row-paid {
-    grid-template-columns: 1fr;
-  }
-  .affbuyer-sale-due {
-    align-items: flex-start;
-  }
-  .affbuyer-store-app-item-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .affbuyer-copy-link-btn {
-    justify-content: center;
-  }
-  .affbuyer-store-earnings-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .affbuyer-dashboard { padding: 20px 14px 72px; gap: 20px; }
+  .affbuyer-panel, .affbuyer-profile-card { padding: 18px; }
+  .affbuyer-store-grid { grid-template-columns: 1fr; }
+  .affbuyer-profile-grid { grid-template-columns: 1fr; }
+  .affbuyer-tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .affbuyer-tab { white-space: nowrap; }
+  .affbuyer-offer-row { flex-direction: column; align-items: flex-start; }
+  .affbuyer-apply-btn { align-self: stretch; justify-content: center; }
+  .affbuyer-sale-row { grid-template-columns: 1fr; align-items: flex-start; }
+  .affbuyer-sale-row-paid { grid-template-columns: 1fr; }
+  .affbuyer-sale-due { align-items: flex-start; }
+  .affbuyer-store-app-item-card { flex-direction: column; align-items: stretch; }
+  .affbuyer-copy-link-btn { justify-content: center; }
+  .affbuyer-store-earnings-header { flex-direction: column; align-items: flex-start; }
 }
