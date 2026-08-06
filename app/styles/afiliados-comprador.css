@@ -382,11 +382,6 @@
   border-radius: var(--abd-radius-pill);
   box-shadow: var(--abd-shadow-orange);
 }
-.affbuyer-store-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 .affbuyer-category-badge {
   align-self: flex-start;
   background: var(--abd-neutral-chip-bg);
@@ -485,10 +480,16 @@
 .affbuyer-avatar-lg.affbuyer-carnet-avatar-img {
   border-radius: 50%;
 }
-.affbuyer-carnet-header {
+.affbuyer-carnet-header,
+.affbuyer-store-card-header {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.affbuyer-carnet-header > div,
+.affbuyer-store-card-header > div {
+  min-width: 0;
+  flex: 1;
 }
 .affbuyer-carnet-name {
   font-family: var(--abd-font-display);
@@ -497,12 +498,21 @@
   color: var(--abd-text-900);
   margin: 0;
   line-height: 1.25;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 .affbuyer-carnet-contact {
   font-size: 0.82rem;
   color: var(--abd-text-500);
   margin: 2px 0 0;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .affbuyer-carnet-description {
   font-size: 0.86rem;
