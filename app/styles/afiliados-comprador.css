@@ -343,6 +343,7 @@
 .affbuyer-store-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
   gap: 18px;
 }
 .affbuyer-store-card {
@@ -350,6 +351,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
+  min-width: 0;
   background: var(--abd-surface);
   border: 1px solid var(--abd-line);
   border-radius: var(--abd-radius-md);
@@ -397,8 +400,11 @@
 }
 .affbuyer-store-stats {
   display: flex;
+  flex-wrap: wrap;
+  row-gap: 6px;
   gap: 18px;
   padding-top: 4px;
+  margin-top: auto;
   border-top: 1px solid var(--abd-line-soft);
 }
 .affbuyer-store-stat {
@@ -408,6 +414,7 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--abd-text-900);
+  white-space: nowrap;
 }
 .affbuyer-store-stat svg {
   color: var(--abd-orange-600);
