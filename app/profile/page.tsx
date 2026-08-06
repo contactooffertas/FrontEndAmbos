@@ -50,6 +50,21 @@ interface MyReport        { _id: string; targetType: "product"|"business"; targe
 interface ReportOnContent { _id: string; targetType: "product"|"business"; targetName: string; status: "pending"|"reviewed"|"dismissed"|"action_taken"; category: string; adminNote?: string; adminAction?: string; reason: string; detectedKeywords: string[]; createdAt: string; resolvedAt?: string; autoBlocked: boolean; }
 interface Announcement    { _id: string; title: string; message: string; audience: "all"|"seller"|"buyer"; durationHours: number; link?: string; createdAt: string; expiresAt: string; }
 
+// ── NUEVO: forma del badge de notificaciones del Programa de Afiliados.
+//    El backend puede mandar distintos campos de desglose según el rol
+//    (seller: pendingApplications/urgentOrDisputed; buyer: pendingApplications/
+//    urgentSales/newStores). El campo "count" es opcional/best-effort: si no
+//    viene (o viene en 0) lo calculamos nosotros sumando el desglose, así el
+//    botón del programa de afiliados nunca se queda sin badge por un tema de
+//    formato de respuesta del backend.
+interface AffiliateNotificationBadge {
+  count?: number;
+  pendingApplications?: number;
+  urgentOrDisputed?: number; // seller
+  urgentSales?: number;      // buyer
+  newStores?: number;        // buyer
+}
+
 // ── Haversine: distancia en metros entre dos coordenadas ─────────────────────
 function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6_371_000;
@@ -443,6 +458,14 @@ export default function ProfilePage() {
   // ── NUEVO: badge del Programa de Afiliados (solicitudes/pagos urgentes).
   //    Pega a /affiliates/seller/notifications-badge o /affiliates/buyer/...
   //    según el rol, cada 30s. Nunca rompe la pantalla: si falla, se queda en 0.
+  //
+  //    FIX: para "buyer" el backend puede no mandar un "count" top-level
+  //    confiable (o mandarlo en 0) aunque sí manda el desglose por tab
+  //    (pendingApplications / urgentSales / newStores — los mismos campos
+  //    que ya usa BuyerDashboard para pintar los contadores de cada pestaña).
+  //    Antes esto dejaba el botón sin badge para compradores. Ahora, si
+  //    "count" no viene como número > 0, lo calculamos sumando el desglose
+  //    disponible según el rol.
   const loadAffiliateBadge = useCallback(async () => {
     const token = getToken(); if (!token || !user) return;
     const u = user as any;
@@ -451,10 +474,19 @@ export default function ProfilePage() {
       const res = await fetch(`${API}/affiliates/${path}/notifications-badge`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) return;
-      const data = await res.json();
-      setAffiliateBadge(data.count || 0);
-    } catch {}
+      if (!res.ok) { setAffiliateBadge(0); return; }
+      const data: AffiliateNotificationBadge = await res.json();
+
+      const fallbackCount =
+        path === "seller"
+          ? (data.pendingApplications || 0) + (data.urgentOrDisputed || 0)
+          : (data.pendingApplications || 0) + (data.urgentSales || 0) + (data.newStores || 0);
+
+      const finalCount = typeof data.count === "number" && data.count > 0 ? data.count : fallbackCount;
+      setAffiliateBadge(finalCount);
+    } catch {
+      setAffiliateBadge(0);
+    }
   }, [user]);
 
   useEffect(() => {
