@@ -195,6 +195,13 @@ interface SellerDashboardProps {
   businessName: string;
 }
 
+/** ── NUEVO: desglose del badge de notificaciones para pintar contador por tab */
+interface NotificationBadge {
+  count: number;
+  pendingApplications: number;
+  urgentOrDisputed: number;
+}
+
 function Pagination({
   meta,
   onChange,
@@ -270,8 +277,8 @@ function BuyerCarnet({
           </p>
         )}
       </div>
-      <a
-        href={buildWhatsAppLink(buyer.phone, businessName)}
+      
+       <a href={buildWhatsAppLink(buyer.phone, businessName)}
         target="_blank"
         rel="noopener noreferrer"
         className="affseller-whatsapp-btn"
@@ -466,12 +473,36 @@ function ProfileEditCard({
   );
 }
 
+/* ── NUEVO: pastilla numérica para pintar cantidad de pendientes en un tab */
+function TabCount({ value }: { value: number }): JSX.Element | null {
+  if (value <= 0) return null;
+  return <span className="affseller-tab-count">{value > 99 ? "99+" : value}</span>;
+}
+
 export default function SellerDashboard({ businessName }: SellerDashboardProps): JSX.Element {
   const [tab, setTab] = useState<TabKey>("ofertas");
 
   // Se conserva solo para mostrar la etiqueta del ciclo elegido en el perfil;
   // el cálculo real de vencimientos ahora lo hace siempre el backend.
   const [, setPaymentTermDays] = useState<15 | 30>(30);
+
+  /* ── NUEVO: badge de notificaciones (desglose por tab) --- */
+  const [badge, setBadge] = useState<NotificationBadge>({ count: 0, pendingApplications: 0, urgentOrDisputed: 0 });
+
+  const loadBadge = useCallback(async () => {
+    try {
+      const data = await authFetch<NotificationBadge>("/notifications-badge");
+      setBadge(data);
+    } catch {
+      // silencioso: el badge no es crítico para el uso del dashboard
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadBadge();
+    const interval = setInterval(() => void loadBadge(), 30_000);
+    return () => clearInterval(interval);
+  }, [loadBadge]);
 
   // --- Tab: Ofertas (catálogo paginado de 5 en 5) ---
   const [products, setProducts] = useState<SellerProductItem[]>([]);
@@ -831,14 +862,14 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
           className={`affseller-tab ${tab === "solicitudes" ? "affseller-tab-active" : ""}`}
           onClick={() => setTab("solicitudes")}
         >
-          <IdCard size={15} /> Solicitudes
+          <IdCard size={15} /> Solicitudes <TabCount value={badge.pendingApplications} />
         </button>
         <button
           type="button"
           className={`affseller-tab ${tab === "afiliados" ? "affseller-tab-active" : ""}`}
           onClick={() => setTab("afiliados")}
         >
-          <Users size={15} /> Mis Afiliados
+          <Users size={15} /> Mis Afiliados <TabCount value={badge.urgentOrDisputed} />
         </button>
         <button
           type="button"
