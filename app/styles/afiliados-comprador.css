@@ -576,6 +576,8 @@
   color: #fff;
   transform: translateY(-1px);
 }
+
+
 /* Badges de estado (sin azul) */
 .affbuyer-status-badge {
   display: inline-flex;
@@ -587,6 +589,7 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   width: fit-content;
+  white-space: nowrap;
 }
 .affbuyer-status-pending {
   background: var(--abd-neutral-chip-bg);
@@ -614,6 +617,7 @@
   border-radius: var(--abd-radius-pill);
   font-size: 0.7rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 .affbuyer-stock-badge-available {
   background: var(--abd-emerald-050);
@@ -622,7 +626,8 @@
 .affbuyer-stock-badge-none {
   background: var(--abd-garnet-050);
   color: var(--abd-garnet-600);
-}.affbuyer-new-pill {
+}
+.affbuyer-new-pill {
   display: inline-flex;
   align-items: center;
   margin-left: 4px;
@@ -634,6 +639,7 @@
   letter-spacing: 0.03em;
   background: var(--abd-orange-600);
   color: #fff;
+  white-space: nowrap;
 }
 .affbuyer-new-badge {
   display: inline-block;
@@ -645,6 +651,7 @@
   text-transform: uppercase;
   background: var(--abd-orange-050);
   color: var(--abd-orange-700);
+  white-space: nowrap;
 }
 .affbuyer-back-btn {
   display: inline-flex;
@@ -693,16 +700,18 @@
   gap: 14px;
   margin-bottom: 18px;
   flex-wrap: wrap;
+  width: 100%;
 }
 .affbuyer-store-detail-toolbar .affbuyer-search {
-  flex: 1;
-  min-width: 220px;
+  flex: 1 1 220px;
+  min-width: 0;
   margin-bottom: 0;
 }
 .affbuyer-offer-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 .affbuyer-offer-row {
   display: flex;
@@ -724,6 +733,7 @@
   align-items: center;
   gap: 14px;
   min-width: 0;
+  flex: 1;
 }
 .affbuyer-offer-thumb {
   width: 54px;
@@ -745,11 +755,13 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
 }
 .affbuyer-offer-meta-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 .affbuyer-offer-commission {
   font-size: 0.82rem;
@@ -770,6 +782,7 @@
   font-size: 0.84rem;
   cursor: pointer;
   flex-shrink: 0;
+  white-space: nowrap;
   box-shadow: var(--abd-shadow-orange);
   transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
@@ -788,6 +801,7 @@
   justify-content: center;
   gap: 14px;
   margin-top: 22px;
+  flex-wrap: wrap;
 }
 .affbuyer-page-btn {
   display: inline-flex;
@@ -795,6 +809,7 @@
   justify-content: center;
   width: 34px;
   height: 34px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: 1.5px solid var(--abd-line);
   background: var(--abd-surface);
@@ -815,11 +830,13 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--abd-text-500);
+  white-space: nowrap;
 }
 .affbuyer-application-footer {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: 100%;
 }
 .affbuyer-amount-box {
   display: flex;
@@ -833,10 +850,372 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 0.82rem;
   color: var(--abd-text-700);
   margin: 0;
 }
 .affbuyer-amount-value {
   font-weight: 800;
-  color: var(--abd-text
+  color: var(--abd-text-900);
+  white-space: nowrap;
+}
+.affbuyer-amount-positive {
+  color: var(--abd-emerald-700);
+}
+.affbuyer-amount-pending {
+  color: var(--abd-orange-700);
+}
+.affbuyer-store-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.affbuyer-store-app-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--abd-line);
+  border-radius: var(--abd-radius-sm);
+  background: var(--abd-surface);
+}
+.affbuyer-application-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--abd-text-700);
+}
+.affbuyer-application-meta span {
+  color: var(--abd-text-300);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  margin-right: 4px;
+}
+.affbuyer-application-meta p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.affbuyer-rating {
+  display: inline-flex;
+  gap: 1px;
+}
+.affbuyer-star {
+  color: var(--abd-line);
+}
+.affbuyer-star-filled {
+  color: var(--abd-orange-500);
+  fill: var(--abd-orange-500);
+  }
+
+/* Copiar link: CTA naranja, accion importante */
+.affbuyer-copy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--abd-radius-pill);
+  background: var(--abd-orange-600);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: var(--abd-shadow-orange);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.affbuyer-copy-link-btn:hover {
+  background: var(--abd-orange-700);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(242, 101, 15, 0.4);
+}
+.affbuyer-copy-link-btn:active {
+  transform: translateY(0);
+}
+/* Resumen de ganancias */
+.affbuyer-earnings-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+.affbuyer-earnings-card {
+  position: relative;
+  padding: 20px;
+  border-radius: var(--abd-radius-md);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--abd-shadow-md);
+  background: linear-gradient(150deg, var(--abd-ink-900), var(--abd-ink-950));
+  border: 1px solid rgba(242, 101, 15, 0.25);
+}
+.affbuyer-earnings-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(242, 101, 15, 0.12);
+}
+.affbuyer-earnings-card-pending {
+  background: linear-gradient(150deg, var(--abd-orange-600), var(--abd-orange-800));
+  border-color: transparent;
+}
+.affbuyer-earnings-card-collected {
+  background: linear-gradient(150deg, var(--abd-emerald-600), var(--abd-emerald-700));
+  border-color: transparent;
+}
+.affbuyer-earnings-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+  margin: 0 0 8px;
+}
+.affbuyer-earnings-value {
+  font-family: var(--abd-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  position: relative;
+  overflow-wrap: anywhere;
+}
+/* Ganancias por tienda */
+.affbuyer-store-earnings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+.affbuyer-store-earnings-block {
+  border: 1px solid var(--abd-line);
+  border-radius: var(--abd-radius-md);
+  padding: 18px;
+  background: var(--abd-surface);
+}
+.affbuyer-store-earnings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--abd-line-soft);
+}
+.affbuyer-store-earnings-totals {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--abd-text-700);
+}
+.affbuyer-store-earnings-totals strong {
+  color: var(--abd-text-900);
+}
+.affbuyer-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.affbuyer-sale-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--abd-line);
+  border-radius: var(--abd-radius-sm);
+  background: var(--abd-surface-muted);
+  width: 100%;
+}
+.affbuyer-sale-product {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--abd-text-900);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.affbuyer-sale-seller {
+  font-size: 0.78rem;
+  color: var(--abd-text-500);
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.affbuyer-dispute-note {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--abd-garnet-700);
+  margin: 4px 0 0;
+}
+.affbuyer-sale-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.affbuyer-sale-total {
+  font-size: 0.78rem;
+  color: var(--abd-text-500);
+  margin: 0;
+}
+.affbuyer-sale-commission {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--abd-text-900);
+  margin: 0;
+}
+.affbuyer-sale-due {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+.affbuyer-due-badge {
+  display: inline-flex;
+  padding: 4px 11px;
+  border-radius: var(--abd-radius-pill);
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: var(--abd-neutral-chip-bg);
+  color: var(--abd-text-700);
+  white-space: nowrap;
+}
+.affbuyer-due-badge-urgent {
+  background: var(--abd-garnet-600);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(165, 44, 70, 0.35);
+}
+.affbuyer-due-badge-paid {
+  background: var(--abd-emerald-100);
+  color: var(--abd-emerald-700);
+}
+.affbuyer-due-date {
+  font-size: 0.74rem;
+  color: var(--abd-text-500);
+  white-space: nowrap;
+}
+.affbuyer-sale-row-urgent {
+  border-color: var(--abd-garnet-500);
+  background: var(--abd-garnet-050);
+  box-shadow: inset 3px 0 0 var(--abd-garnet-600);
+}
+.affbuyer-sale-row-disputed {
+  border-style: dashed;
+  border-color: var(--abd-garnet-600);
+  background: var(--abd-garnet-050);
+}
+.affbuyer-sale-row-paid {
+  background: var(--abd-emerald-050);
+  border-color: var(--abd-emerald-100);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.9fr) auto;
+}
+.affbuyer-paid-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.affbuyer-proof-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--abd-orange-700);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.affbuyer-proof-link:hover {
+  text-decoration: underline;
+}
+.affbuyer-reject-payment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--abd-radius-pill);
+  border: 1.5px solid var(--abd-garnet-500);
+  background: var(--abd-surface);
+  color: var(--abd-garnet-600);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .16s ease;
+  white-space: nowrap;
+}
+.affbuyer-reject-payment-btn:hover {
+  background: var(--abd-garnet-600);
+  color: #fff;
+}
+.affbuyer-reject-payment-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Historial de pagos */
+.affbuyer-history-section {
+  margin-top: 14px;
+  border-top: 1px solid var(--abd-line-soft);
+  padding-top: 14px;
+  width: 100%;
+}
+.affbuyer-history-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--abd-text-900);
+  cursor: pointer;
+  list-style: none;
+}
+.affbuyer-history-title::-webkit-details-marker {
+  display: none;
+}
+.affbuyer-history-title svg {
+  color: var(--abd-orange-600);
+  flex-shrink: 0;
+}
+.affbuyer-history-section[open] .affbuyer-history-title {
+  margin-bottom: 12px;
+}
+/* Responsive */
+@media (max-width: 960px) {
+  .affbuyer-store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .affbuyer-carnet-grid { grid-template-columns: minmax(0, 1fr); }
+  .affbuyer-profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .affbuyer-earnings-summary { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .affbuyer-dashboard { padding: 20px 14px 72px; gap: 20px; }
+  .affbuyer-panel, .affbuyer-profile-card { padding: 18px; }
+  .affbuyer-store-grid { grid-template-columns: minmax(0, 1fr); }
+  .affbuyer-profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .affbuyer-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .affbuyer-tab { white-space: nowrap; }
+  .affbuyer-store-detail-toolbar .affbuyer-search { flex-basis: 100%; }
+  .affbuyer-offer-row { flex-direction: column; align-items: flex-start; }
+  .affbuyer-apply-btn { align-self: stretch; justify-content: center; }
+  .affbuyer-sale-row { grid-template-columns: minmax(0, 1fr); align-items: flex-start; }
+  .affbuyer-sale-row-paid { grid-template-columns: minmax(0, 1fr); }
+  .affbuyer-sale-due { align-items: flex-start; }
+  .affbuyer-store-app-item-card { flex-direction: column; align-items: stretch; }
+  .affbuyer-copy-link-btn { justify-content: center; }
+  .affbuyer-store-earnings-header { flex-direction: column; align-items: flex-start; }
+  }
