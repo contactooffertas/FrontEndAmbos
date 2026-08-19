@@ -1,14 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers } from '../app/context/Providers';
-import PWAManifestUpdater from '@/app/componentes/PWAManifestUpdater';
+import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Mercado Rosario - Las mejores ofertas',
   description: 'Encuentra las mejores ofertas cerca tuyo',
-  viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
   authors: [{ name: 'Mercado Rosario' }],
-  keywords: ['ofertas', 'marketplace', 'compras online','compras rosario'],
+  keywords: ['ofertas', 'marketplace', 'compras online', 'compras rosario'],
   openGraph: {
     title: 'Mercado Rosario - Las mejores ofertas',
     description: 'Encuentra las mejores ofertas cerca tuyo',
@@ -17,6 +16,12 @@ export const metadata: Metadata = {
     locale: 'es_AR',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -59,11 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* Componente para sincronizar cambios del manifest */}
         <PWAManifestUpdater />
-        
+
         <Providers>
           {children}
         </Providers>
       </body>
     </html>
   );
-}
+      }
