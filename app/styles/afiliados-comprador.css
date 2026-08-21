@@ -21,6 +21,7 @@
   --abd-garnet-800: #6c1c30;
   --abd-garnet-700: #862339;
   --abd-garnet-600: #a52c46;
+  --abd-garnet-500: #c23a58;
   --abd-garnet-100: #f7e2e7;
   --abd-garnet-050: #fbf0f2;
   --abd-emerald-700: #0f6b4d;
@@ -41,19 +42,25 @@
   --abd-font-body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-family: var(--abd-font-body);
   color: var(--abd-text-900);
-  max-width: 1180px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
   padding: 32px 20px 96px;
   display: flex;
   flex-direction: column;
   gap: 28px;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 .affbuyer-dashboard * {
   box-sizing: border-box;
+  min-width: 0;
 }
 .affbuyer-dashboard button {
   font-family: inherit;
+}
+.affbuyer-dashboard img,
+.affbuyer-dashboard svg {
+  max-width: 100%;
 }
 .affbuyer-dashboard ::selection {
   background: var(--abd-orange-100);
@@ -73,6 +80,7 @@
 .affbuyer-spin {
   animation: affbuyer-spin 0.9s linear infinite;
   color: var(--abd-orange-600);
+  flex-shrink: 0;
 }
 @keyframes affbuyer-spin {
   to { transform: rotate(360deg); }
@@ -87,6 +95,7 @@
   border-radius: var(--abd-radius-sm);
   border-left: 3px solid var(--abd-garnet-600);
   margin-bottom: 14px;
+  word-break: break-word;
 }
 .affbuyer-empty {
   text-align: center;
@@ -96,7 +105,7 @@
   background: var(--abd-surface-muted);
   border: 1px dashed var(--abd-line);
   border-radius: var(--abd-radius-md);
-}
+  }
 /* Tarjetas: blancas, borde gris fino, sin barras de color */
 .affbuyer-panel {
   background: var(--abd-surface);
@@ -104,6 +113,7 @@
   border-radius: var(--abd-radius-lg);
   padding: 28px;
   box-shadow: var(--abd-shadow-xs);
+  width: 100%;
 }
 .affbuyer-profile-card {
   background: var(--abd-surface);
@@ -111,6 +121,7 @@
   border-radius: var(--abd-radius-lg);
   padding: 26px 28px;
   box-shadow: var(--abd-shadow-xs);
+  width: 100%;
 }
 .affbuyer-profile-header {
   display: flex;
@@ -131,6 +142,7 @@
 .affbuyer-profile-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 /* Botones secundarios (estilo Editar) */
 .affbuyer-edit-btn,
@@ -147,6 +159,7 @@
   border: 1.5px solid var(--abd-line);
   background: var(--abd-surface);
   color: var(--abd-text-700);
+  white-space: nowrap;
   transition: border-color .16s ease, color .16s ease, background .16s ease, transform .16s ease;
 }
 .affbuyer-edit-btn:hover,
@@ -171,6 +184,7 @@
   cursor: pointer;
   background: var(--abd-orange-600);
   color: #fff;
+  white-space: nowrap;
   box-shadow: var(--abd-shadow-orange);
   transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
 }
@@ -188,8 +202,9 @@
 }
 .affbuyer-profile-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
+  width: 100%;
 }
 .affbuyer-profile-grid-full {
   grid-column: 1 / -1;
@@ -198,6 +213,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
   font-size: 0.76rem;
   font-weight: 700;
   color: var(--abd-text-500);
@@ -205,6 +221,8 @@
   letter-spacing: 0.04em;
 }
 .affbuyer-profile-grid input {
+  width: 100%;
+  min-width: 0;
   border: 1px solid transparent;
   border-radius: var(--abd-radius-sm);
   padding: 10px 12px;
@@ -229,6 +247,7 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 .affbuyer-tab {
   display: inline-flex;
@@ -242,10 +261,12 @@
   font-size: 0.9rem;
   color: var(--abd-text-500);
   cursor: pointer;
+  white-space: nowrap;
   transition: color .16s ease, background .16s ease;
 }
 .affbuyer-tab svg {
   color: var(--abd-text-300);
+  flex-shrink: 0;
   transition: color .16s ease;
 }
 .affbuyer-tab:hover {
@@ -266,13 +287,14 @@
 .affbuyer-tab-active:hover {
   background: var(--abd-orange-700);
   color: #fff;
-}
+  }
 /* Subtabs, mismo estilo mas chico */
 .affbuyer-subtabs {
   display: flex;
   gap: 8px;
   margin-bottom: 18px;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 .affbuyer-subtab {
   display: inline-flex;
@@ -286,6 +308,7 @@
   font-weight: 600;
   font-size: 0.84rem;
   cursor: pointer;
+  white-space: nowrap;
   transition: all .16s ease;
 }
 .affbuyer-subtab:hover {
@@ -308,6 +331,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
   background: var(--abd-surface-muted);
   border: 1.5px solid transparent;
   border-radius: var(--abd-radius-pill);
@@ -332,6 +357,7 @@
   background: transparent;
   outline: none;
   width: 100%;
+  min-width: 0;
   font-size: 0.92rem;
   color: var(--abd-text-900);
   font-weight: 500;
@@ -342,9 +368,10 @@
 /* Grilla y tarjeta de tienda */
 .affbuyer-store-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   align-items: stretch;
   gap: 18px;
+  width: 100%;
 }
 .affbuyer-store-card {
   position: relative;
@@ -381,6 +408,7 @@
   padding: 5px 10px;
   border-radius: var(--abd-radius-pill);
   box-shadow: var(--abd-shadow-orange);
+  white-space: nowrap;
 }
 .affbuyer-category-badge {
   align-self: flex-start;
@@ -392,6 +420,7 @@
   letter-spacing: 0.03em;
   padding: 4px 10px;
   border-radius: var(--abd-radius-pill);
+  white-space: nowrap;
 }
 .affbuyer-store-stats {
   display: flex;
@@ -413,6 +442,7 @@
 }
 .affbuyer-store-stat svg {
   color: var(--abd-orange-600);
+  flex-shrink: 0;
 }
 .affbuyer-view-store-btn {
   margin-top: 4px;
@@ -420,6 +450,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  width: 100%;
   padding: 10px 16px;
   border-radius: var(--abd-radius-sm);
   border: none;
@@ -433,7 +464,7 @@
 .affbuyer-view-store-btn:hover {
   background: var(--abd-orange-700);
   transform: translateY(-1px);
-}
+    }
 /* Avatar tipo icono de negocio */
 .affbuyer-carnet-avatar {
   width: 46px;
@@ -467,6 +498,7 @@
   height: 34px;
   font-size: 0.88rem;
   border-radius: 10px;
+  flex-shrink: 0;
 }
 .affbuyer-avatar-sm.affbuyer-carnet-avatar-img {
   border-radius: 50%;
@@ -476,6 +508,7 @@
   height: 64px;
   font-size: 1.5rem;
   border-radius: 18px;
+  flex-shrink: 0;
 }
 .affbuyer-avatar-lg.affbuyer-carnet-avatar-img {
   border-radius: 50%;
@@ -519,6 +552,7 @@
   color: var(--abd-text-700);
   line-height: 1.5;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 .affbuyer-carnet-divider {
   height: 1px;
@@ -544,6 +578,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
   background: var(--abd-surface);
   border: 1px solid var(--abd-line);
   border-radius: var(--abd-radius-lg);
@@ -552,8 +587,9 @@
 }
 .affbuyer-carnet-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 18px;
+  width: 100%;
 }
 /* WhatsApp: excepcion de marca, verde sobrio */
 .affbuyer-whatsapp-btn {
@@ -569,6 +605,7 @@
   font-weight: 700;
   font-size: 0.86rem;
   text-decoration: none;
+  white-space: nowrap;
   transition: background .16s ease, color .16s ease, transform .16s ease;
 }
 .affbuyer-whatsapp-btn:hover {
@@ -576,8 +613,6 @@
   color: #fff;
   transform: translateY(-1px);
 }
-
-
 /* Badges de estado (sin azul) */
 .affbuyer-status-badge {
   display: inline-flex;
@@ -913,7 +948,6 @@
   color: var(--abd-orange-500);
   fill: var(--abd-orange-500);
   }
-
 /* Copiar link: CTA naranja, accion importante */
 .affbuyer-copy-link-btn {
   display: inline-flex;
@@ -944,7 +978,7 @@
 /* Resumen de ganancias */
 .affbuyer-earnings-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
   width: 100%;
@@ -1167,7 +1201,7 @@
 .affbuyer-reject-payment-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
+  }
 /* Historial de pagos */
 .affbuyer-history-section {
   margin-top: 14px;
@@ -1195,18 +1229,12 @@
 .affbuyer-history-section[open] .affbuyer-history-title {
   margin-bottom: 12px;
 }
-/* Responsive */
-@media (max-width: 960px) {
-  .affbuyer-store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .affbuyer-carnet-grid { grid-template-columns: minmax(0, 1fr); }
-  .affbuyer-profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .affbuyer-earnings-summary { grid-template-columns: minmax(0, 1fr); }
-}
+/* Responsive
+   Los grids usan auto-fill/auto-fit + minmax, así que se ajustan solos
+   sin depender de breakpoints exactos (mismo criterio que afiliados-vendedor.css). */
 @media (max-width: 640px) {
   .affbuyer-dashboard { padding: 20px 14px 72px; gap: 20px; }
   .affbuyer-panel, .affbuyer-profile-card { padding: 18px; }
-  .affbuyer-store-grid { grid-template-columns: minmax(0, 1fr); }
-  .affbuyer-profile-grid { grid-template-columns: minmax(0, 1fr); }
   .affbuyer-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
   .affbuyer-tab { white-space: nowrap; }
   .affbuyer-store-detail-toolbar .affbuyer-search { flex-basis: 100%; }
@@ -1218,4 +1246,4 @@
   .affbuyer-store-app-item-card { flex-direction: column; align-items: stretch; }
   .affbuyer-copy-link-btn { justify-content: center; }
   .affbuyer-store-earnings-header { flex-direction: column; align-items: flex-start; }
-  }
+}
