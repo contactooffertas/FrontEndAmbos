@@ -29,6 +29,7 @@ import {
   ArrowRight,
   Share2,
   Zap,
+  Navigation,
 } from "lucide-react";
 import Link from "next/link";
 import "../app/styles/home.css";
@@ -96,6 +97,33 @@ interface PublicStats {
   totalProducts: number;
   totalBusinesses: number;
 }
+
+// ── Negocios cerca tuyo (home) ────────────────────────────────────────────
+// Mismo shape que devuelve GET /api/business/nearby (el que ya usa el panel
+// de perfil), reutilizado acá para no depender de estar logueado ni de
+// tener la ubicación guardada en la cuenta.
+interface NearbyHomeBusiness {
+  _id: string;
+  name: string;
+  logo?: string;
+  city?: string;
+  address?: string;
+  rating?: number;
+  totalRatings?: number;
+  verified?: boolean;
+  categories?: string[];
+  distanceMeters: number;
+  distanceLabel: string;
+}
+
+type NearbyGeoStatus = "idle" | "loading" | "ok" | "denied" | "error";
+
+const HOME_RADIUS_OPTIONS = [
+  { label: "3 km", value: 3000 },
+  { label: "5 km", value: 5000 },
+  { label: "10 km", value: 10000 },
+  { label: "Todo el país", value: 0 },
+];
 
 const imgUrl = (url?: string) =>
   url || "https://via.placeholder.com/300x200?text=Producto";
@@ -557,112 +585,190 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
   );
 }
 
-function ProductCard({ product, currentUserId }: { product: Product; currentUserId?: string }) {
-  const { addToCart } = useCart();
-  const [liked, setLiked] = useState(false);
-  const [justShared, setJustShared] = useState(false);
-  const isFeatured = product._isFeatured === true;
-  const isOutOfRange = product._outOfRange === true;
-  const isFlash = product.flashOffer?.active === true;
-  const bizId = product.business?._id;
-  const bizName = product.business?.name;
-  const bizCity = product.business?.city;
-  const followers = product.business?.followers?.length?? 0;
-  const rating = product.business?.rating?? 0;
-  const totalRatings = product.business?.totalRatings?? 0;
-  const flashDiscount = product.flashOffer?.discount?? 0;
-  const flashBase = flashBasePrice(product);
-  const flashFinalPrice = isFlash? computeFlashFinalPrice(product) : product.price;
+// ── Negocios cerca tuyo (home) ────────────────────────────────────────────
 
-  const handleCart = () => {
-    addToCart({
-      _id: product._id,
-      productId: product._id,
-      name: product.name,
-      price: isFlash? Number(flashFinalPrice.toFixed(2)) : product.price,
-      originalPrice: isFlash? flashBase : product.originalPrice,
-      discount: isFlash? flashDiscount : product.discount,
-      image: product.image,
-      businessId: bizId,
-      businessName: bizName,
-      businessPhone: product.business?.phone || "",
-      stock: product.stock || 99,
-      isFlashOffer: isFlash,
-    } as any);
-  };
+function NearbyBusinessCard({ biz }: { biz: NearbyHomeBusiness }) {
+  return (
+    <Link
+      href={`/negocio/${biz._id}`}
+      className="nearby-home-card"
+      style={{
+        display: "flex",
+        gap: "0.75rem",
+        alignItems: "center",
+        background: "var(--surface,#fff)",
+        border: "1px solid rgba(0,0,0,0.08)",
+        borderRadius: 14,
+        padding: "0.75rem",
+        textDecoration: "none",
+        color: "inherit",
+        minWidth: 260,
+        maxWidth: 260,
+        flexShrink: 0,
+        scrollSnapAlign: "start",
+      }}
+    >
+      <img
+        src={logoUrl(biz.name, biz.logo)}
+        alt={biz.name}
+        style={{ width: 52, height: 52, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
+      />
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontWeight: 700, fontSize: "0.86rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {biz.name}
+          </span>
+          {biz.verified && <CheckCircle size={12} style={{ color: "#f97316", flexShrink: 0 }} />}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, color: "#22c55e", fontWeight: 700, fontSize: "0.76rem" }}>
+          <Navigation size={11} /> {biz.distanceLabel}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+          <StarRow rating={biz.rating ?? 0} size={11} />
+          <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
+            {(biz.rating ?? 0) > 0 ? biz.rating!.toFixed(1) : "Sin votos"}
+          </span>
+        </div>
+      </div>
+      <ArrowRight size={16} style={{ color: "#9ca3af", flexShrink: 0 }} />
+    </Link>
+  );
+}
 
-  const handleLike = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!currentUserId) {
-      const Swal = (await import("sweetalert2")).default;
-      Swal.fire({ icon: "info", title: "Iniciá sesión", timer: 2000, showConfirmButton: false });
-      return;
-    }
-    setLiked((v) =>!v);
-  };
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const url = shareUrlFor(product._id);
-    const shareData = { title: product.name, text: `${product.name} - $${product.price.toLocaleString()}`, url };
-    if (typeof navigator!== "undefined" && (navigator as any).share) {
-      try { await (navigator as any).share(shareData); } catch {}
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setJustShared(true);
-      setTimeout(() => setJustShared(false), 1800);
-    } catch {
-      const Swal = (await import("sweetalert2")).default;
-      Swal.fire({ icon: "info", title: "Enlace para compartir", text: url });
-    }
-  };
+function NearbyBusinessesSection({
+  geoStatus,
+  businesses,
+  loading,
+  error,
+  radius,
+  onRadiusChange,
+  onRequestLocation,
+}: {
+  geoStatus: NearbyGeoStatus;
+  businesses: NearbyHomeBusiness[];
+  loading: boolean;
+  error: string;
+  radius: number;
+  onRadiusChange: (v: number) => void;
+  onRequestLocation: () => void;
+}) {
+  const radiusLabel = HOME_RADIUS_OPTIONS.find((o) => o.value === radius)?.label || "3 km";
+  const showPrompt = geoStatus === "idle" || geoStatus === "denied" || geoStatus === "error";
 
   return (
-    <div className="product-card" style={isFlash? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" } : isFeatured? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" } : undefined}>
-      <div className="product-image-wrap">
-        <img src={imgUrl(product.image)} alt={product.name} loading="lazy" />
-        {!isFlash && product.discount? <span className="product-discount-badge">-{product.discount}%</span> : null}
-        {isFlash && (<span className="product-flash-badge"><Zap size={10} fill="#111" strokeWidth={0} /> FLASH -{flashDiscount}%</span>)}
-        {!isFlash && isFeatured && (<span style={{ position: "absolute", top: 8, left: 8, background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontSize: "0.65rem", fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "flex", alignItems: "center", gap: 4, boxShadow: "0 2px 8px rgba(249,115,22,0.5)", zIndex: 2 }}><Crown size={9} /> Destacado</span>)}
-        <button className="product-fav-btn product-fav-btn--always" onClick={handleLike}><span style={{ fontSize: "1.05rem", color: liked? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>{liked? "♥" : "♡"}</span></button>
-        <button className="product-fav-btn product-fav-btn--always" style={{ right: "2.6rem" }} onClick={handleShare} aria-label="Compartir producto" title="Compartir"><Share2 size={15} style={{ color: justShared? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} /></button>
-        {justShared && (<span style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(34,197,94,0.95)", color: "#fff", fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px", borderRadius: 6, zIndex: 3 }}>¡Enlace copiado!</span>)}
+    <section className="section" id="negocios-cerca">
+      <div className="section-header">
+        <div>
+          <h2 className="section-title">
+            <span className="section-title-icon"><Navigation size={20} strokeWidth={2} /></span>
+            Negocios cerca tuyo
+          </h2>
+          <p className="section-subtitle">
+            {geoStatus === "ok"
+              ? `${businesses.length} negocio${businesses.length !== 1 ? "s" : ""} en ${radiusLabel}`
+              : "Descubrí negocios cerca de tu ubicación, sin entrar a tu perfil"}
+          </p>
+        </div>
+        {geoStatus === "ok" && (
+          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+            {HOME_RADIUS_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onRadiusChange(opt.value)}
+                style={{
+                  padding: "0.3rem 0.75rem",
+                  borderRadius: 20,
+                  border: `1.5px solid ${opt.value === radius ? "#f97316" : "rgba(0,0,0,0.15)"}`,
+                  background: opt.value === radius ? "#f97316" : "transparent",
+                  color: opt.value === radius ? "#fff" : "inherit",
+                  fontSize: "0.75rem",
+                  fontWeight: opt.value === radius ? 700 : 500,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {isFlash && (<div className="product-flash-strip"><Zap size={10} fill="#f59e0b" strokeWidth={0} /><span>Oferta por tiempo limitado - {formatFlashTime(product.flashOfferSecondsLeft)} restantes</span></div>)}
-      {!isFlash && isFeatured && isOutOfRange && (
-        <div style={{ background: "linear-gradient(90deg,rgba(249,115,22,0.13),rgba(249,115,22,0.07))", borderBottom: "1px solid rgba(249,115,22,0.2)", padding: "0.3rem 0.65rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-          <Sparkles size={10} style={{ color: "#f97316", flexShrink: 0 }} /><span style={{ fontSize: "0.65rem", color: "#fdba74", fontWeight: 700, lineHeight: 1.3 }}>No está cerca, pero te lo acercamos</span>
+
+      {showPrompt ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            gap: "0.75rem",
+            padding: "2.5rem 1.5rem",
+            border: "1.5px dashed rgba(249,115,22,0.35)",
+            borderRadius: 16,
+            background: "rgba(249,115,22,0.04)",
+          }}
+        >
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.05))",
+              border: "1.5px solid rgba(249,115,22,0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MapPin size={24} style={{ color: "#f97316" }} />
+          </div>
+          <div>
+            <p style={{ fontWeight: 700, margin: "0 0 0.3rem" }}>
+              {geoStatus === "denied" ? "Ubicación bloqueada" : "Descubrí lo que tenés cerca"}
+            </p>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0, maxWidth: 360 }}>
+              {geoStatus === "denied"
+                ? "Habilitá el permiso de ubicación desde tu navegador para ver negocios cercanos."
+                : "Activá tu ubicación y te mostramos, con distancia incluida, los negocios más cercanos a vos."}
+            </p>
+          </div>
+          {geoStatus !== "denied" && (
+            <button
+              className="btn btn-primary"
+              onClick={onRequestLocation}
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <Navigation size={15} /> Ver negocios cerca tuyo
+            </button>
+          )}
+        </div>
+      ) : geoStatus === "loading" ? (
+        <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: 4 }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} style={{ minWidth: 260, height: 84, borderRadius: 14, background: "rgba(0,0,0,0.05)", flexShrink: 0 }} />
+          ))}
+        </div>
+      ) : loading ? (
+        <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: 4 }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} style={{ minWidth: 260, height: 84, borderRadius: 14, background: "rgba(0,0,0,0.05)", flexShrink: 0 }} />
+          ))}
+        </div>
+      ) : error ? (
+        <p style={{ color: "#ef4444", fontSize: "0.85rem" }}>{error}</p>
+      ) : businesses.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
+          <Store size={32} strokeWidth={1} style={{ opacity: 0.4, display: "block", margin: "0 auto 0.75rem" }} />
+          <p style={{ margin: 0 }}>No encontramos negocios en {radiusLabel}. Probá con un radio más amplio.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: 4, scrollSnapType: "x proximity" }}>
+          {businesses.map((biz) => (
+            <NearbyBusinessCard key={biz._id} biz={biz} />
+          ))}
         </div>
       )}
-      <div className="product-body">
-        {bizId? (<Link href={`/negocio/${bizId}`} className="product-business" style={{ textDecoration: "none", color: "inherit" }}>{bizName}{bizCity? ` - ${bizCity}` : ""}{product.business?.verified && <span style={{ color: "#f97316", marginLeft: "0.2rem" }}>✓</span>}</Link>) : (<div className="product-business">{bizName}{bizCity? ` - ${bizCity}` : ""}</div>)}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
-          <StarRow rating={rating} size={13} /><span style={{ fontSize: "0.71rem", color: "#9ca3af", fontWeight: 500 }}>{rating > 0? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}</span>
-          {followers > 0 && (<span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: "0.71rem", color: "#9ca3af" }}><Users size={10} />{followers}</span>)}
-        </div>
-        <div className="product-name">{product.name}</div>
-        <div className="product-prices">
-          {isFlash? (<><span className="product-price product-price--flash">${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span><span className="product-original">${flashBase.toLocaleString()}</span></>) : (<><span className="product-price">${product.price.toLocaleString()}</span>{product.originalPrice && <span className="product-original">${product.originalPrice.toLocaleString()}</span>}</>)}
-        </div>
-      </div>
-      <div className="product-card-footer" style={{ flexDirection: "column", gap: "0.45rem" }}>
-        <button className="btn btn-primary" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }} onClick={handleCart}><ShoppingCart size={15} /> Agregar al carrito</button>
-       <div style={{ display: "flex", gap: "0.4rem", width: "100%" }}>
-            {bizId && (
-        <Link href={`/negocio/${bizId}`} className="product-secondary-btn is-flex">
-      <Store size={13} /> Visitar negocio
-    </Link>
-  )}
-  <button onClick={handleShare} className={`product-secondary-btn ${bizId ? "" : "is-flex"}`}>
-    <Share2 size={13} /> Compartir
-  </button>
-</div>
-        <ReportModal targetType="product" targetId={product._id} targetName={product.name} token={typeof window!== "undefined"? localStorage.getItem("marketplace_token") || "" : ""} onRequireAuth={async () => { const Swal = (await import("sweetalert2")).default; Swal.fire({ icon: "info", title: "Iniciá sesión para reportar", timer: 2000, showConfirmButton: false }); }} />
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -698,6 +804,66 @@ function HomeContent() {
     if (currentUserId) p.set("userId", currentUserId);
     return p.toString();
   };
+
+  // ── Negocios cerca tuyo (home) ──────────────────────────────────────────
+  // Independiente del login: usa geolocalización del navegador directamente.
+  // Si el usuario ya tiene la ubicación activada en su cuenta (userHasLoc),
+  // se aprovecha esa sin volver a pedir permiso.
+  const [nearbyGeoStatus, setNearbyGeoStatus] = useState<NearbyGeoStatus>("idle");
+  const [nearbyLat, setNearbyLat] = useState<number | null>(null);
+  const [nearbyLng, setNearbyLng] = useState<number | null>(null);
+  const [nearbyBizList, setNearbyBizList] = useState<NearbyHomeBusiness[]>([]);
+  const [nearbyBizLoading, setNearbyBizLoading] = useState(false);
+  const [nearbyBizError, setNearbyBizError] = useState("");
+  const [nearbyBizRadius, setNearbyBizRadius] = useState<number>(() => {
+    if (typeof window === "undefined") return 3000;
+    const saved = localStorage.getItem("nearbyRadius");
+    return saved ? parseInt(saved) : 3000;
+  });
+
+  useEffect(() => {
+    if (userHasLoc && nearbyGeoStatus === "idle") {
+      setNearbyLat(userLat);
+      setNearbyLng(userLng);
+      setNearbyGeoStatus("ok");
+    }
+  }, [userHasLoc, userLat, userLng, nearbyGeoStatus]);
+
+  const requestNearbyLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setNearbyGeoStatus("error");
+      return;
+    }
+    setNearbyGeoStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setNearbyLat(pos.coords.latitude);
+        setNearbyLng(pos.coords.longitude);
+        setNearbyGeoStatus("ok");
+      },
+      (err) => {
+        setNearbyGeoStatus(err.code === 1 ? "denied" : "error");
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 }
+    );
+  }, []);
+
+  const handleNearbyRadiusChange = (value: number) => {
+    setNearbyBizRadius(value);
+    localStorage.setItem("nearbyRadius", String(value));
+  };
+
+  useEffect(() => {
+    if (nearbyLat === null || nearbyLng === null) return;
+    setNearbyBizLoading(true);
+    setNearbyBizError("");
+    const effectiveRadius = nearbyBizRadius === 0 ? 999999999 : nearbyBizRadius;
+    fetch(`${API}/business/nearby?lat=${nearbyLat}&lng=${nearbyLng}&radius=${effectiveRadius}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data: NearbyHomeBusiness[]) => setNearbyBizList(Array.isArray(data) ? data : []))
+      .catch(() => setNearbyBizError("No pudimos cargar los negocios cercanos."))
+      .finally(() => setNearbyBizLoading(false));
+  }, [nearbyLat, nearbyLng, nearbyBizRadius]);
 
   useEffect(() => { fetch(`${API}/products/public-stats`).then((r) => r.json()).then(setPublicStats).catch(() => {}); }, []);
 
@@ -809,6 +975,16 @@ function HomeContent() {
         </div>
       </section>
 
+      <NearbyBusinessesSection
+        geoStatus={nearbyGeoStatus}
+        businesses={nearbyBizList}
+        loading={nearbyBizLoading}
+        error={nearbyBizError}
+        radius={nearbyBizRadius}
+        onRadiusChange={handleNearbyRadiusChange}
+        onRequestLocation={requestNearbyLocation}
+      />
+
       {!user?.locationEnabled &&!geoBannerDismissed && (
         <div style={{ padding: "1.5rem 1.5rem 0" }}>
           <div className="geo-banner">
@@ -866,6 +1042,115 @@ function HomeContent() {
 
       <FlashOfferOverlay products={allProducts} />
     </MainLayout>
+  );
+}
+
+function ProductCard({ product, currentUserId }: { product: Product; currentUserId?: string }) {
+  const { addToCart } = useCart();
+  const [liked, setLiked] = useState(false);
+  const [justShared, setJustShared] = useState(false);
+  const isFeatured = product._isFeatured === true;
+  const isOutOfRange = product._outOfRange === true;
+  const isFlash = product.flashOffer?.active === true;
+  const bizId = product.business?._id;
+  const bizName = product.business?.name;
+  const bizCity = product.business?.city;
+  const followers = product.business?.followers?.length?? 0;
+  const rating = product.business?.rating?? 0;
+  const totalRatings = product.business?.totalRatings?? 0;
+  const flashDiscount = product.flashOffer?.discount?? 0;
+  const flashBase = flashBasePrice(product);
+  const flashFinalPrice = isFlash? computeFlashFinalPrice(product) : product.price;
+
+  const handleCart = () => {
+    addToCart({
+      _id: product._id,
+      productId: product._id,
+      name: product.name,
+      price: isFlash? Number(flashFinalPrice.toFixed(2)) : product.price,
+      originalPrice: isFlash? flashBase : product.originalPrice,
+      discount: isFlash? flashDiscount : product.discount,
+      image: product.image,
+      businessId: bizId,
+      businessName: bizName,
+      businessPhone: product.business?.phone || "",
+      stock: product.stock || 99,
+      isFlashOffer: isFlash,
+    } as any);
+  };
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!currentUserId) {
+      const Swal = (await import("sweetalert2")).default;
+      Swal.fire({ icon: "info", title: "Iniciá sesión", timer: 2000, showConfirmButton: false });
+      return;
+    }
+    setLiked((v) =>!v);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = shareUrlFor(product._id);
+    const shareData = { title: product.name, text: `${product.name} - $${product.price.toLocaleString()}`, url };
+    if (typeof navigator!== "undefined" && (navigator as any).share) {
+      try { await (navigator as any).share(shareData); } catch {}
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setJustShared(true);
+      setTimeout(() => setJustShared(false), 1800);
+    } catch {
+      const Swal = (await import("sweetalert2")).default;
+      Swal.fire({ icon: "info", title: "Enlace para compartir", text: url });
+    }
+  };
+
+  return (
+    <div className="product-card" style={isFlash? { border: "1.5px solid rgba(250,204,21,0.6)", boxShadow: "0 0 0 1px rgba(250,204,21,0.18), 0 4px 20px rgba(250,204,21,0.15)" } : isFeatured? { border: "1.5px solid rgba(249,115,22,0.5)", boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 4px 20px rgba(249,115,22,0.1)" } : undefined}>
+      <div className="product-image-wrap">
+        <img src={imgUrl(product.image)} alt={product.name} loading="lazy" />
+        {!isFlash && product.discount? <span className="product-discount-badge">-{product.discount}%</span> : null}
+        {isFlash && (<span className="product-flash-badge"><Zap size={10} fill="#111" strokeWidth={0} /> FLASH -{flashDiscount}%</span>)}
+        {!isFlash && isFeatured && (<span style={{ position: "absolute", top: 8, left: 8, background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", fontSize: "0.65rem", fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "flex", alignItems: "center", gap: 4, boxShadow: "0 2px 8px rgba(249,115,22,0.5)", zIndex: 2 }}><Crown size={9} /> Destacado</span>)}
+        <button className="product-fav-btn product-fav-btn--always" onClick={handleLike}><span style={{ fontSize: "1.05rem", color: liked? "#ef4444" : "#9ca3af", transition: "color 0.2s" }}>{liked? "♥" : "♡"}</span></button>
+        <button className="product-fav-btn product-fav-btn--always" style={{ right: "2.6rem" }} onClick={handleShare} aria-label="Compartir producto" title="Compartir"><Share2 size={15} style={{ color: justShared? "#22c55e" : "#9ca3af", transition: "color 0.2s" }} /></button>
+        {justShared && (<span style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(34,197,94,0.95)", color: "#fff", fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px", borderRadius: 6, zIndex: 3 }}>¡Enlace copiado!</span>)}
+      </div>
+      {isFlash && (<div className="product-flash-strip"><Zap size={10} fill="#f59e0b" strokeWidth={0} /><span>Oferta por tiempo limitado - {formatFlashTime(product.flashOfferSecondsLeft)} restantes</span></div>)}
+      {!isFlash && isFeatured && isOutOfRange && (
+        <div style={{ background: "linear-gradient(90deg,rgba(249,115,22,0.13),rgba(249,115,22,0.07))", borderBottom: "1px solid rgba(249,115,22,0.2)", padding: "0.3rem 0.65rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+          <Sparkles size={10} style={{ color: "#f97316", flexShrink: 0 }} /><span style={{ fontSize: "0.65rem", color: "#fdba74", fontWeight: 700, lineHeight: 1.3 }}>No está cerca, pero te lo acercamos</span>
+        </div>
+      )}
+      <div className="product-body">
+        {bizId? (<Link href={`/negocio/${bizId}`} className="product-business" style={{ textDecoration: "none", color: "inherit" }}>{bizName}{bizCity? ` - ${bizCity}` : ""}{product.business?.verified && <span style={{ color: "#f97316", marginLeft: "0.2rem" }}>✓</span>}</Link>) : (<div className="product-business">{bizName}{bizCity? ` - ${bizCity}` : ""}</div>)}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
+          <StarRow rating={rating} size={13} /><span style={{ fontSize: "0.71rem", color: "#9ca3af", fontWeight: 500 }}>{rating > 0? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}</span>
+          {followers > 0 && (<span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: "0.71rem", color: "#9ca3af" }}><Users size={10} />{followers}</span>)}
+        </div>
+        <div className="product-name">{product.name}</div>
+        <div className="product-prices">
+          {isFlash? (<><span className="product-price product-price--flash">${flashFinalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span><span className="product-original">${flashBase.toLocaleString()}</span></>) : (<><span className="product-price">${product.price.toLocaleString()}</span>{product.originalPrice && <span className="product-original">${product.originalPrice.toLocaleString()}</span>}</>)}
+        </div>
+      </div>
+      <div className="product-card-footer" style={{ flexDirection: "column", gap: "0.45rem" }}>
+        <button className="btn btn-primary" style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }} onClick={handleCart}><ShoppingCart size={15} /> Agregar al carrito</button>
+       <div style={{ display: "flex", gap: "0.4rem", width: "100%" }}>
+            {bizId && (
+        <Link href={`/negocio/${bizId}`} className="product-secondary-btn is-flex">
+      <Store size={13} /> Visitar negocio
+    </Link>
+  )}
+  <button onClick={handleShare} className={`product-secondary-btn ${bizId ? "" : "is-flex"}`}>
+    <Share2 size={13} /> Compartir
+  </button>
+</div>
+        <ReportModal targetType="product" targetId={product._id} targetName={product.name} token={typeof window!== "undefined"? localStorage.getItem("marketplace_token") || "" : ""} onRequireAuth={async () => { const Swal = (await import("sweetalert2")).default; Swal.fire({ icon: "info", title: "Iniciá sesión para reportar", timer: 2000, showConfirmButton: false }); }} />
+      </div>
+    </div>
   );
 }
 
