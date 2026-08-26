@@ -1438,3 +1438,223 @@
   background: #fff;
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
 }
+
+.nearby-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.nearby-section-header-text {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+/* Grupo de botones de radio (3km / 5km / 10km / Todo el país) */
+.nearby-radius-group {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.nearby-radius-btn {
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  background: transparent;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.nearby-radius-btn.active {
+  border-color: #f97316;
+  background: #f97316;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Tarjetas de negocios cercanos */
+.nearby-home-list {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nearby-home-skeleton {
+  min-width: 260px;
+  height: 84px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.nearby-home-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--surface, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  min-width: 260px;
+  max-width: 260px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.nearby-home-card-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.nearby-home-card-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.nearby-home-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nearby-home-card-name {
+  font-weight: 700;
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nearby-home-card-verified {
+  color: #f97316;
+  flex-shrink: 0;
+}
+
+.nearby-home-card-distance {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 0.76rem;
+}
+
+.nearby-home-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.nearby-home-card-rating-text {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.nearby-home-card-arrow {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* Prompt para activar ubicación */
+.nearby-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  border: 1.5px dashed rgba(249, 115, 22, 0.35);
+  border-radius: 16px;
+  background: rgba(249, 115, 22, 0.04);
+}
+
+.nearby-prompt-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.18), rgba(249, 115, 22, 0.05));
+  border: 1.5px solid rgba(249, 115, 22, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f97316;
+}
+
+.nearby-prompt-title {
+  font-weight: 700;
+  margin: 0 0 0.3rem;
+}
+
+.nearby-prompt-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 360px;
+}
+
+.nearby-prompt-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nearby-error-text {
+  color: #ef4444;
+  font-size: 0.85rem;
+}
+
+.nearby-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.nearby-empty-icon {
+  opacity: 0.4;
+  display: block;
+  margin: 0 auto 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .nearby-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .nearby-radius-group {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nearby-radius-btn {
+    flex: 0 0 auto;
+  }
+
+  .nearby-home-card {
+    min-width: 230px;
+    max-width: 230px;
+  }
+}
