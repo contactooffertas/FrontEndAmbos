@@ -589,48 +589,28 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
 
 function NearbyBusinessCard({ biz }: { biz: NearbyHomeBusiness }) {
   return (
-    <Link
-      href={`/negocio/${biz._id}`}
-      className="nearby-home-card"
-      style={{
-        display: "flex",
-        gap: "0.75rem",
-        alignItems: "center",
-        background: "var(--surface,#fff)",
-        border: "1px solid rgba(0,0,0,0.08)",
-        borderRadius: 14,
-        padding: "0.75rem",
-        textDecoration: "none",
-        color: "inherit",
-        minWidth: 260,
-        maxWidth: 260,
-        flexShrink: 0,
-        scrollSnapAlign: "start",
-      }}
-    >
+    <Link href={`/negocio/${biz._id}`} className="nearby-home-card">
       <img
         src={logoUrl(biz.name, biz.logo)}
         alt={biz.name}
-        style={{ width: 52, height: 52, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
+        className="nearby-home-card-logo"
       />
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ fontWeight: 700, fontSize: "0.86rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {biz.name}
-          </span>
-          {biz.verified && <CheckCircle size={12} style={{ color: "#f97316", flexShrink: 0 }} />}
+      <div className="nearby-home-card-info">
+        <div className="nearby-home-card-name-row">
+          <span className="nearby-home-card-name">{biz.name}</span>
+          {biz.verified && <CheckCircle size={12} className="nearby-home-card-verified" />}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, color: "#22c55e", fontWeight: 700, fontSize: "0.76rem" }}>
+        <div className="nearby-home-card-distance">
           <Navigation size={11} /> {biz.distanceLabel}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+        <div className="nearby-home-card-rating">
           <StarRow rating={biz.rating ?? 0} size={11} />
-          <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
+          <span className="nearby-home-card-rating-text">
             {(biz.rating ?? 0) > 0 ? biz.rating!.toFixed(1) : "Sin votos"}
           </span>
         </div>
       </div>
-      <ArrowRight size={16} style={{ color: "#9ca3af", flexShrink: 0 }} />
+      <ArrowRight size={16} className="nearby-home-card-arrow" />
     </Link>
   );
 }
@@ -657,8 +637,8 @@ function NearbyBusinessesSection({
 
   return (
     <section className="section" id="negocios-cerca">
-      <div className="section-header">
-        <div>
+      <div className="nearby-section-header">
+        <div className="nearby-section-header-text">
           <h2 className="section-title">
             <span className="section-title-icon"><Navigation size={20} strokeWidth={2} /></span>
             Negocios cerca tuyo
@@ -670,22 +650,12 @@ function NearbyBusinessesSection({
           </p>
         </div>
         {geoStatus === "ok" && (
-          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+          <div className="nearby-radius-group">
             {HOME_RADIUS_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => onRadiusChange(opt.value)}
-                style={{
-                  padding: "0.3rem 0.75rem",
-                  borderRadius: 20,
-                  border: `1.5px solid ${opt.value === radius ? "#f97316" : "rgba(0,0,0,0.15)"}`,
-                  background: opt.value === radius ? "#f97316" : "transparent",
-                  color: opt.value === radius ? "#fff" : "inherit",
-                  fontSize: "0.75rem",
-                  fontWeight: opt.value === radius ? 700 : 500,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
+                className={`nearby-radius-btn ${opt.value === radius ? "active" : ""}`}
               >
                 {opt.label}
               </button>
@@ -695,74 +665,47 @@ function NearbyBusinessesSection({
       </div>
 
       {showPrompt ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            gap: "0.75rem",
-            padding: "2.5rem 1.5rem",
-            border: "1.5px dashed rgba(249,115,22,0.35)",
-            borderRadius: 16,
-            background: "rgba(249,115,22,0.04)",
-          }}
-        >
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.05))",
-              border: "1.5px solid rgba(249,115,22,0.3)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <MapPin size={24} style={{ color: "#f97316" }} />
+        <div className="nearby-prompt">
+          <div className="nearby-prompt-icon">
+            <MapPin size={24} />
           </div>
           <div>
-            <p style={{ fontWeight: 700, margin: "0 0 0.3rem" }}>
+            <p className="nearby-prompt-title">
               {geoStatus === "denied" ? "Ubicación bloqueada" : "Descubrí lo que tenés cerca"}
             </p>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0, maxWidth: 360 }}>
+            <p className="nearby-prompt-desc">
               {geoStatus === "denied"
                 ? "Habilitá el permiso de ubicación desde tu navegador para ver negocios cercanos."
                 : "Activá tu ubicación y te mostramos, con distancia incluida, los negocios más cercanos a vos."}
             </p>
           </div>
           {geoStatus !== "denied" && (
-            <button
-              className="btn btn-primary"
-              onClick={onRequestLocation}
-              style={{ display: "flex", alignItems: "center", gap: 6 }}
-            >
+            <button className="btn btn-primary nearby-prompt-btn" onClick={onRequestLocation}>
               <Navigation size={15} /> Ver negocios cerca tuyo
             </button>
           )}
         </div>
       ) : geoStatus === "loading" ? (
-        <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: 4 }}>
+        <div className="nearby-home-list">
           {[...Array(3)].map((_, i) => (
-            <div key={i} style={{ minWidth: 260, height: 84, borderRadius: 14, background: "rgba(0,0,0,0.05)", flexShrink: 0 }} />
+            <div key={i} className="nearby-home-skeleton" />
           ))}
         </div>
       ) : loading ? (
-        <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: 4 }}>
+        <div className="nearby-home-list">
           {[...Array(3)].map((_, i) => (
-            <div key={i} style={{ minWidth: 260, height: 84, borderRadius: 14, background: "rgba(0,0,0,0.05)", flexShrink: 0 }} />
+            <div key={i} className="nearby-home-skeleton" />
           ))}
         </div>
       ) : error ? (
-        <p style={{ color: "#ef4444", fontSize: "0.85rem" }}>{error}</p>
+        <p className="nearby-error-text">{error}</p>
       ) : businesses.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
-          <Store size={32} strokeWidth={1} style={{ opacity: 0.4, display: "block", margin: "0 auto 0.75rem" }} />
-          <p style={{ margin: 0 }}>No encontramos negocios en {radiusLabel}. Probá con un radio más amplio.</p>
+        <div className="nearby-empty">
+          <Store size={32} strokeWidth={1} className="nearby-empty-icon" />
+          <p>No encontramos negocios en {radiusLabel}. Probá con un radio más amplio.</p>
         </div>
       ) : (
-        <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto", paddingBottom: 4, scrollSnapType: "x proximity" }}>
+        <div className="nearby-home-list">
           {businesses.map((biz) => (
             <NearbyBusinessCard key={biz._id} biz={biz} />
           ))}
