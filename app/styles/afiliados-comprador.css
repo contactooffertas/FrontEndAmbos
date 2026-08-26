@@ -105,7 +105,7 @@
   background: var(--abd-surface-muted);
   border: 1px dashed var(--abd-line);
   border-radius: var(--abd-radius-md);
-  }
+}
 /* Tarjetas: blancas, borde gris fino, sin barras de color */
 .affbuyer-panel {
   background: var(--abd-surface);
@@ -287,7 +287,7 @@
 .affbuyer-tab-active:hover {
   background: var(--abd-orange-700);
   color: #fff;
-  }
+}
 /* Subtabs, mismo estilo mas chico */
 .affbuyer-subtabs {
   display: flex;
@@ -464,7 +464,7 @@
 .affbuyer-view-store-btn:hover {
   background: var(--abd-orange-700);
   transform: translateY(-1px);
-    }
+}
 /* Avatar tipo icono de negocio */
 .affbuyer-carnet-avatar {
   width: 46px;
@@ -947,7 +947,7 @@
 .affbuyer-star-filled {
   color: var(--abd-orange-500);
   fill: var(--abd-orange-500);
-  }
+}
 /* Copiar link: CTA naranja, accion importante */
 .affbuyer-copy-link-btn {
   display: inline-flex;
@@ -1201,7 +1201,7 @@
 .affbuyer-reject-payment-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  }
+}
 /* Historial de pagos */
 .affbuyer-history-section {
   margin-top: 14px;
@@ -1235,8 +1235,19 @@
 @media (max-width: 640px) {
   .affbuyer-dashboard { padding: 20px 14px 72px; gap: 20px; }
   .affbuyer-panel, .affbuyer-profile-card { padding: 18px; }
-  .affbuyer-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
-  .affbuyer-tab { white-space: nowrap; }
+  .affbuyer-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .affbuyer-tab {
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .affbuyer-store-detail-toolbar .affbuyer-search { flex-basis: 100%; }
   .affbuyer-offer-row { flex-direction: column; align-items: flex-start; }
   .affbuyer-apply-btn { align-self: stretch; justify-content: center; }
