@@ -48,7 +48,7 @@ interface Stats          { purchases: number; favorites: number; products: numbe
 interface ChatParticipant{ _id: string; name: string; logo?: string; avatar?: string; }
 interface RecentConv     { _id: string; other: ChatParticipant; lastMessage?: { text?: string; image?: string; createdAt: string } | null; unreadCount: number; updatedAt: string; }
 interface FollowedBusiness{ _id: string; name: string; logo?: string; city?: string; rating?: number; totalRatings?: number; verified?: boolean; }
-interface NearbyBusiness  { _id: string; name: string; logo?: string; city?: string; address?: string; rating?: number; totalRatings?: number; verified?: boolean; categories?: string[]; distanceMeters: number; distanceLabel: string; followers?: string[]; }
+interface NearbyBusiness  { _id: string; name: string; logo?: string; city?: string; address?: string; rating?: number; totalRatings?: number; verified?: boolean; categories?: string[]; distanceMeters: number; distanceLabel: string; followers?: string[]; location?: { type: string; coordinates: [number, number] }; }
 interface MyReport        { _id: string; targetType: "product"|"business"; targetName: string; status: "pending"|"reviewed"|"dismissed"|"action_taken"; category: string; adminNote?: string; adminAction?: string; createdAt: string; resolvedAt?: string; autoBlocked: boolean; }
 interface ReportOnContent { _id: string; targetType: "product"|"business"; targetName: string; status: "pending"|"reviewed"|"dismissed"|"action_taken"; category: string; adminNote?: string; adminAction?: string; reason: string; detectedKeywords: string[]; createdAt: string; resolvedAt?: string; autoBlocked: boolean; }
 interface Announcement    { _id: string; title: string; message: string; audience: "all"|"seller"|"buyer"; durationHours: number; link?: string; createdAt: string; expiresAt: string; }
@@ -578,17 +578,28 @@ export default function ProfilePage() {
   const displayLat    = gps.status === "ok" ? gps.lat : u.lat;
   const displayLng    = gps.status === "ok" ? gps.lng : u.lng;
   const locationActive = gps.status === "ok" || !!(u.locationEnabled && u.lat && u.lng);
-
   const nowAnn        = new Date();
   const activeAnns    = announcements.filter(a => new Date(a.expiresAt) > nowAnn);
   const hasUnseenAnn  = activeAnns.some(a => !seenAnnouncements.has(a._id));
 
+  // ── Distancia en vivo: recalcula con Haversine en cada tick del GPS,
+  //    sin volver a pegarle al backend. nearbyBiz sigue actualizándose
+  //    por fetch cada NEARBY_FETCH_THRESHOLD_METERS (para traer negocios
+  //    nuevos que entraron al radio); esto solo refresca el número.
+  const liveNearbyBiz = nearbyBiz.map((biz) => {
+    if (gps.status !== "ok" || gps.lat === null || gps.lng === null || !biz.location?.coordinates) {
+      return biz;
+    }
+    const [bizLng, bizLat] = biz.location.coordinates;
+    const distanceMeters = haversineMeters(gps.lat, gps.lng, bizLat, bizLng);
+    const distanceLabel = distanceMeters < 1000
+      ? `${Math.round(distanceMeters)} m`
+      : `${(distanceMeters / 1000).toFixed(1)} km`;
+    return { ...biz, distanceMeters, distanceLabel };
+  });
+
   const openBanner = () => { localStorage.setItem(SECURITY_SEEN_KEY, Date.now().toString()); setGlowActive(false); setBannerOpen(true); };
 
-  // ── ÚNICO CAMBIO REAL: además de guardar en localStorage (caché local
-  //    instantánea), avisamos al backend para que quede marcado como leído
-  //    SOLO para este usuario (readBy), y así no vuelva a aparecer en
-  //    ningún dispositivo — sin afectar a los demás usuarios.
   const handleSeenAnnouncement = (id: string) => {
     localStorage.setItem(`profile_ann_seen_${id}`, Date.now().toString());
     setSeenAnnouncements(p => new Set([...p, id]));
@@ -871,9 +882,9 @@ export default function ProfilePage() {
             <div className="profile-card">
               <div className="profile-chat-header">
                 <h3>
-                  <Navigation size={15} strokeWidth={1.75}/>
+                 <Navigation size={15} strokeWidth={1.75}/>
                   Negocios cerca tuyo
-                  {nearbyBiz.length>0 && <span className="profile-chat-badge profile-chat-badge--title">{nearbyBiz.length}</span>}
+                  {liveNearbyBiz.length>0 && <span className="profile-chat-badge profile-chat-badge--title">{liveNearbyBiz.length}</span>}
                 </h3>
                 {locationActive && (
                   <div style={{ display:"flex", alignItems:"center", gap:"0.5rem" }}>
@@ -917,7 +928,7 @@ export default function ProfilePage() {
                   <p style={{ color:"#fca5a5" }}>{nearbyError}</p>
                   <button onClick={refreshGps} style={{ marginTop:"0.5rem", color:"#f97316", background:"none", border:"none", cursor:"pointer", fontWeight:600 }}>Reintentar</button>
                 </div>
-              ) : nearbyBiz.length === 0 ? (
+              ) : liveNearbyBiz.length === 0 ? (
                 <div className="profile-chat-empty">
                   <Store size={32} strokeWidth={1} style={{ color:"#d1d5db" }}/>
                   <p>No hay negocios en {radiusLabel}.</p>
@@ -926,7 +937,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="profile-followed-biz-list">
-                  {nearbyBiz.map(biz=>(
+                  {liveNearbyBiz.map(biz=>(
                     <div key={biz._id} className="profile-followed-biz-item">
                       <Link href={`/negocio/${biz._id}`} className="profile-followed-biz-info">
                         <img src={bizLogoUrl(biz.name,biz.logo)} alt={biz.name} className="profile-followed-biz-logo" onError={e=>{(e.target as HTMLImageElement).src=`https://ui-avatars.com/api/?name=${encodeURIComponent(biz.name)}&background=f97316&color=fff&size=80`;}}/>
