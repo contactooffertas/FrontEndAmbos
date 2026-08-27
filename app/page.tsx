@@ -30,6 +30,7 @@ import {
   Share2,
   Zap,
   Navigation,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import "../app/styles/home.css";
@@ -114,6 +115,9 @@ interface NearbyHomeBusiness {
   categories?: string[];
   distanceMeters: number;
   distanceLabel: string;
+  // Coordenadas del negocio (si el backend las manda) — se usan para
+  // recalcular la distancia en vivo con Haversine sin volver a pegarle a la API.
+  location?: { type: string; coordinates: [number, number] };
 }
 
 type NearbyGeoStatus = "idle" | "loading" | "ok" | "denied" | "error";
@@ -124,6 +128,12 @@ const HOME_RADIUS_OPTIONS = [
   { label: "10 km", value: 10000 },
   { label: "Todo el país", value: 0 },
 ];
+
+// Distancia mínima en metros para volver a pedirle negocios cercanos al
+// backend. El usuario tiene que moverse al menos esto antes de refrescar
+// la lista; mientras tanto, las distancias en pantalla igual se actualizan
+// en vivo (ver liveNearbyBizList).
+const NEARBY_FETCH_THRESHOLD_METERS = 100;
 
 const imgUrl = (url?: string) =>
   url || "https://via.placeholder.com/300x200?text=Producto";
@@ -146,6 +156,18 @@ function dedupeById<T extends { _id: string }>(items: T[]): T[] {
   const map = new Map<string, T>();
   items.forEach((it) => map.set(it._id, it));
   return Array.from(map.values());
+}
+
+// ── Haversine: distancia en metros entre dos coordenadas ─────────────────────
+function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6_371_000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function flashBasePrice(product: Product): number {
@@ -623,6 +645,7 @@ function NearbyBusinessesSection({
   radius,
   onRadiusChange,
   onRequestLocation,
+  live,
 }: {
   geoStatus: NearbyGeoStatus;
   businesses: NearbyHomeBusiness[];
@@ -631,6 +654,7 @@ function NearbyBusinessesSection({
   radius: number;
   onRadiusChange: (v: number) => void;
   onRequestLocation: () => void;
+  live?: boolean;
 }) {
   const radiusLabel = HOME_RADIUS_OPTIONS.find((o) => o.value === radius)?.label || "3 km";
   const showPrompt = geoStatus === "idle" || geoStatus === "denied" || geoStatus === "error";
@@ -644,9 +668,19 @@ function NearbyBusinessesSection({
             Negocios cerca tuyo
           </h2>
           <p className="section-subtitle">
-            {geoStatus === "ok"
-              ? `${businesses.length} negocio${businesses.length !== 1 ? "s" : ""} en ${radiusLabel}`
-              : "Descubrí negocios cerca de tu ubicación, sin entrar a tu perfil"}
+            {geoStatus === "ok" ? (
+              <>
+                {businesses.length} negocio{businesses.length !== 1 ? "s" : ""} en {radiusLabel}
+                {live && (
+                  <span style={{ marginLeft: 8, display: "inline-flex", alignItems: "center", gap: 4, color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
+                    en vivo
+                  </span>
+                )}
+              </>
+            ) : (
+              "Descubrí negocios cerca de tu ubicación, sin entrar a tu perfil"
+            )}
           </p>
         </div>
         {geoStatus === "ok" && (
@@ -660,6 +694,13 @@ function NearbyBusinessesSection({
                 {opt.label}
               </button>
             ))}
+            <button
+              onClick={onRequestLocation}
+              title="Actualizar ubicación"
+              style={{ background: "none", border: "1px solid rgba(249,115,22,0.3)", borderRadius: 8, padding: "0.35rem 0.55rem", color: "#f97316", cursor: "pointer", display: "flex", alignItems: "center" }}
+            >
+              <RefreshCw size={13} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+            </button>
           </div>
         )}
       </div>
@@ -749,9 +790,12 @@ function HomeContent() {
   };
 
   // ── Negocios cerca tuyo (home) ──────────────────────────────────────────
-  // Independiente del login: usa geolocalización del navegador directamente.
-  // Si el usuario ya tiene la ubicación activada en su cuenta (userHasLoc),
-  // se aprovecha esa sin volver a pedir permiso.
+  // Antes se pedía la ubicación una sola vez (getCurrentPosition) y quedaba
+  // fija para siempre, aunque el usuario se moviera. Ahora seguimos el GPS
+  // con watchPosition: las distancias se recalculan en vivo (Haversine) y
+  // el listado se vuelve a pedir al backend solo cuando el usuario se movió
+  // NEARBY_FETCH_THRESHOLD_METERS o más (o cambió el radio), para no
+  // sobrecargar la API en cada tick del GPS.
   const [nearbyGeoStatus, setNearbyGeoStatus] = useState<NearbyGeoStatus>("idle");
   const [nearbyLat, setNearbyLat] = useState<number | null>(null);
   const [nearbyLng, setNearbyLng] = useState<number | null>(null);
@@ -764,49 +808,87 @@ function HomeContent() {
     return saved ? parseInt(saved) : 3000;
   });
 
-  useEffect(() => {
-    if (userHasLoc && nearbyGeoStatus === "idle") {
-      setNearbyLat(userLat);
-      setNearbyLng(userLng);
-      setNearbyGeoStatus("ok");
-    }
-  }, [userHasLoc, userLat, userLng, nearbyGeoStatus]);
+  const nearbyWatchIdRef = useRef<number | null>(null);
+  const lastFetchedNearbyCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  const requestNearbyLocation = useCallback(() => {
+  const startNearbyWatch = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setNearbyGeoStatus("error");
+      if (userHasLoc) { setNearbyLat(userLat); setNearbyLng(userLng); setNearbyGeoStatus("ok"); }
+      else setNearbyGeoStatus("error");
       return;
     }
-    setNearbyGeoStatus("loading");
-    navigator.geolocation.getCurrentPosition(
+    setNearbyGeoStatus((prev) => (prev === "ok" ? prev : "loading"));
+    if (nearbyWatchIdRef.current !== null) navigator.geolocation.clearWatch(nearbyWatchIdRef.current);
+    nearbyWatchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         setNearbyLat(pos.coords.latitude);
         setNearbyLng(pos.coords.longitude);
         setNearbyGeoStatus("ok");
       },
       (err) => {
-        setNearbyGeoStatus(err.code === 1 ? "denied" : "error");
+        // Si la cuenta ya tenía una ubicación guardada, la usamos como respaldo
+        // en vez de dejar la sección vacía por un permiso denegado o un timeout.
+        if (userHasLoc) { setNearbyLat(userLat); setNearbyLng(userLng); setNearbyGeoStatus("ok"); }
+        else setNearbyGeoStatus(err.code === 1 ? "denied" : "error");
       },
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 }
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 }
     );
+  }, [userHasLoc, userLat, userLng]);
+
+  // Si la cuenta ya tiene la ubicación activada, arrancamos el GPS en vivo
+  // apenas carga la página, sin esperar a que el usuario toque el botón.
+  useEffect(() => {
+    if (userHasLoc && nearbyGeoStatus === "idle") startNearbyWatch();
+  }, [userHasLoc, nearbyGeoStatus, startNearbyWatch]);
+
+  useEffect(() => {
+    return () => {
+      if (nearbyWatchIdRef.current !== null && typeof navigator !== "undefined" && navigator.geolocation) {
+        navigator.geolocation.clearWatch(nearbyWatchIdRef.current);
+      }
+    };
   }, []);
+
+  const requestNearbyLocation = useCallback(() => { startNearbyWatch(); }, [startNearbyWatch]);
 
   const handleNearbyRadiusChange = (value: number) => {
     setNearbyBizRadius(value);
     localStorage.setItem("nearbyRadius", String(value));
+    lastFetchedNearbyCoordsRef.current = null; // forzar refetch con el nuevo radio
   };
 
   useEffect(() => {
     if (nearbyLat === null || nearbyLng === null) return;
+    const last = lastFetchedNearbyCoordsRef.current;
+    const moved = !last || haversineMeters(last.lat, last.lng, nearbyLat, nearbyLng) >= NEARBY_FETCH_THRESHOLD_METERS;
+    if (!moved) return;
     setNearbyBizLoading(true);
     setNearbyBizError("");
     const effectiveRadius = nearbyBizRadius === 0 ? 999999999 : nearbyBizRadius;
     fetch(`${API}/business/nearby?lat=${nearbyLat}&lng=${nearbyLng}&radius=${effectiveRadius}`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((data: NearbyHomeBusiness[]) => setNearbyBizList(Array.isArray(data) ? data : []))
+      .then((data: NearbyHomeBusiness[]) => {
+        setNearbyBizList(Array.isArray(data) ? data : []);
+        lastFetchedNearbyCoordsRef.current = { lat: nearbyLat, lng: nearbyLng };
+      })
       .catch(() => setNearbyBizError("No pudimos cargar los negocios cercanos."))
       .finally(() => setNearbyBizLoading(false));
   }, [nearbyLat, nearbyLng, nearbyBizRadius]);
+
+  // Distancia en vivo: recalcula con Haversine en cada tick del GPS sin
+  // volver a pegarle al backend. La lista sigue refrescándose por fetch
+  // (arriba) para traer negocios nuevos que entraron al radio.
+  const liveNearbyBizList = nearbyBizList.map((biz) => {
+    if (nearbyGeoStatus !== "ok" || nearbyLat === null || nearbyLng === null || !biz.location?.coordinates) {
+      return biz;
+    }
+    const [bizLng, bizLat] = biz.location.coordinates;
+    const distanceMeters = haversineMeters(nearbyLat, nearbyLng, bizLat, bizLng);
+    const distanceLabel = distanceMeters < 1000
+      ? `${Math.round(distanceMeters)} m`
+      : `${(distanceMeters / 1000).toFixed(1)} km`;
+    return { ...biz, distanceMeters, distanceLabel };
+  });
 
   useEffect(() => { fetch(`${API}/products/public-stats`).then((r) => r.json()).then(setPublicStats).catch(() => {}); }, []);
 
@@ -898,6 +980,10 @@ function HomeContent() {
 
   return (
     <MainLayout>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+
       <section className="hero">
         <div className="hero-inner">
           <div>
@@ -920,12 +1006,13 @@ function HomeContent() {
 
       <NearbyBusinessesSection
         geoStatus={nearbyGeoStatus}
-        businesses={nearbyBizList}
+        businesses={liveNearbyBizList}
         loading={nearbyBizLoading}
         error={nearbyBizError}
         radius={nearbyBizRadius}
         onRadiusChange={handleNearbyRadiusChange}
         onRequestLocation={requestNearbyLocation}
+        live={nearbyGeoStatus === "ok"}
       />
 
       {!user?.locationEnabled &&!geoBannerDismissed && (
