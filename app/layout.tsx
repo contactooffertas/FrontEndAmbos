@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Mercado Rosario - Las mejores ofertas',
     description: 'Encuentra las mejores ofertas cerca tuyo',
-    url: 'https://offertas.com',
+    url: 'http://rosariomarket.com.ar',
     siteName: 'Mercado Rosario',
     locale: 'es_AR',
     type: 'website',
