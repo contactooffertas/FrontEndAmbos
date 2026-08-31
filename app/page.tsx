@@ -31,9 +31,15 @@ interface SeoProduct {
 
 async function getSeoProducts(): Promise<SeoProduct[]> {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // 3s máximo
+ 
     const res = await fetch(`${API}/products/random?limit=20`, {
       next: { revalidate: 300 },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
+ 
     if (!res.ok) return [];
     const data = await res.json();
     return data.products || [];
