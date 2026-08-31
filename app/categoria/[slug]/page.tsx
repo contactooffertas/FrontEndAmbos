@@ -1,7 +1,7 @@
 // app/categoria/[slug]/page.tsx
 
 import type { Metadata } from "next";
-import CategoriaContent from "../../componentes/categoria";
+import CategoriaContent from "../../componentes/categorias";
 import { categories } from "../../lib/db";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://new-backend-lovat.vercel.app/api";
