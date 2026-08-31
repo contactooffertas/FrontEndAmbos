@@ -730,7 +730,7 @@ export default function NegocioPublicoPage() {
                   className="nid-meta-item"
                   style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem", textDecoration: "none", cursor: "pointer" }}
                 >
-                  <Navigation size={11} /> Ubicación verificada
+                  <Navigation size={11} /> Ver en Maps
                 </a>
               )}
               <span className="nid-meta-item nid-meta-item--bold">
