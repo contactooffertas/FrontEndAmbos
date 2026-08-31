@@ -261,7 +261,7 @@ function SellBanner() {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function CategoriaPage() {
+export default function CategoriaContent() {
   const params   = useParams<{ slug: string }>();
   const slug     = params?.slug ?? "";
   const router   = useRouter();
