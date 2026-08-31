@@ -895,28 +895,38 @@ function HomePageBody() {
 
   useEffect(() => { fetch(`${API}/products/public-stats`).then((r) => r.json()).then(setPublicStats).catch(() => {}); }, []);
 
-  useEffect(() => {
+useEffect(() => {
     setLoading(true);
-    const params = buildLocationParams({ limit: "60" });
+    const featuredExtra: Record<string, string> = { limit: "60" };
+    if (activeCategory) featuredExtra.category = activeCategory;
+    if (searchParam) featuredExtra.search = searchParam;
+    const params = buildLocationParams(featuredExtra);
+
     fetch(`${API}/products/featured?${params}`).then((r) => r.json()).then(async (data) => {
-      const featured: Product[] = data.products || [];
+      let featured: Product[] = data.products || [];
+      if (activeCategory) featured = featured.filter((p) => p.category === activeCategory);
+
+      const randomExtra: Record<string, string> = { limit: "40" };
+      if (activeCategory) randomExtra.category = activeCategory;
+      if (searchParam) randomExtra.search = searchParam;
+
       if (featured.length === 0) {
-        const r2 = await fetch(`${API}/products/random?${buildLocationParams({ limit: "40" })}`);
+        const r2 = await fetch(`${API}/products/random?${buildLocationParams(randomExtra)}`);
         const d2 = await r2.json();
         setAllProducts(d2.products || []);
       } else {
         const excludeIds = featured.map((p) => p._id);
-        const extra: Record<string, string> = { limit: "40" };
-        if (excludeIds.length) extra.excludeIds = JSON.stringify(excludeIds);
-        if (activeCategory) extra.category = activeCategory;
-        if (searchParam) extra.search = searchParam;
-        const r2 = await fetch(`${API}/products/random?${buildLocationParams(extra)}`);
+        if (excludeIds.length) randomExtra.excludeIds = JSON.stringify(excludeIds);
+        const r2 = await fetch(`${API}/products/random?${buildLocationParams(randomExtra)}`);
         const d2 = await r2.json();
         setAllProducts([...featured, ...(d2.products || [])]);
       }
     }).catch(async () => {
       try {
-        const r2 = await fetch(`${API}/products/random?${buildLocationParams({ limit: "40" })}`);
+        const randomExtra: Record<string, string> = { limit: "40" };
+        if (activeCategory) randomExtra.category = activeCategory;
+        if (searchParam) randomExtra.search = searchParam;
+        const r2 = await fetch(`${API}/products/random?${buildLocationParams(randomExtra)}`);
         const d2 = await r2.json();
         setAllProducts(d2.products || []);
       } catch { setAllProducts([]); }
