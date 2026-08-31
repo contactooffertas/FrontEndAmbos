@@ -110,8 +110,8 @@ export default function ForgotPasswordPage() {
 
         {/* Logo */}
         <Link href="/" className="fp-logo">
-          <span className="fp-logo-badge">MR</span>
-          <span className="fp-logo-suffix">Mercado Rosario</span>
+          <span className="fp-logo-badge">RM</span>
+          <span className="fp-logo-suffix">Rosario Market</span>
         </Link>
 
         {/* Progress */}
