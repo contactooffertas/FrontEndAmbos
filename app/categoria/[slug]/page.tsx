@@ -1,33 +1,31 @@
 // app/categoria/[slug]/page.tsx
-// Route que carga el componente de categoría con SEO: título/descripción
-// dinámicos por categoría + JSON-LD de los productos, generados en el server
-// antes de renderizar el componente client interactivo.
 
 import type { Metadata } from "next";
-import CategoriaContent from "../../componentes/categorias";
+import CategoriaContent from "../../componentes/categoria";
 import { categories } from "../../lib/db";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://new-backend-lovat.vercel.app/api";
 const SITE = "https://www.rosariomarket.com.ar";
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const cat = categories.find((c) => c.slug === params.slug);
-  const name = cat?.name || params.slug;
+  const { slug } = await params; // ← await acá
+  const cat = categories.find((c) => c.slug === slug);
+  const name = cat?.name || slug;
   const title = `${name} en Rosario | RosarioMarket`;
   const description = `Comprá ${name.toLowerCase()} en negocios locales de Rosario. Ofertas y envío rápido cerca tuyo.`;
 
   return {
     title,
     description,
-    alternates: { canonical: `${SITE}/categoria/${params.slug}` },
+    alternates: { canonical: `${SITE}/categoria/${slug}` },
     openGraph: {
       title,
       description,
-      url: `${SITE}/categoria/${params.slug}`,
+      url: `${SITE}/categoria/${slug}`,
       siteName: "RosarioMarket",
       locale: "es_AR",
       type: "website",
@@ -58,13 +56,14 @@ async function getCategoryProducts(slug: string): Promise<SeoProduct[]> {
 }
 
 export default async function Page({ params }: Props) {
-  const products = await getCategoryProducts(params.slug);
-  const cat = categories.find((c) => c.slug === params.slug);
+  const { slug } = await params; // ← await acá también
+  const products = await getCategoryProducts(slug);
+  const cat = categories.find((c) => c.slug === slug);
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: cat?.name || params.slug,
+    name: cat?.name || slug,
     itemListElement: products.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
