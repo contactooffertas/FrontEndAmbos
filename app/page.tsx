@@ -14,9 +14,17 @@ export const metadata: Metadata = {
     description:
       "Descubrí productos de negocios verificados de Rosario. Filtrá por categoría y ubicación.",
     url: `${SITE}/`,
-    siteName: "RosarioMarket",
+    siteName: "Rosario Market",
     locale: "es_AR",
     type: "website",
+    images: [
+      {
+        url: `${SITE}/assets/offerton.png`, // ¡Importante: URL absoluta con el dominio!
+        width: 512,
+        height: 512,
+        alt: "RosarioMarket Logo",
+      },
+    ],
   },
 };
 
