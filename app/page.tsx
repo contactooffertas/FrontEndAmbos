@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "Comprá en negocios locales de Rosario, Argentina. Ofertas, envíos rápidos y productos cerca tuyo, todo en un solo lugar.",
   alternates: { canonical: `${SITE}/` },
   openGraph: {
-    title: "RosarioMarket — Ofertas cerca tuyo en Rosario",
+    title: "Rosario Market — Ofertas cerca tuyo en Rosario",
     description:
       "Descubrí productos de negocios verificados de Rosario. Filtrá por categoría y ubicación.",
     url: `${SITE}/`,
