@@ -5,7 +5,7 @@ const API = "https://new-backend-lovat.vercel.app/api";
 const SITE = "https://www.rosariomarket.com.ar";
 
 export const metadata: Metadata = {
-  title: "RosarioMarket — Ofertas y productos de negocios en Rosario, Santa Fe",
+  title: "Rosario Market — Ofertas y productos de negocios en Rosario, Santa Fe",
   description:
     "Comprá en negocios locales de Rosario, Argentina. Ofertas, envíos rápidos y productos cerca tuyo, todo en un solo lugar.",
   alternates: { canonical: `${SITE}/` },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${SITE}/assets/offerton.png`, // ¡Importante: URL absoluta con el dominio!
+        url: `${SITE}/assets/offerton.png`,
         width: 512,
         height: 512,
         alt: "RosarioMarket Logo",
