@@ -1007,11 +1007,28 @@ useEffect(() => {
               <button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("offers")?.scrollIntoView({ behavior: "smooth" })}>Ver ofertas</button>
               {!user && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}
             </div>
-            <div className="hero-stats">
-              <div className="hero-stat"><span className="hero-stat-num">{publicStats.totalProducts > 0 ? `+${publicStats.totalProducts.toLocaleString()}` : "—"}</span><span className="hero-stat-label">Productos</span></div>
-              <div className="hero-stat"><span className="hero-stat-num">{publicStats.totalBusinesses > 0 ? `+${publicStats.totalBusinesses.toLocaleString()}` : "—"}</span><span className="hero-stat-label">Negocios</span></div>
-              <div className="hero-stat"><span className="hero-stat-num">98%</span><span className="hero-stat-label">Satisfacción</span></div>
-            </div>
+           {/* 
+<div className="hero-stats">
+  <div className="hero-stat">
+    <span className="hero-stat-num">
+      {publicStats.totalProducts > 0 ? `+${publicStats.totalProducts.toLocaleString()}` : "—"}
+    </span>
+    <span className="hero-stat-label">Productos</span>
+  </div>
+
+  <div className="hero-stat">
+    <span className="hero-stat-num">
+      {publicStats.totalBusinesses > 0 ? `+${publicStats.totalBusinesses.toLocaleString()}` : "—"}
+    </span>
+    <span className="hero-stat-label">Negocios</span>
+  </div>
+
+  <div className="hero-stat">
+    <span className="hero-stat-num">98%</span>
+    <span className="hero-stat-label">Satisfacción</span>
+  </div>
+</div>
+*/}
           </div>
           {heroProducts.length > 0 && <HeroSlider products={heroProducts} />}
         </div>
