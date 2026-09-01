@@ -673,7 +673,7 @@ function NearbyBusinessesSection({
           <p className="section-subtitle">
             {geoStatus === "ok" ? (
               <>
-                {businesses.length} negocio{businesses.length !== 1 ? "s" : ""} en {radiusLabel}
+                {businesses.length} negocio{businesses.length !== 1 ? "s" : ""} -{radiusLabel} a la redonda
                 {live && (
                   <span style={{ marginLeft: 8, display: "inline-flex", alignItems: "center", gap: 4, color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
