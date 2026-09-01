@@ -12,19 +12,19 @@
   "lang": "es-AR",
   "icons": [
     {
-      "src": "/assets/offerton.png",
+      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/offerton.png",
+      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/offerton-192-mono.png",
+      "src": "https://www.rosariomarket.com.ar/assets/offerton-192-mono.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "monochrome"
@@ -33,14 +33,14 @@
 
   "screenshots": [
     {
-      "src": "/assets/screenshot-1.png",
+      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Pantalla principal de Offertas"
     },
     {
-      "src": "/assets/screenshot-2.png",
+      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
@@ -61,7 +61,7 @@
       "url": "/?utm_source=shortcut",
       "icons": [
         {
-          "src": "/assets/offerton.png",
+          "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -74,7 +74,7 @@
       "url": "/panel?utm_source=shortcut",
       "icons": [
         {
-          "src": "/assets/shortcut-panel-192.png",
+          "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
           "sizes": "192x192",
           "type": "image/png"
         }
