@@ -303,7 +303,7 @@ export default function AdminPage() {
     }, 400);
   }, [prodSearch]);
 
-  // ── Usuarios ──────────────────────────────────────────────────────────────
+  // Usuarios
   const blockUser = async (id: string, name: string, cur: boolean) => {
     const Swal = (await import('sweetalert2')).default;
     const { isConfirmed } = await Swal.fire({ title: cur ? `Desbloquear a ${name}?` : `Bloquear a ${name}?`, icon: 'warning', showCancelButton: true, confirmButtonText: cur ? 'Desbloquear' : 'Bloquear', cancelButtonText: 'Cancelar', confirmButtonColor: cur ? '#16a34a' : '#ef4444' });
@@ -325,7 +325,7 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Negocios ──────────────────────────────────────────────────────────────
+  // Negocios
   const verifyBusiness = async (id: string, cur: boolean) => {
     try {
       await apiFetch(`/businesses/${id}/verify`, { method: 'PATCH' });
@@ -347,7 +347,7 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Suscriptores ──────────────────────────────────────────────────────────
+  // Suscriptores
   const openSubModal = (biz: BusinessRow) => {
     setSubBizId(biz._id);
     setSubBizName(biz.name);
@@ -393,7 +393,7 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Anuncios ──────────────────────────────────────────────────────────────
+  // Anuncios
   const submitAnnouncement = async () => {
     if (!annTitle.trim() || !annMessage.trim()) { toast('warning', 'Completá titulo y mensaje'); return; }
     setAnnSaving(true);
@@ -420,7 +420,7 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Apelaciones ───────────────────────────────────────────────────────────
+  // Apelaciones
   const handleResolveAppeal = async (bizId: string, action: 'approve' | 'reject', adminNote: string) => {
     setAppealResolveSaving(true);
     try {
@@ -438,7 +438,7 @@ export default function AdminPage() {
     finally { setAppealResolveSaving(false); }
   };
 
-  // ── Moderacion producto ───────────────────────────────────────────────────
+  // Moderacion producto
   const handleModerateProduct = async (productId: string) => {
     if (!moderateAction) { toast('warning', 'Selecciona una accion'); return; }
     setModerateSaving(true);
@@ -465,7 +465,7 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Destacados ────────────────────────────────────────────────────────────
+  // Destacados
   const openFeatBiz = (biz: BusinessRow) => { setFeatBizId(biz._id); setFeatBizName(biz.name); setFeatBizType('weekly'); setFeatBizDays('7'); setFeatBizNote(''); setFeatBizPaid(false); setFeatBizModal(true); };
   const submitFeatBiz = async () => {
     setFeatBizSaving(true);
@@ -558,7 +558,7 @@ export default function AdminPage() {
     } catch (e: any) { toast('error', e.message); }
   };
 
-  // ── Reportes ──────────────────────────────────────────────────────────────
+  // Reportes
   const handleResolveReport = async (reportId: string) => {
     if (!resolveActions.length) { toast('warning', 'Selecciona al menos una accion'); return; }
     setResolveSaving(true);
@@ -630,6 +630,8 @@ export default function AdminPage() {
     { id: 'announcements',    icon: Bell,              label: 'Anuncios' },
   ];
 
+  const badgeColor = (id: Tab) => id === 'product-reviews' ? '#f59e0b' : id === 'subscribers' ? '#f97316' : '#ef4444';
+
   const statusInfo = (s: string) => {
     if (s === 'pending')      return { label: 'Pendiente',     cls: 'pending'     };
     if (s === 'action_taken') return { label: 'Accion tomada', cls: 'action_taken' };
@@ -659,7 +661,7 @@ export default function AdminPage() {
             <button key={id} className={`adm-nav-item ${tab === id ? 'active' : ''}`} onClick={() => setTab(id)} style={{ position: 'relative' }}>
               <Icon size={17} /><span>{label}</span>
               {badge !== undefined && badge > 0 && (
-                <span style={{ position: 'absolute', top: 6, right: 8, background: id === 'product-reviews' ? '#f59e0b' : id === 'subscribers' ? '#f97316' : id === 'business-appeals' ? '#ef4444' : '#ef4444', color: '#fff', borderRadius: '50%', width: 17, height: 17, fontSize: '0.65rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ position: 'absolute', top: 6, right: 8, background: badgeColor(id), color: '#fff', borderRadius: '50%', width: 17, height: 17, fontSize: '0.65rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {badge > 9 ? '9+' : badge}
                 </span>
               )}
@@ -700,19 +702,53 @@ export default function AdminPage() {
           }}><RefreshCw size={15} /></button>
         </div>
 
+        {/* Nav mobile: todas las secciones en pills scrolleables */}
+        <div
+          className="adm-mobile-only"
+          style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', padding: '0 0 0.85rem', WebkitOverflowScrolling: 'touch' }}
+        >
+          {navItems.map(({ id, icon: Icon, label, badge }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                padding: '0.5rem 0.9rem', borderRadius: 999, whiteSpace: 'nowrap',
+                fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                border: `1.5px solid ${tab === id ? '#f97316' : 'var(--adm-border2)'}`,
+                background: tab === id ? 'rgba(249,115,22,0.15)' : 'var(--adm-surface)',
+                color: tab === id ? '#f97316' : 'var(--adm-muted2)',
+                position: 'relative',
+              }}
+            >
+              <Icon size={14} /><span>{label}</span>
+              {badge !== undefined && badge > 0 && (
+                <span style={{ background: badgeColor(id), color: '#fff', borderRadius: '50%', width: 15, height: 15, fontSize: '0.6rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {badge > 9 ? '9+' : badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* ════ DASHBOARD ════ */}
         {tab === 'dashboard' && stats && (
           <div className="adm-content">
             <div className="adm-stats-grid">
               {[
-                { label: 'Usuarios',             value: stats.totalUsers,             icon: Users,           color: 'blue'   },
-                { label: 'Negocios',             value: stats.totalBusinesses,        icon: Store,           color: 'orange' },
-                { label: 'Productos',            value: stats.totalProducts,          icon: Package,         color: 'green'  },
-                { label: 'Negocios destacados',  value: stats.activeFeaturedBiz,      icon: Crown,           color: 'gold'   },
-                { label: 'Productos destacados', value: stats.activeFeaturedProducts, icon: Tag,             color: 'gold'   },
-                { label: 'Negocios bloqueados',  value: stats.blockedBusinesses,      icon: AlertTriangle,   color: 'red'    },
-              ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className={`adm-stat-card adm-stat-${color}`}>
+                { label: 'Usuarios',             value: stats.totalUsers,             icon: Users,           color: 'blue',   tabId: 'users' as Tab       },
+                { label: 'Negocios',             value: stats.totalBusinesses,        icon: Store,           color: 'orange', tabId: 'businesses' as Tab  },
+                { label: 'Productos',            value: stats.totalProducts,          icon: Package,         color: 'green',  tabId: 'product-reviews' as Tab },
+                { label: 'Negocios destacados',  value: stats.activeFeaturedBiz,      icon: Crown,           color: 'gold',   tabId: 'featured-biz' as Tab },
+                { label: 'Productos destacados', value: stats.activeFeaturedProducts, icon: Tag,             color: 'gold',   tabId: 'featured-products' as Tab },
+                { label: 'Negocios bloqueados',  value: stats.blockedBusinesses,      icon: AlertTriangle,   color: 'red',    tabId: 'businesses' as Tab  },
+              ].map(({ label, value, icon: Icon, color, tabId }) => (
+                <div
+                  key={label}
+                  className={`adm-stat-card adm-stat-${color}`}
+                  onClick={tabId ? () => setTab(tabId) : undefined}
+                  style={tabId ? { cursor: 'pointer' } : undefined}
+                >
                   <div className="adm-stat-icon"><Icon size={20} /></div>
                   <div className="adm-stat-num">{value}</div>
                   <div className="adm-stat-label">{label}</div>
@@ -870,7 +906,6 @@ export default function AdminPage() {
                   <div className="adm-mobile-only" style={{ flexDirection: 'column' }}>
                     {businesses.map(b => (
                       <div key={b._id} style={{ padding: '1rem', borderBottom: '1px solid var(--adm-border)', opacity: b.blocked ? 0.7 : 1 }}>
-                        {/* Header del negocio */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                           <img
                             src={b.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&size=44&background=f97316&color=fff`}
@@ -889,7 +924,6 @@ export default function AdminPage() {
                             : <span className="adm-status active" style={{ fontSize: '0.7rem' }}><CheckCircle size={10} /></span>
                           }
                         </div>
-                        {/* Info extra */}
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                             {[1,2,3].map(n => (<div key={n} style={{ width: 10, height: 10, borderRadius: '50%', background: n <= (b.strikeCount || 0) ? '#ef4444' : 'var(--adm-border2)' }} />))}
@@ -898,7 +932,6 @@ export default function AdminPage() {
                           {b.featuredInfo && <span className="adm-featured-chip" style={{ fontSize: '0.7rem' }}><Crown size={9} /> {daysLeft(b.featuredInfo.endDate)}d</span>}
                           {(b.featuredProductsCount ?? 0) > 0 && <span style={{ fontSize: '0.7rem', color: '#f97316', fontWeight: 700 }}><Tag size={9} /> {b.featuredProductsCount}</span>}
                         </div>
-                        {/* Acciones */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
                           <button className={`adm-btn-sm ${b.verified ? 'orange' : 'green'}`} style={{ justifyContent: 'center' }} onClick={() => verifyBusiness(b._id, b.verified)}>
                             {b.verified ? <><XCircle size={11} /> Quitar ver.</> : <><CheckCircle size={11} /> Verificar</>}
@@ -1453,7 +1486,7 @@ export default function AdminPage() {
         )}
       </main>
 
-      {/* ── Modal: suscripcion ──────────────────────────────────────────────── */}
+      {/* Modal: suscripcion */}
       {subModal && (
         <div className="adm-modal-overlay" onClick={() => setSubModal(false)}>
           <div className="adm-modal" onClick={e => e.stopPropagation()}>
