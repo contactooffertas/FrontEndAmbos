@@ -84,30 +84,12 @@ export default function Nosotros() {
   return (
     <main className="nosotros-page">
       <nav className="nosotros-breadcrumb" aria-label="Breadcrumb">
-        <Link
-          href="/"
-          className="nosotros-breadcrumb-home"
-          aria-label="Rosario Market — Volver al inicio"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              flexShrink: 0,
-            }}
-          >
-            <Image src="/assets/navbarbolsa.png" alt="" width={30} height={30} />
+        <Link href="/" className="nosotros-breadcrumb-home" aria-label="Rosario Market — Volver al inicio">
+          <span className="nosotros-brand-icon" aria-hidden="true">
+            <Image src="/assets/navbarbolsa.png" alt="" width={32} height={32} />
           </span>
-          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 3, fontWeight: 800 }}>
-            <span>Rosario</span>
-            <span style={{ color: '#f97316' }}>Market</span>
+          <span className="nosotros-brand-wordmark">
+            <span>Rosario</span><span>Market</span>
           </span>
         </Link>
         <ChevronRight size={14} className="nosotros-breadcrumb-sep" />
@@ -115,28 +97,26 @@ export default function Nosotros() {
       </nav>
 
       <section className="nosotros-hero">
-        <div className="nosotros-hero-tag">
-          <Star size={13} strokeWidth={2.5} />
-          Hecho para Rosario
+        <div className="nosotros-hero-media" aria-hidden="true">
+          <Image src="/assets/monumento-hero.png" alt="" fill priority sizes="100vw" />
         </div>
-        <h1 className="nosotros-hero-title">
-          La ciudad tiene miles de vidrieras.<br />
-          <span className="nosotros-hero-accent">Queremos ayudarte a encontrarlas.</span>
-        </h1>
-        <p className="nosotros-hero-sub">
-          Rosario Market nació con una idea simple: que encontrar un producto o descubrir un negocio de Rosario no tenga que significar recorrer de punta a punta la ciudad. Queremos reunir comercios, productos y ofertas en una sola vidriera digital, con la cercanía como protagonista y el trato directo como parte de la experiencia.
-        </p>
+        <div className="nosotros-hero-overlay" />
+        <div className="nosotros-hero-content">
+          <div className="nosotros-hero-tag"><Star size={13} strokeWidth={2.5} /> Hecho para Rosario</div>
+          <h1 className="nosotros-hero-title">
+            La ciudad tiene miles de vidrieras.<br />
+            <span className="nosotros-hero-accent">Queremos ayudarte a encontrarlas.</span>
+          </h1>
+          <p className="nosotros-hero-sub">
+            Rosario Market nació con una idea simple: que encontrar un producto o descubrir un negocio de Rosario no tenga que significar recorrer de punta a punta la ciudad. Queremos reunir comercios, productos y ofertas en una sola vidriera digital, con la cercanía como protagonista y el trato directo como parte de la experiencia.
+          </p>
+          <div className="nosotros-hero-signature">ROSARIO · BARRIOS · COMERCIO LOCAL</div>
+        </div>
       </section>
 
       <section className="nosotros-image-banner">
         <div className="nosotros-image-wrapper">
-          <Image
-            src="/assets/offerton.png"
-            alt="Rosario Market, vidriera digital de negocios y productos de Rosario"
-            fill
-            style={{ objectFit: 'cover' }}
-            priority
-          />
+          <Image src="/assets/monumento-hero.png" alt="Rosario y su comercio local" fill sizes="(max-width: 768px) 100vw, 1200px" />
           <div className="nosotros-image-overlay" />
           <div className="nosotros-image-badge">
             <span className="nosotros-badge-dot" />
@@ -148,65 +128,46 @@ export default function Nosotros() {
 
       <section className="nosotros-features">
         <div className="nosotros-section-header">
+          <span className="nosotros-section-kicker">LA IDEA</span>
           <h2 className="nosotros-section-title">Qué queremos resolver</h2>
-          <p className="nosotros-section-desc">
-            Una plataforma local tiene que ser útil para ambos lados: para quien busca y para quien vende.
-          </p>
+          <p className="nosotros-section-desc">Una plataforma local tiene que ser útil para ambos lados: para quien busca y para quien vende.</p>
         </div>
-
         <div className="nosotros-features-grid">
-          {features.map((f) => (
-            <div key={f.title} className="nosotros-feature-card">
+          {features.map((f, index) => (
+            <article key={f.title} className="nosotros-feature-card">
+              <span className="nosotros-feature-number">0{index + 1}</span>
               <div className="nosotros-feature-icon">{f.icon}</div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
-            </div>
+            </article>
           ))}
         </div>
       </section>
 
       <section className="nosotros-promo-banner">
         <div className="nosotros-promo-content">
-          <p className="nosotros-promo-eyebrow">
-            <Tag size={13} strokeWidth={2.5} />
-            Para comercios de Rosario
-          </p>
+          <p className="nosotros-promo-eyebrow"><Tag size={13} strokeWidth={2.5} /> Para comercios de Rosario</p>
           <h2 className="nosotros-promo-title">Tu negocio también puede tener su vidriera</h2>
           <p className="nosotros-promo-text">
             Rosario Market busca darle presencia digital al comercio local sin quedarse con una comisión por cada venta. Los negocios pueden mostrar sus productos, recibir visitas a su tienda y conectar directamente con potenciales clientes. Las opciones de visibilidad destacada son una herramienta adicional para quien quiera tener más exposición, no el motivo principal de estar en la plataforma.
           </p>
-          <Link href="/register" className="nosotros-promo-btn">
-            <Users size={16} strokeWidth={2} />
-            Sumar mi negocio
-          </Link>
+          <Link href="/register" className="nosotros-promo-btn"><Users size={16} strokeWidth={2} /> Sumar mi negocio</Link>
         </div>
         <div className="nosotros-promo-decor">RM</div>
       </section>
 
       <section className="nosotros-community">
         <div className="nosotros-section-header">
-          <h2 className="nosotros-section-title">
-            <ShieldCheck size={28} strokeWidth={1.8} className="nosotros-title-icon" />
-            Una plataforma con identidad local
-          </h2>
-          <p className="nosotros-section-desc">
-            No queremos ser un catálogo genérico. Queremos que Rosario Market refleje la variedad de negocios y emprendimientos que forman parte de la ciudad.
-          </p>
+          <span className="nosotros-section-kicker">IDENTIDAD LOCAL</span>
+          <h2 className="nosotros-section-title"><ShieldCheck size={28} strokeWidth={1.8} className="nosotros-title-icon" />Una plataforma con identidad local</h2>
+          <p className="nosotros-section-desc">No queremos ser un catálogo genérico. Queremos que Rosario Market refleje la variedad de negocios y emprendimientos que forman parte de la ciudad.</p>
         </div>
-
         <div className="nosotros-community-grid">
           {community.map((item) => (
-            <div key={item.label} className="nosotros-community-chip">
-              <span className="nosotros-chip-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </div>
+            <div key={item.label} className="nosotros-community-chip"><span className="nosotros-chip-icon">{item.icon}</span><span>{item.label}</span></div>
           ))}
         </div>
-
-        <p className="nosotros-community-closing">
-          Comprar local también empieza por poder encontrar lo que tenés cerca.{' '}
-          <strong>Rosario Market: Rosario en una sola vidriera.</strong>
-        </p>
+        <p className="nosotros-community-closing">Comprar local también empieza por poder encontrar lo que tenés cerca.{' '}<strong>Rosario Market: Rosario en una sola vidriera.</strong></p>
       </section>
 
       {/*
