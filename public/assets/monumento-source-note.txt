@@ -1,0 +1,1 @@
+Imagen del Monumento Nacional a la Bandera utilizada por la Home de Rosario Market. El recurso visual principal se sirve localmente desde /assets/monumento-rosario-hero.svg para evitar dependencias externas.
