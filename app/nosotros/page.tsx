@@ -1,8 +1,8 @@
+import type { Metadata } from 'next';
 import '../styles/nosotros.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  Home,
   MapPin,
   ShoppingCart,
   MessageCircle,
@@ -18,79 +18,121 @@ import {
   Candy,
   Store,
   Handshake,
-  Flag,
+  Search,
+  HeartHandshake,
 } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Nosotros',
+  description:
+    'Conocé Rosario Market, una plataforma pensada para conectar a personas con negocios, productos y ofertas de Rosario de forma simple, cercana y directa.',
+  alternates: { canonical: '/nosotros' },
+  openGraph: {
+    title: 'Nosotros | Rosario Market',
+    description:
+      'Una vidriera digital para descubrir y acompañar al comercio local de Rosario.',
+    url: 'https://www.rosariomarket.com.ar/nosotros',
+    siteName: 'Rosario Market',
+    locale: 'es_AR',
+    type: 'website',
+  },
+};
 
 export default function Nosotros() {
   const features = [
     {
       icon: <MapPin size={28} strokeWidth={1.8} />,
-      title: 'Lo local primero',
-      desc: 'Radios de 5, 10 o 20 km para entregas rápidas, o cobertura nacional con opciones destacadas.',
+      title: 'Cercanía que sirve',
+      desc: 'Usamos la ubicación para ayudarte a descubrir negocios y productos de Rosario cerca tuyo y comparar opciones por distancia.',
+    },
+    {
+      icon: <Search size={28} strokeWidth={1.8} />,
+      title: 'Encontrar antes que recorrer',
+      desc: 'Buscá productos, categorías y comercios desde un solo lugar antes de salir a recorrer negocio por negocio.',
     },
     {
       icon: <ShoppingCart size={28} strokeWidth={1.8} />,
-      title: 'Carrito inteligente',
-      desc: 'Agregá productos de distintos vendedores y coordiná todo desde un solo lugar.',
+      title: 'Una experiencia simple',
+      desc: 'Explorá productos, armá tu carrito y mantené organizadas tus opciones dentro de una misma plataforma.',
     },
     {
       icon: <MessageCircle size={28} strokeWidth={1.8} />,
-      title: 'Chat fluido',
-      desc: 'Hablá directamente con el vendedor para coordinar, negociar y cerrar el trato.',
+      title: 'Trato directo',
+      desc: 'Rosario Market acerca a compradores y comercios para que puedan comunicarse y coordinar de manera directa.',
+    },
+    {
+      icon: <Store size={28} strokeWidth={1.8} />,
+      title: 'Vidriera para el comercio local',
+      desc: 'Cada negocio puede mostrar quién es, dónde está y qué vende para ganar presencia digital dentro de Rosario.',
     },
     {
       icon: <BarChart2 size={28} strokeWidth={1.8} />,
-      title: 'Sistema de reportes',
-      desc: 'Transparencia total: reportes claros que mantienen la plataforma confiable para todos.',
+      title: 'Una plataforma que puede crecer',
+      desc: 'Estamos construyendo herramientas para que comercios y usuarios tengan cada vez más formas de descubrirse, conectarse y volver.',
     },
   ];
 
   const community = [
-    { icon: <UtensilsCrossed size={20} strokeWidth={1.8} />, label: 'Empanadas caseras' },
-    { icon: <Coffee size={20} strokeWidth={1.8} />,          label: 'Yerba mate al por mayor' },
-    { icon: <Candy size={20} strokeWidth={1.8} />,           label: 'Golosinas de kiosco' },
-    { icon: <Store size={20} strokeWidth={1.8} />,           label: 'Almacenes de barrio' },
-    { icon: <Handshake size={20} strokeWidth={1.8} />,       label: 'Emprendedores locales' },
-    { icon: <Flag size={20} strokeWidth={1.8} />,            label: 'Todo entre argentinos' },
+    { icon: <UtensilsCrossed size={20} strokeWidth={1.8} />, label: 'Gastronomía local' },
+    { icon: <Coffee size={20} strokeWidth={1.8} />, label: 'Dietéticas y almacenes' },
+    { icon: <Candy size={20} strokeWidth={1.8} />, label: 'Kioscos y comercios de barrio' },
+    { icon: <Store size={20} strokeWidth={1.8} />, label: 'Negocios de Rosario' },
+    { icon: <Handshake size={20} strokeWidth={1.8} />, label: 'Emprendedores locales' },
+    { icon: <HeartHandshake size={20} strokeWidth={1.8} />, label: 'Compra y trato cercano' },
   ];
 
   return (
     <main className="nosotros-page">
-
-      {/* ── Breadcrumb ── */}
       <nav className="nosotros-breadcrumb" aria-label="Breadcrumb">
-        <Link href="/" className="nosotros-breadcrumb-home">
-          <Home size={16} strokeWidth={2} />
-          <span>Home</span>
+        <Link
+          href="/"
+          className="nosotros-breadcrumb-home"
+          aria-label="Rosario Market — Volver al inicio"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}
+          >
+            <Image src="/assets/navbarbolsa.png" alt="" width={30} height={30} />
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 3, fontWeight: 800 }}>
+            <span>Rosario</span>
+            <span style={{ color: '#f97316' }}>Market</span>
+          </span>
         </Link>
         <ChevronRight size={14} className="nosotros-breadcrumb-sep" />
         <span className="nosotros-breadcrumb-current">Nosotros</span>
       </nav>
 
-      {/* ── Hero ── */}
       <section className="nosotros-hero">
         <div className="nosotros-hero-tag">
           <Star size={13} strokeWidth={2.5} />
-          Nuestra Historia
+          Hecho para Rosario
         </div>
         <h1 className="nosotros-hero-title">
-          Donde el trato directo<br />
-          <span className="nosotros-hero-accent">hace la diferencia</span>
+          La ciudad tiene miles de vidrieras.<br />
+          <span className="nosotros-hero-accent">Queremos ayudarte a encontrarlas.</span>
         </h1>
         <p className="nosotros-hero-sub">
-          Nacimos en Rosario, Santa Fe, para resolver un problema cotidiano: conectar
-          ofertas de kioscos, almacenes y emprendedores con quienes buscan gangas cerca de casa.
-          Hoy llegamos a todo el país, con miles de ofertas geolocalizadas que fortalecen
-          el comercio tradicional.
+          Rosario Market nació con una idea simple: que encontrar un producto o descubrir un negocio de Rosario no tenga que significar recorrer de punta a punta la ciudad. Queremos reunir comercios, productos y ofertas en una sola vidriera digital, con la cercanía como protagonista y el trato directo como parte de la experiencia.
         </p>
       </section>
 
-      {/* ── Image Banner ── */}
       <section className="nosotros-image-banner">
         <div className="nosotros-image-wrapper">
           <Image
             src="/assets/offerton.png"
-            alt="Ofertas vibrantes en mapa de Argentina"
+            alt="Rosario Market, vidriera digital de negocios y productos de Rosario"
             fill
             style={{ objectFit: 'cover' }}
             priority
@@ -99,17 +141,16 @@ export default function Nosotros() {
           <div className="nosotros-image-badge">
             <span className="nosotros-badge-dot" />
             <Zap size={14} strokeWidth={2.5} />
-            Ofertas geolocalizadas en tiempo real
+            Negocios y productos de Rosario, más cerca
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
       <section className="nosotros-features">
         <div className="nosotros-section-header">
-          <h2 className="nosotros-section-title">Cómo nos diferenciamos</h2>
+          <h2 className="nosotros-section-title">Qué queremos resolver</h2>
           <p className="nosotros-section-desc">
-            Tecnología al servicio del barrio, sin complicaciones ni comisiones ocultas.
+            Una plataforma local tiene que ser útil para ambos lados: para quien busca y para quien vende.
           </p>
         </div>
 
@@ -124,33 +165,33 @@ export default function Nosotros() {
         </div>
       </section>
 
-      {/* ── Promo Banner ── */}
       <section className="nosotros-promo-banner">
         <div className="nosotros-promo-content">
           <p className="nosotros-promo-eyebrow">
             <Tag size={13} strokeWidth={2.5} />
-            Oferta fundadores
+            Para comercios de Rosario
           </p>
-          <h2 className="nosotros-promo-title">Gratis por 2 meses</h2>
+          <h2 className="nosotros-promo-title">Tu negocio también puede tener su vidriera</h2>
           <p className="nosotros-promo-text">
-            Más <strong>30% de descuento vitalicio</strong>. Solo cobramos por visibilidad extra,
-            nunca comisiones ocultas por ventas.
+            Rosario Market busca darle presencia digital al comercio local sin quedarse con una comisión por cada venta. Los negocios pueden mostrar sus productos, recibir visitas a su tienda y conectar directamente con potenciales clientes. Las opciones de visibilidad destacada son una herramienta adicional para quien quiera tener más exposición, no el motivo principal de estar en la plataforma.
           </p>
-          <a href="/register" className="nosotros-promo-btn">
+          <Link href="/register" className="nosotros-promo-btn">
             <Users size={16} strokeWidth={2} />
-            Quiero ser fundador
-          </a>
+            Sumar mi negocio
+          </Link>
         </div>
-        <div className="nosotros-promo-decor">%</div>
+        <div className="nosotros-promo-decor">RM</div>
       </section>
 
-      {/* ── Comunidad ── */}
       <section className="nosotros-community">
         <div className="nosotros-section-header">
           <h2 className="nosotros-section-title">
             <ShieldCheck size={28} strokeWidth={1.8} className="nosotros-title-icon" />
-            Compromiso con la comunidad
+            Una plataforma con identidad local
           </h2>
+          <p className="nosotros-section-desc">
+            No queremos ser un catálogo genérico. Queremos que Rosario Market refleje la variedad de negocios y emprendimientos que forman parte de la ciudad.
+          </p>
         </div>
 
         <div className="nosotros-community-grid">
@@ -163,11 +204,18 @@ export default function Nosotros() {
         </div>
 
         <p className="nosotros-community-closing">
-          Apoyamos la economía real: sin complicaciones, sin intermediarios innecesarios.{' '}
-          <strong>¡rosariomarket.com.ar: donde el trato directo hace la diferencia!</strong>
+          Comprar local también empieza por poder encontrar lo que tenés cerca.{' '}
+          <strong>Rosario Market: Rosario en una sola vidriera.</strong>
         </p>
       </section>
 
+      {/*
+        IDEAS / MÉTRICAS FUTURAS — NO BORRAR.
+        Mostrar cuando exista volumen real suficiente para respaldarlas:
+        - “Miles de clientes”
+        - “98 % de satisfacción”
+        - Estadísticas públicas de productos y negocios
+      */}
     </main>
   );
 }
