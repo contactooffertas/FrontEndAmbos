@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
-import './styles/home-polish.css';
 import './styles/product-card-polish.css';
 
 const SITE = 'https://www.rosariomarket.com.ar';
@@ -55,7 +54,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html lang="es-AR">
       <body>
         <Providers>
           <PWAManifestUpdater />
