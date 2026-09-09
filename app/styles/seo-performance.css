@@ -1,0 +1,64 @@
+/* SEO / Core Web Vitals — capa no invasiva.
+   Mantiene el diseño de Home y mejora entrega, estabilidad y accesibilidad. */
+
+/* El hero original usa un PNG de ~3 MB como background. Servirlo a través del
+   optimizador de imágenes de Next reduce peso y permite cache/resizing. */
+.home-v2-page .hero {
+  background:
+    linear-gradient(90deg, rgba(7,32,52,.96) 0%, rgba(7,32,52,.88) 30%, rgba(7,32,52,.48) 52%, rgba(7,32,52,.08) 76%, rgba(7,32,52,.03) 100%),
+    url('/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=1920&q=72') center 46% / cover no-repeat !important;
+}
+
+/* Reservar geometría para imágenes y evitar pequeños saltos al cargar. */
+.home-v2-page .hero-card img,
+.home-v2-page .biz-card-banner-img,
+.home-v2-page .product-card img,
+.home-v2-page .nearby-home-card img {
+  display: block;
+  max-width: 100%;
+}
+.home-v2-page .hero-card img {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* El contenido bajo el primer viewport no necesita pintarse antes de tiempo.
+   contain-intrinsic-size reserva espacio y reduce trabajo inicial sin CLS. */
+.home-v2-page .section,
+.home-v2-page .banner {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 650px;
+}
+
+/* Foco de teclado visible: evita fallos de accesibilidad por controles sin
+   indicador perceptible. */
+.home-v2-page a:focus-visible,
+.home-v2-page button:focus-visible,
+.navbar a:focus-visible,
+.navbar button:focus-visible {
+  outline: 3px solid #ff7417 !important;
+  outline-offset: 3px;
+}
+
+/* Los category-card pueden ser botones semánticos sin cambiar su aspecto. */
+.home-v2-page button.category-card {
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 620px) {
+  .home-v2-page .hero {
+    background:
+      linear-gradient(180deg,rgba(5,24,40,.12) 0%,rgba(5,24,40,.14) 31%,rgba(5,24,40,.64) 60%,rgba(5,24,40,.96) 100%),
+      url('/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=828&q=68') 56% top / auto 70% no-repeat,
+      #071f34 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+  }
+}
