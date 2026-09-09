@@ -2,6 +2,7 @@
 // Service Worker — push notifications, navegación, badge
 
 const MANIFEST_URL = "/manifest.json";
+const BACKEND_ORIGIN = "https://new-backend-lovat.vercel.app";
 let cachedManifest = null;
 
 // ── Instalar ──────────────────────────────────────────────────────────────────
@@ -16,8 +17,42 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
 });
 
-self.addEventListener("fetch", () => {
-  // sin intervención — dejar pasar todo al network normalmente
+// ── Proxy same-origin SOLO para Afiliados/Términos ───────────────────────────
+// No cambia el backend ni intercepta el resto de Rosario Market. Evita que el
+// navegador bloquee por CORS las llamadas históricas que aún usan la URL
+// absoluta del backend dentro de BuyerDashboard/SellerDashboard.
+async function proxyBackendRequest(request) {
+  const url = new URL(request.url);
+  const apiPath = url.pathname.replace(/^\/api\//, "");
+  const proxyUrl = new URL(`/api/backend-proxy/${apiPath}`, self.location.origin);
+  proxyUrl.search = url.search;
+
+  const method = request.method.toUpperCase();
+  const init = {
+    method,
+    headers: new Headers(request.headers),
+    cache: "no-store",
+    credentials: "same-origin",
+    redirect: "follow",
+  };
+
+  if (method !== "GET" && method !== "HEAD") {
+    init.body = await request.clone().arrayBuffer();
+  }
+
+  return fetch(proxyUrl.toString(), init);
+}
+
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  const isBackend = url.origin === BACKEND_ORIGIN;
+  const isAffiliateRequest = url.pathname === "/api/affiliates" || url.pathname.startsWith("/api/affiliates/");
+  const isTermsRequest = url.pathname === "/api/terminos" || url.pathname.startsWith("/api/terminos/");
+
+  if (isBackend && (isAffiliateRequest || isTermsRequest)) {
+    event.respondWith(proxyBackendRequest(event.request));
+  }
+  // Todo lo demás sigue pasando al network normalmente.
 });
 
 // ── Helper: obtener ícono del manifest ───────────────────────────────────────
