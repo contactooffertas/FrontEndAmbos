@@ -1,5 +1,4 @@
 "use client";
-// app/login/page.tsx
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,10 +9,9 @@ import {
   MapPin,
   Bell,
   Star,
-  CreditCard,
+  Store,
   Loader2,
   Lock,
-  Shield,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -22,9 +20,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {},
-  );
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = () => {
     const errs: typeof errors = {};
@@ -40,6 +36,7 @@ export default function LoginPage() {
       setErrors(errs);
       return;
     }
+
     setErrors({});
     setLoading(true);
 
@@ -48,10 +45,8 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result.success) {
-      // Check if the logged-in user is an admin
-      const storedUser = JSON.parse(
-        localStorage.getItem("marketplace_user") || "{}",
-      );
+      const storedUser = JSON.parse(localStorage.getItem("marketplace_user") || "{}");
+
       if (storedUser?.role === "admin") {
         const { value: goToAdmin } = await Swal.fire({
           icon: "success",
@@ -66,11 +61,7 @@ export default function LoginPage() {
           timerProgressBar: true,
         });
 
-        if (goToAdmin) {
-          router.push("/admin");
-        } else {
-          router.push("/");
-        }
+        router.push(goToAdmin ? "/admin" : "/");
       } else {
         await Swal.fire({
           icon: "success",
@@ -92,50 +83,79 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
-      {/* Left panel */}
       <div className="auth-left">
         <div className="auth-left-content">
-          <div className="auth-left-logo">Off-ertas</div>
-          <h2>Encontrá las mejores ofertas cerca tuyo</h2>
-          <p>Accedé a miles de productos de negocios verificados en tu zona.</p>
+          <Link
+            href="/"
+            aria-label="Rosario Market — Ir al inicio"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              color: "inherit",
+              textDecoration: "none",
+              marginBottom: "1.35rem",
+            }}
+          >
+            <img
+              src="/assets/navbarbolsa.png"
+              alt=""
+              style={{ width: 42, height: 42, objectFit: "contain" }}
+            />
+            <span style={{ fontSize: "1.35rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
+              Rosario <span style={{ color: "#f97316" }}>Market</span>
+            </span>
+          </Link>
+
+          <h2>Todo Rosario, en un solo lugar</h2>
+          <p>
+            Iniciá sesión para guardar tus preferencias, seguir negocios y descubrir productos cerca tuyo.
+          </p>
+
           <ul className="auth-left-features">
             <li>
-              <span>
-                <MapPin size={18} />
-              </span>
-              <span>Productos cercanos a tu ubicación</span>
+              <span><MapPin size={18} /></span>
+              <span>Negocios y productos según tu ubicación</span>
             </li>
             <li>
-              <span>
-                <Bell size={18} />
-              </span>
-              <span>Alertas de ofertas en tiempo real</span>
+              <span><Bell size={18} /></span>
+              <span>Alertas de ofertas de tus negocios favoritos</span>
             </li>
             <li>
-              <span>
-                <Star size={18} />
-              </span>
-              <span>Negocios calificados por la comunidad</span>
+              <span><Star size={18} /></span>
+              <span>Calificaciones y referencias de la comunidad</span>
             </li>
             <li>
-              <span>
-                <CreditCard size={18} />
-              </span>
-              <span>Pagos seguros y garantizados</span>
+              <span><Store size={18} /></span>
+              <span>Acceso directo a comercios locales de Rosario</span>
             </li>
           </ul>
         </div>
       </div>
 
-      {/* Right panel */}
       <div className="auth-right">
         <div className="auth-header">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              color: "var(--primary)",
+              textDecoration: "none",
+              fontSize: "0.86rem",
+              fontWeight: 700,
+              marginBottom: "1rem",
+            }}
           >
-            ← Volver al inicio
+            <img
+              src="/assets/navbarbolsa.png"
+              alt=""
+              style={{ width: 24, height: 24, objectFit: "contain" }}
+            />
+            Volver a Rosario Market
           </Link>
+
           <h1>Iniciar sesión</h1>
           <p>Bienvenido de vuelta a Rosario Market</p>
         </div>
@@ -146,6 +166,7 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               className={`form-control ${errors.email ? "error" : ""}`}
               placeholder="tu@email.com"
               value={email}
@@ -159,24 +180,19 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               className={`form-control ${errors.password ? "error" : ""}`}
               placeholder="Tu contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {errors.password && (
-              <span className="form-error">{errors.password}</span>
-            )}
+            {errors.password && <span className="form-error">{errors.password}</span>}
           </div>
 
           <div style={{ textAlign: "right" }}>
             <Link
-              href="forgotpassword"
-              style={{
-                fontSize: "0.82rem",
-                color: "var(--primary)",
-                fontWeight: "600",
-              }}
+              href="/forgotpassword"
+              style={{ fontSize: "0.82rem", color: "var(--primary)", fontWeight: 600 }}
             >
               ¿Olvidaste tu contraseña?
             </Link>
@@ -185,16 +201,12 @@ export default function LoginPage() {
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? (
               <>
-                <Loader2
-                  size={18}
-                  className="animate-spin"
-                  style={{ marginRight: "6px" }}
-                />
+                <Loader2 size={18} className="animate-spin" style={{ marginRight: 6 }} />
                 Ingresando...
               </>
             ) : (
               <>
-                <Lock size={18} style={{ marginRight: "6px" }} />
+                <Lock size={18} style={{ marginRight: 6 }} />
                 Ingresar
               </>
             )}
