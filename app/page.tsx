@@ -5,14 +5,14 @@ const API = "https://new-backend-lovat.vercel.app/api";
 const SITE = "https://www.rosariomarket.com.ar";
 
 export const metadata: Metadata = {
-  title: "Rosario Market — Ofertas y productos de negocios en Rosario, Santa Fe",
+  title: "Negocios, productos y ofertas en Rosario",
   description:
-    "Comprá en negocios locales de Rosario, Argentina. Ofertas, envíos rápidos y productos cerca tuyo, todo en un solo lugar.",
+    "Encontrá negocios, productos y ofertas de Rosario, Santa Fe. Descubrí comercios locales, explorá por categoría y encontrá opciones cerca tuyo.",
   alternates: { canonical: `${SITE}/` },
   openGraph: {
-    title: "Rosario Market — Ofertas cerca tuyo en Rosario",
+    title: "Rosario Market | Todo Rosario, en un solo lugar",
     description:
-      "Descubrí productos de negocios verificados de Rosario. Filtrá por categoría y ubicación.",
+      "Descubrí negocios, productos y ofertas de Rosario y encontrá opciones cerca tuyo.",
     url: `${SITE}/`,
     siteName: "Rosario Market",
     locale: "es_AR",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         url: `${SITE}/assets/offerton.png`,
         width: 512,
         height: 512,
-        alt: "RosarioMarket Logo",
+        alt: "Rosario Market",
       },
     ],
   },
@@ -34,23 +34,23 @@ interface SeoProduct {
   image?: string;
   price: number;
   stock?: number;
-  business?: { _id: string };
+  business?: { _id: string; name?: string };
 }
 
 async function getSeoProducts(): Promise<SeoProduct[]> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000); // 3s máximo
- 
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
     const res = await fetch(`${API}/products/random?limit=20`, {
       next: { revalidate: 300 },
       signal: controller.signal,
     });
     clearTimeout(timeout);
- 
+
     if (!res.ok) return [];
     const data = await res.json();
-    return data.products || [];
+    return Array.isArray(data.products) ? data.products : [];
   } catch {
     return [];
   }
@@ -59,17 +59,23 @@ async function getSeoProducts(): Promise<SeoProduct[]> {
 export default async function Page() {
   const products = await getSeoProducts();
 
-  const jsonLd = {
+  const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
+    name: "Productos disponibles en Rosario Market",
     itemListElement: products.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
       item: {
         "@type": "Product",
         name: p.name,
-        image: p.image,
-        url: `${SITE}/negocio/${p.business?._id}?p=${p._id}`,
+        ...(p.image ? { image: p.image } : {}),
+        url: p.business?._id
+          ? `${SITE}/negocio/${p.business._id}?p=${p._id}`
+          : `${SITE}/`,
+        ...(p.business?.name
+          ? { brand: { "@type": "Brand", name: p.business.name } }
+          : {}),
         offers: {
           "@type": "Offer",
           price: p.price,
@@ -83,23 +89,44 @@ export default async function Page() {
     })),
   };
 
-  const orgJsonLd = {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Rosario Market",
+    url: `${SITE}/`,
+    inLanguage: "es-AR",
+    description:
+      "Marketplace local para descubrir negocios, productos y ofertas de Rosario, Santa Fe.",
+  };
+
+  const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "RosarioMarket",
+    name: "Rosario Market",
     url: `${SITE}/`,
-    areaServed: { "@type": "City", name: "Rosario" },
+    areaServed: {
+      "@type": "City",
+      name: "Rosario",
+      containedInPlace: {
+        "@type": "AdministrativeArea",
+        name: "Santa Fe, Argentina",
+      },
+    },
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
       <HomeContent />
     </>
