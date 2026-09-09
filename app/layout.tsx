@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
+import './styles/home-polish.css';
 
 const SITE = 'https://www.rosariomarket.com.ar';
 
