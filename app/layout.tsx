@@ -3,18 +3,59 @@ import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
 
+const SITE = 'https://www.rosariomarket.com.ar';
+
 export const metadata: Metadata = {
-  title: 'Mercado Rosario - Las mejores ofertas',
-  description: 'Encuentra las mejores ofertas cerca tuyo',
-  authors: [{ name: 'Mercado Rosario' }],
-  keywords: ['ofertas', 'marketplace', 'compras online', 'compras rosario'],
+  metadataBase: new URL(SITE),
+  title: {
+    default: 'Rosario Market | Negocios, productos y ofertas en Rosario',
+    template: '%s | Rosario Market',
+  },
+  description:
+    'Descubrí negocios, productos y ofertas de Rosario, Santa Fe. Encontrá opciones cerca tuyo y conectate con comercios locales desde un solo lugar.',
+  authors: [{ name: 'Rosario Market' }],
+  creator: 'Rosario Market',
+  publisher: 'Rosario Market',
+  keywords: [
+    'Rosario Market',
+    'negocios en Rosario',
+    'productos en Rosario',
+    'ofertas en Rosario',
+    'comercios de Rosario',
+    'compras Rosario',
+    'negocios cerca mío',
+    'Santa Fe',
+  ],
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'Mercado Rosario - Las mejores ofertas',
-    description: 'Encuentra las mejores ofertas cerca tuyo',
-    url: 'http://rosariomarket.com.ar',
-    siteName: 'Mercado Rosario',
+    title: 'Rosario Market | Negocios y productos cerca tuyo',
+    description:
+      'Descubrí negocios, productos y ofertas de Rosario. Explorá comercios locales y encontrá opciones cerca tuyo.',
+    url: SITE,
+    siteName: 'Rosario Market',
     locale: 'es_AR',
     type: 'website',
+    images: [
+      {
+        url: '/assets/offerton.png',
+        width: 512,
+        height: 512,
+        alt: 'Rosario Market',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Rosario Market | Negocios y productos en Rosario',
+    description:
+      'Encontrá negocios, productos y ofertas de Rosario cerca tuyo.',
+    images: ['/assets/offerton.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -22,13 +63,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: '#f97316',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es-AR">
       <head>
-        {/* Fuentes */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -36,39 +77,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
 
-        {/* Favicon */}
-        <link rel="icon" href="/assets/ofertas.webp" type="image/jpeg" />
-        <link rel="shortcut icon" href="/assets/ofertas.webp" type="image/jpeg" />
+        <link rel="icon" href="/assets/ofertas.webp" type="image/webp" />
+        <link rel="shortcut icon" href="/assets/ofertas.webp" type="image/webp" />
 
-        {/* PWA - Manifest */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#f97316" />
-
-        {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Offertas" />
+        <meta name="apple-mobile-web-app-title" content="Rosario Market" />
         <link rel="apple-touch-icon" href="/assets/ofertas.webp" />
 
-        {/* Android Chrome */}
         <meta name="mobile-web-app-capable" content="yes" />
-
-        {/* Colores */}
         <meta name="msapplication-TileColor" content="#f97316" />
         <meta name="msapplication-navbutton-color" content="#f97316" />
-
-        {/* Otras meta tags PWA */}
         <meta name="format-detection" content="telephone=no" />
-        <meta name="description" content="Encuentra las mejores ofertas cerca tuyo en tiempo real" />
       </head>
       <body>
-        {/* Componente para sincronizar cambios del manifest */}
         <PWAManifestUpdater />
-
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
-      }
+}
