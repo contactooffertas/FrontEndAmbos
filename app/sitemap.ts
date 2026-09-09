@@ -11,6 +11,7 @@ const CATEGORY_SLUGS = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
+    { url: `${SITE}/nosotros`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE}/destacados`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
     ...CATEGORY_SLUGS.map((slug) => ({
       url: `${SITE}/categoria/${slug}`,
