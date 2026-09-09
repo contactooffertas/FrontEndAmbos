@@ -1,129 +1,114 @@
-/* Rosario Market — Hero principal
-   Identidad rosarina clara, foto local del Monumento y diseño responsive. */
+/* Rosario Market — Home limpia
+   Hero nuevo desde cero, identidad rosarina visible y responsive sin desbordes. */
 
 .hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  width: calc(100% - 2.5rem);
-  max-width: 1380px;
-  margin: 1.15rem auto 0;
-  border-radius: 26px;
+  width: min(1380px, calc(100% - 2rem));
+  margin: 1rem auto 0;
+  min-height: 440px;
+  border-radius: 28px;
+  background: #081526 !important;
   color: #fff;
-  min-height: 430px;
-  padding: clamp(2.7rem, 5vw, 5.2rem) clamp(1.6rem, 4.8vw, 4.8rem) clamp(3rem, 5vw, 5rem) !important;
-  background-color: #0a1728 !important;
-  background-image:
-    linear-gradient(90deg,
-      rgba(6,17,31,.985) 0%,
-      rgba(6,17,31,.965) 30%,
-      rgba(6,17,31,.84) 48%,
-      rgba(6,17,31,.42) 70%,
-      rgba(6,17,31,.28) 100%),
-    linear-gradient(0deg, rgba(4,12,23,.22), rgba(4,12,23,.22)),
-    url('/assets/monumento-rosario-hero.svg') !important;
-  background-size: cover !important;
-  background-position: center 47% !important;
-  background-repeat: no-repeat !important;
-  box-shadow:
-    0 24px 55px rgba(15,23,42,.18),
-    inset 0 0 0 1px rgba(255,255,255,.06);
+  box-shadow: 0 24px 60px rgba(15,23,42,.16);
 }
 
+/* La foto del Monumento es un elemento visual real del hero, no un fondo remoto. */
 .hero::before {
-  content: '' !important;
+  content: "" !important;
   position: absolute;
-  inset: 0;
-  z-index: -1;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  width: 52%;
+  height: 100%;
+  background-image: url('/assets/monumento-rosario-hero.svg');
+  background-size: cover;
+  background-position: center 45%;
+  background-repeat: no-repeat;
+  opacity: .92;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.38) 17%, #000 42%);
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.38) 17%, #000 42%);
   pointer-events: none;
-  background:
-    radial-gradient(circle at 11% 30%, rgba(249,115,22,.22), transparent 29%),
-    linear-gradient(118deg, transparent 0 73%, rgba(249,115,22,.055) 73% 74%, transparent 74% 100%) !important;
 }
 
 .hero::after {
-  content: 'RÍO · BARRIOS · GENTE · COMERCIO LOCAL';
+  content: "";
   position: absolute;
-  right: 2rem;
-  bottom: 1.1rem;
-  padding: .42rem .65rem;
-  border-radius: 999px;
-  background: rgba(5,15,28,.32);
-  backdrop-filter: blur(6px);
-  color: rgba(255,255,255,.68);
-  font-size: .6rem;
-  font-weight: 750;
-  letter-spacing: .17em;
-  white-space: nowrap;
+  z-index: 1;
+  inset: 0;
   pointer-events: none;
+  background:
+    radial-gradient(circle at 8% 28%, rgba(249,115,22,.18), transparent 28%),
+    linear-gradient(90deg, rgba(8,21,38,.995) 0%, rgba(8,21,38,.97) 35%, rgba(8,21,38,.68) 57%, rgba(8,21,38,.14) 100%);
 }
 
 .hero-inner {
-  max-width: 1280px !important;
-  margin: 0 auto !important;
   position: relative;
-  display: block !important;
+  z-index: 2;
+  max-width: 1280px !important;
+  min-height: 440px;
+  margin: 0 auto !important;
+  padding: clamp(2.8rem, 5vw, 5rem) clamp(1.5rem, 4.5vw, 4.5rem) 2.5rem;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start !important;
+  gap: 0 !important;
 }
 
+/* Se elimina por completo la composición vieja del hero. */
+.hero-tag,
 .hero-visual,
-.hero-tag {
+.hero-stats {
   display: none !important;
 }
 
+/* Un solo título. El texto viejo queda neutralizado para evitar repeticiones. */
 .hero h1 {
-  max-width: 730px;
+  max-width: 670px;
   margin: 0 0 1.15rem !important;
-  font-family: var(--font-display);
   font-size: 0 !important;
-  line-height: .98 !important;
+  line-height: 1 !important;
   letter-spacing: -.045em;
-  text-wrap: balance;
-  text-shadow: 0 8px 30px rgba(0,0,0,.18);
+  color: transparent !important;
+  font-family: var(--font-display);
 }
 
-.hero h1 br { display: none !important; }
-
-.hero h1::before,
-.hero h1 em::before,
-.hero h1::after {
-  font-size: clamp(2.7rem, 5.25vw, 5.35rem);
-  line-height: .96;
-  font-weight: 900;
+.hero h1 > *,
+.hero h1 br,
+.hero h1 em {
+  display: none !important;
 }
 
 .hero h1::before {
-  content: 'Todo ';
-  color: #fff;
-}
-
-.hero h1 em {
-  font-size: 0 !important;
-  font-style: normal !important;
-}
-
-.hero h1 em::before {
-  content: 'Rosario,';
-  color: #f97316;
-}
-
-.hero h1::after {
-  content: 'en un solo lugar';
+  content: "Todo Rosario,\Aen un solo lugar";
   display: block;
+  white-space: pre-line;
+  font-size: clamp(2.75rem, 5.15vw, 5.2rem);
+  line-height: .98;
+  font-weight: 900;
+  letter-spacing: -.045em;
   color: #fff;
-  margin-top: .04em;
+  text-shadow: 0 8px 30px rgba(0,0,0,.24);
+}
+
+.hero h1::first-line {
+  color: #fff;
 }
 
 .hero-desc {
-  max-width: 620px !important;
-  margin: 0 0 1.45rem !important;
+  max-width: 610px !important;
+  margin: 0 0 1.4rem !important;
   font-size: 0 !important;
-  color: rgba(255,255,255,.82) !important;
+  color: transparent !important;
 }
 
 .hero-desc::before {
-  content: 'Encontrá negocios, productos y ofertas de Rosario. Buscá por rubro, descubrí qué tenés cerca y apoyá el comercio local.';
+  content: "Encontrá negocios, productos y ofertas de Rosario. Descubrí qué tenés cerca y conectate con el comercio local.";
   display: block;
-  font-size: clamp(.98rem, 1.45vw, 1.12rem);
+  font-size: clamp(.98rem, 1.4vw, 1.12rem);
   line-height: 1.62;
   color: rgba(255,255,255,.82);
 }
@@ -137,82 +122,135 @@
 }
 
 .hero-actions .btn {
-  min-height: 48px;
+  min-height: 46px;
   border-radius: 13px !important;
-  font-size: .91rem !important;
+  padding: .72rem 1.35rem !important;
+  font-size: .9rem !important;
   font-weight: 800 !important;
-  padding: .74rem 1.45rem !important;
 }
 
 .hero-actions .btn-primary {
-  box-shadow: 0 9px 25px rgba(249,115,22,.28);
+  box-shadow: 0 9px 24px rgba(249,115,22,.28);
 }
 
 .hero-actions .btn-outline {
-  background: rgba(255,255,255,.06) !important;
-  backdrop-filter: blur(6px);
-}
-
-.hero-inner::after {
-  content: '⌖  Negocios cerca tuyo     ·     ▣  Productos reales de Rosario     ·     ♡  Apoyá el comercio local';
-  display: block;
-  width: fit-content;
-  max-width: 650px;
-  margin-top: 1.8rem;
-  padding: .78rem 1rem;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 13px;
-  background: rgba(5,15,28,.48);
+  background: rgba(255,255,255,.07) !important;
+  border-color: rgba(255,255,255,.26) !important;
   backdrop-filter: blur(8px);
-  color: rgba(255,255,255,.8);
-  font-size: .76rem;
-  font-weight: 650;
-  line-height: 1.45;
-  white-space: normal;
 }
 
-.hero + .section {
-  padding-top: 2rem !important;
+/* Firma local sutil, sin repetir Rosario. */
+.hero-inner::after {
+  content: "RÍO · BARRIOS · GENTE · COMERCIO LOCAL";
+  display: inline-flex;
+  margin-top: 1.6rem;
+  padding: .58rem .76rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(7,18,32,.44);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,.66);
+  font-size: .61rem;
+  font-weight: 750;
+  letter-spacing: .15em;
+  white-space: nowrap;
+}
+
+/* ================================
+   Negocios cerca tuyo — sin overflow
+   ================================ */
+#negocios-cerca {
+  width: 100%;
+  max-width: 1280px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.nearby-section-header {
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start !important;
+}
+
+.nearby-section-header-text {
+  min-width: 0 !important;
+  max-width: 100%;
+}
+
+.nearby-section-header .section-title {
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  font-size: clamp(1.45rem, 3vw, 1.8rem);
+}
+
+.nearby-section-header .section-subtitle {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.nearby-radius-group {
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+}
+
+.nearby-radius-btn {
+  flex: 0 0 auto;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+
+.nearby-home-list {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  padding: .15rem .05rem .55rem;
+  box-sizing: border-box;
+  scroll-padding-inline: .05rem;
+}
+
+.nearby-home-card {
+  min-width: min(280px, 82vw) !important;
+  max-width: min(280px, 82vw) !important;
+  box-sizing: border-box;
+  border-radius: 16px !important;
+  border: 1px solid rgba(15,23,42,.08) !important;
+  box-shadow: 0 6px 18px rgba(15,23,42,.045);
+}
+
+.nearby-home-card-info {
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+.nearby-home-card-name-row,
+.nearby-home-card-rating,
+.nearby-home-card-distance {
+  min-width: 0;
+}
+
+.nearby-home-card-name {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.nearby-prompt {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .section {
   width: 100%;
-}
-
-#offers .section-header {
-  margin-bottom: 1.2rem;
-}
-
-#offers .section-title {
-  letter-spacing: -.025em;
-}
-
-.nearby-home-card {
-  border-radius: 15px !important;
-  border: 1px solid rgba(15,23,42,.08) !important;
-  box-shadow: 0 5px 18px rgba(15,23,42,.045);
-  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-}
-
-.nearby-home-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(249,115,22,.22) !important;
-  box-shadow: 0 10px 24px rgba(15,23,42,.08);
-}
-
-.nearby-radius-btn {
-  border-radius: 999px !important;
-  font-weight: 650 !important;
-}
-
-.nearby-radius-btn.active {
-  box-shadow: 0 4px 12px rgba(249,115,22,.16);
+  box-sizing: border-box;
 }
 
 .category-card {
   border-radius: 15px !important;
   border-width: 1px !important;
-  box-shadow: 0 4px 16px rgba(15,23,42,.035);
 }
 
 .banner {
@@ -221,78 +259,77 @@
 
 @media (max-width: 900px) {
   .hero {
-    width: calc(100% - 1.6rem);
-    min-height: 390px;
-    margin-top: .8rem;
+    width: calc(100% - 1.3rem);
+    min-height: 405px;
+    margin-top: .65rem;
     border-radius: 22px;
-    padding: 2.6rem 1.6rem 3rem !important;
-    background-image:
-      linear-gradient(90deg,
-        rgba(6,17,31,.97) 0%,
-        rgba(6,17,31,.93) 43%,
-        rgba(6,17,31,.64) 72%,
-        rgba(6,17,31,.48) 100%),
-      linear-gradient(0deg, rgba(4,12,23,.2), rgba(4,12,23,.2)),
-      url('/assets/monumento-rosario-hero.svg') !important;
-    background-position: 58% center !important;
   }
 
-  .hero h1 { max-width: 650px; }
+  .hero-inner {
+    min-height: 405px;
+    padding: 2.45rem 1.5rem 2.2rem;
+  }
 
-  .hero h1::before,
-  .hero h1 em::before,
-  .hero h1::after {
-    font-size: clamp(2.55rem, 8vw, 4.3rem);
+  .hero::before {
+    width: 57%;
+    background-position: 55% center;
+  }
+
+  .hero::after {
+    background: linear-gradient(90deg, rgba(8,21,38,.995) 0%, rgba(8,21,38,.94) 43%, rgba(8,21,38,.52) 72%, rgba(8,21,38,.12) 100%);
   }
 }
 
 @media (max-width: 640px) {
   .hero {
-    width: calc(100% - 1rem);
-    min-height: 420px;
-    margin-top: .5rem;
+    width: calc(100% - .8rem);
+    min-height: 510px;
+    margin-top: .4rem;
     border-radius: 18px;
-    padding: 1.75rem 1rem 2.6rem !important;
-    background-image:
-      linear-gradient(90deg,
-        rgba(6,17,31,.97) 0%,
-        rgba(6,17,31,.92) 48%,
-        rgba(6,17,31,.70) 72%,
-        rgba(6,17,31,.58) 100%),
-      linear-gradient(0deg, rgba(4,12,23,.18), rgba(4,12,23,.18)),
-      url('/assets/monumento-rosario-hero.svg') !important;
-    background-position: 63% center !important;
+  }
+
+  .hero-inner {
+    min-height: 510px;
+    padding: 1.65rem 1rem 2rem;
+    justify-content: flex-start;
+  }
+
+  /* En celular la imagen ocupa la parte inferior del hero y se ve de verdad. */
+  .hero::before {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: 48%;
+    background-size: cover;
+    background-position: center 45%;
+    opacity: .9;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 24%, #000 54%);
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 24%, #000 54%);
   }
 
   .hero::after {
-    right: .75rem;
-    bottom: .55rem;
-    max-width: calc(100% - 1.5rem);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: .47rem;
-    letter-spacing: .11em;
+    background:
+      linear-gradient(to bottom, rgba(8,21,38,.995) 0%, rgba(8,21,38,.96) 53%, rgba(8,21,38,.44) 76%, rgba(8,21,38,.14) 100%),
+      radial-gradient(circle at 10% 18%, rgba(249,115,22,.14), transparent 24%);
   }
 
   .hero h1 {
-    max-width: 96%;
-    margin-bottom: .9rem !important;
+    max-width: 100%;
+    margin-bottom: .85rem !important;
   }
 
-  .hero h1::before,
-  .hero h1 em::before,
-  .hero h1::after {
-    font-size: clamp(2.12rem, 11.4vw, 3.25rem);
-    line-height: .99;
+  .hero h1::before {
+    font-size: clamp(2.15rem, 11.2vw, 3.15rem);
+    line-height: 1;
   }
 
   .hero-desc {
-    max-width: 92% !important;
+    max-width: 100% !important;
   }
 
   .hero-desc::before {
     font-size: .9rem;
-    line-height: 1.52;
+    line-height: 1.5;
   }
 
   .hero-actions {
@@ -300,43 +337,73 @@
   }
 
   .hero-actions .btn {
-    min-height: 43px;
-    padding: .62rem 1rem !important;
-    font-size: .81rem !important;
+    min-height: 42px;
+    padding: .6rem .95rem !important;
+    font-size: .8rem !important;
   }
 
   .hero-inner::after {
-    margin-top: 1.2rem;
-    max-width: 96%;
-    padding: .65rem .72rem;
-    font-size: .66rem;
-    line-height: 1.55;
+    margin-top: 1rem;
+    max-width: 100%;
+    font-size: .53rem;
+    letter-spacing: .1em;
+    white-space: normal;
+    line-height: 1.4;
   }
 
-  .hero + .section {
-    padding-top: 1.35rem !important;
+  #negocios-cerca {
+    padding-left: .9rem !important;
+    padding-right: .9rem !important;
+  }
+
+  .nearby-section-header {
+    display: block !important;
+  }
+
+  .nearby-radius-group {
+    display: flex !important;
+    gap: .38rem !important;
+    margin-top: .7rem;
+    flex-wrap: wrap !important;
+  }
+
+  .nearby-radius-btn {
+    padding: .34rem .68rem !important;
+    font-size: .71rem !important;
+  }
+
+  .nearby-home-card {
+    min-width: min(245px, 78vw) !important;
+    max-width: min(245px, 78vw) !important;
+  }
+
+  .nearby-home-card-logo {
+    width: 48px !important;
+    height: 48px !important;
   }
 
   .section {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: .9rem !important;
+    padding-right: .9rem !important;
   }
 }
 
 @media (max-width: 390px) {
   .hero {
-    min-height: 440px;
-    background-position: 66% center !important;
+    min-height: 525px;
   }
 
-  .hero h1::before,
-  .hero h1 em::before,
-  .hero h1::after {
-    font-size: clamp(1.98rem, 11vw, 2.72rem);
+  .hero h1::before {
+    font-size: clamp(2rem, 10.8vw, 2.7rem);
   }
 
   .hero-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .nearby-home-card {
+    min-width: 84vw !important;
+    max-width: 84vw !important;
   }
 }
