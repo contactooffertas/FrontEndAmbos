@@ -1,330 +1,287 @@
 /* Rosario Market — Programa de Afiliados
-   Solo estilos del módulo /programa-afiliados. */
+   Esta hoja controla solo la pantalla base /programa-afiliados.
+   Los dashboards comprador/vendedor conservan sus CSS propios. */
 
 .affiliate-page {
-  --afl-navy: #17243a;
-  --afl-navy-deep: #0d1728;
-  --afl-orange: #f97316;
-  --afl-orange-dark: #ea580c;
-  --afl-orange-soft: #fff1e8;
-  --afl-surface: #ffffff;
-  --afl-surface-soft: #f8fafc;
-  --afl-bg: #f5f7fa;
-  --afl-line: #e4e8ee;
-  --afl-text: #172033;
-  --afl-muted: #667085;
-  --afl-success: #14805e;
-  --afl-danger: #d92d20;
-  --afl-shadow: 0 12px 32px rgba(13, 23, 40, .08);
+  --afl-navy:#17243a;
+  --afl-navy-deep:#0d1728;
+  --afl-orange:#f97316;
+  --afl-orange-dark:#ea580c;
+  --afl-orange-soft:#fff1e8;
+  --afl-bg:#f4f6f8;
+  --afl-surface:#ffffff;
+  --afl-line:#e3e7ed;
+  --afl-text:#172033;
+  --afl-muted:#667085;
+  --afl-success:#14805e;
+  --afl-danger:#b42318;
 
-  width: min(1180px, calc(100% - 24px));
-  margin: 0 auto;
-  padding: 28px 0 72px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  color: var(--afl-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  width:min(1180px,calc(100% - 24px));
+  min-height:620px;
+  margin:0 auto;
+  padding:24px 0 64px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  color:var(--afl-text);
 }
 
+/* CARGA */
 .affiliate-loading {
-  width: min(720px, calc(100% - 24px));
-  min-height: 240px;
-  margin: 28px auto 64px;
-  padding: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid rgba(249, 115, 22, .18);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 90% 10%, rgba(249,115,22,.18), transparent 32%),
-    linear-gradient(135deg, #17243a, #0d1728);
-  color: #fff;
-  box-shadow: 0 18px 46px rgba(13,23,40,.15);
-  font-weight: 700;
+  width:min(760px,calc(100% - 24px));
+  min-height:260px;
+  margin:28px auto 70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border-radius:22px;
+  background:linear-gradient(135deg,var(--afl-navy),var(--afl-navy-deep));
+  color:#fff;
+  box-shadow:0 18px 46px rgba(13,23,40,.16);
+  font-weight:800;
 }
+.affiliate-spin { animation:affiliate-spin .8s linear infinite; color:var(--afl-orange); }
+@keyframes affiliate-spin { to { transform:rotate(360deg); } }
 
-.affiliate-spin {
-  color: var(--afl-orange);
-  animation: affiliate-spin .8s linear infinite;
-}
-@keyframes affiliate-spin { to { transform: rotate(360deg); } }
-
+/* HERO */
 .affiliate-hero {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  min-height: 220px;
-  padding: clamp(28px, 5vw, 58px);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 26px;
+  position:relative;
+  overflow:hidden;
+  min-height:220px;
+  padding:42px 42px 56px;
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  border-radius:24px;
   background:
-    linear-gradient(90deg, rgba(13,23,40,.96) 0%, rgba(13,23,40,.82) 48%, rgba(13,23,40,.38) 100%),
-    url('/assets/monumento-hero.png') center 44% / cover no-repeat;
-  box-shadow: 0 20px 50px rgba(13,23,40,.15);
-  color: #fff;
+    linear-gradient(90deg,rgba(13,23,40,.96),rgba(13,23,40,.76),rgba(13,23,40,.38)),
+    url('/assets/monumento-hero.png') center 42% / cover no-repeat;
+  color:#fff;
+  box-shadow:0 20px 50px rgba(13,23,40,.15);
 }
-
 .affiliate-hero::after {
-  content: "ROSARIO · COMERCIO LOCAL · OPORTUNIDADES";
-  position: absolute;
-  left: clamp(28px, 5vw, 58px);
-  bottom: 20px;
-  font-size: .62rem;
-  font-weight: 800;
-  letter-spacing: .14em;
-  color: rgba(255,255,255,.58);
+  content:"ROSARIO · COMERCIO LOCAL · OPORTUNIDADES";
+  position:absolute;
+  left:42px;
+  bottom:20px;
+  color:rgba(255,255,255,.62);
+  font-size:.62rem;
+  font-weight:900;
+  letter-spacing:.13em;
 }
-
 .affiliate-hero-icon {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: var(--afl-orange);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.24);
-  box-shadow: 0 10px 24px rgba(249,115,22,.24);
+  width:48px;
+  height:48px;
+  flex:0 0 48px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  background:var(--afl-orange);
+  color:#fff;
+  box-shadow:0 10px 24px rgba(249,115,22,.25);
 }
-
 .affiliate-title {
-  margin: 0 0 8px;
-  color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.9rem, 4.8vw, 3.9rem);
-  line-height: 1;
-  letter-spacing: -.035em;
+  margin:0 0 8px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(1.9rem,4.5vw,3.7rem);
+  line-height:1;
+  letter-spacing:-.035em;
 }
-
 .affiliate-subtitle {
-  margin: 0;
-  max-width: 650px;
-  color: rgba(255,255,255,.86);
-  font-size: .98rem;
-  line-height: 1.6;
+  margin:0;
+  max-width:680px;
+  font-size:.98rem;
+  line-height:1.6;
+}
+.affiliate-hero .affiliate-title { color:#fff !important; }
+.affiliate-hero .affiliate-subtitle { color:rgba(255,255,255,.88) !important; }
+
+/* TARJETAS BASE */
+.affiliate-card {
+  padding:26px;
+  border:1px solid var(--afl-line);
+  border-radius:18px;
+  background:#fff;
+  color:var(--afl-text);
+  box-shadow:0 10px 28px rgba(13,23,40,.07);
 }
 
-.affiliate-card {
-  padding: clamp(20px, 3vw, 30px);
-  border: 1px solid var(--afl-line);
-  border-radius: 20px;
-  background: var(--afl-surface);
-  box-shadow: var(--afl-shadow);
+/* CRÍTICO: nunca más texto blanco sobre tarjeta blanca */
+.affiliate-card .affiliate-title {
+  color:var(--afl-navy) !important;
+  font-size:clamp(1.55rem,3vw,2.35rem);
+  line-height:1.08;
+}
+.affiliate-card .affiliate-subtitle {
+  color:var(--afl-muted) !important;
+}
+
+/* La rama admin actualmente renderiza una sola tarjeta. La convertimos en
+   un panel visible, no en un bloque blanco vacío. */
+.affiliate-page > .affiliate-card:only-child {
+  min-height:360px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  gap:12px;
+  padding:clamp(28px,5vw,54px);
+  border-color:rgba(249,115,22,.20);
+  background:
+    radial-gradient(circle at 92% 8%,rgba(249,115,22,.16),transparent 30%),
+    linear-gradient(145deg,#ffffff,#f7f9fc);
+  box-shadow:0 18px 44px rgba(13,23,40,.10);
+}
+.affiliate-page > .affiliate-card:only-child::before {
+  content:"PANEL DEL PROGRAMA";
+  display:inline-flex;
+  padding:7px 10px;
+  border-radius:999px;
+  background:var(--afl-orange-soft);
+  color:var(--afl-orange-dark);
+  font-size:.68rem;
+  font-weight:900;
+  letter-spacing:.09em;
 }
 
 .affiliate-section-title {
-  margin: 0 0 14px;
-  color: var(--afl-navy);
-  font-size: .78rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+  margin:0 0 14px;
+  color:var(--afl-navy);
+  font-size:.78rem;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.1em;
 }
 
-.affiliate-error-card {
-  position: relative;
-  overflow: hidden;
-  min-height: 210px;
-  padding: 30px !important;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 16px;
-  border-color: rgba(249,115,22,.24) !important;
-  background:
-    radial-gradient(circle at 94% 5%, rgba(249,115,22,.18), transparent 28%),
-    linear-gradient(145deg, #17243a 0%, #0d1728 100%) !important;
-  color: #fff !important;
-  box-shadow: 0 18px 48px rgba(13,23,40,.16) !important;
-}
-
-.affiliate-error-card::before {
-  content: "Programa de Afiliados";
-  display: block;
-  color: var(--afl-orange);
-  font-size: .72rem;
-  font-weight: 900;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-
-.affiliate-error-card p {
-  margin: 0;
-  max-width: 560px;
-  color: #fff !important;
-  font-size: 1rem;
-  line-height: 1.55;
-  font-weight: 650;
-}
-
-/* Fallback real del panel: siempre visible aun cuando no llegan datos */
-.affiliate-page-fallback {
-  min-height: 620px;
-}
-
+/* FALLBACK COMPLETO */
+.affiliate-page-fallback { min-height:650px; }
 .affiliate-fallback-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 8px;
-  border-radius: 18px;
-  background: var(--afl-navy);
-  box-shadow: 0 12px 30px rgba(13,23,40,.13);
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  padding:8px;
+  border-radius:16px;
+  background:var(--afl-navy);
+  box-shadow:0 10px 26px rgba(13,23,40,.13);
 }
-
 .affiliate-fallback-tab {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 9px 12px;
-  border-radius: 12px;
-  color: rgba(255,255,255,.76);
-  font-size: .82rem;
-  font-weight: 800;
-  text-align: center;
-}
-
-.affiliate-fallback-tab.is-active {
-  background: var(--afl-orange);
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(249,115,22,.22);
-}
-
-.affiliate-empty-panel {
-  min-height: 290px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 18px 20px;
-  border-color: #dfe4ea;
-  background:
-    radial-gradient(circle at 94% 6%, rgba(249,115,22,.10), transparent 28%),
-    linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
-}
-
-.affiliate-empty-icon {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: var(--afl-orange-soft);
-  color: var(--afl-orange-dark);
-  border: 1px solid rgba(249,115,22,.18);
-}
-
-.affiliate-empty-copy {
-  min-width: 0;
-}
-
-.affiliate-empty-kicker {
-  display: block;
-  margin-bottom: 7px;
-  color: var(--afl-orange-dark);
-  font-size: .7rem;
-  font-weight: 900;
-  letter-spacing: .11em;
-  text-transform: uppercase;
-}
-
-.affiliate-empty-copy h2 {
-  margin: 0 0 8px;
-  color: var(--afl-navy);
-  font-size: clamp(1.25rem, 3vw, 1.8rem);
-  line-height: 1.15;
-}
-
-.affiliate-empty-copy p {
-  margin: 0;
-  max-width: 680px;
-  color: var(--afl-muted);
-  font-size: .92rem;
-  line-height: 1.6;
-}
-
-.affiliate-soft-warning {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 12px 14px;
-  border: 1px solid #fed7aa;
-  border-radius: 12px;
-  background: #fff7ed;
-  color: #9a3412;
-  font-size: .84rem;
-  line-height: 1.45;
-}
-
-.affiliate-soft-warning svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.affiliate-empty-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 4px;
-}
-
-.affiliate-benefits {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.affiliate-benefit {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  color: var(--afl-text);
-  font-size: .9rem;
-  line-height: 1.55;
-}
-.affiliate-benefit svg,
-.affiliate-note svg { flex-shrink: 0; margin-top: 3px; color: var(--afl-orange); }
-
-.affiliate-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 13px 14px;
-  border: 1px solid var(--afl-line);
-  border-radius: 13px;
-  background: var(--afl-surface-soft);
-  color: var(--afl-muted);
-  font-size: .82rem;
-  line-height: 1.55;
-}
-
-.affiliate-terms-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-  color: var(--afl-orange-dark);
-  font-size: .84rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-.affiliate-terms-link:hover { text-decoration: underline; }
-.affiliate-terms-declaration { margin: 0 0 14px; color: var(--afl-muted); font-size: .86rem; line-height: 1.6; }
-.affiliate-checkbox { display:flex; align-items:flex-start; gap:9px; margin-bottom:16px; color:var(--afl-text); font-size:.86rem; cursor:pointer; }
-.affiliate-checkbox input { width:17px; height:17px; margin-top:2px; accent-color:var(--afl-orange); }
-
-.affiliate-accepted-badge {
+  min-height:44px;
   display:flex;
   align-items:center;
+  justify-content:center;
+  padding:9px 10px;
+  border-radius:11px;
+  color:rgba(255,255,255,.76);
+  font-size:.82rem;
+  font-weight:800;
+  text-align:center;
+}
+.affiliate-fallback-tab.is-active {
+  background:var(--afl-orange);
+  color:#fff;
+}
+.affiliate-empty-panel {
+  min-height:310px;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:18px 20px;
+  align-items:center;
+  background:
+    radial-gradient(circle at 95% 7%,rgba(249,115,22,.10),transparent 30%),
+    linear-gradient(180deg,#fff,#f8fafc);
+}
+.affiliate-empty-icon {
+  width:64px;
+  height:64px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  background:var(--afl-orange-soft);
+  color:var(--afl-orange-dark);
+}
+.affiliate-empty-kicker {
+  display:block;
+  margin-bottom:7px;
+  color:var(--afl-orange-dark);
+  font-size:.7rem;
+  font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.affiliate-empty-copy h2 {
+  margin:0 0 8px;
+  color:var(--afl-navy);
+  font-size:clamp(1.25rem,3vw,1.8rem);
+}
+.affiliate-empty-copy p {
+  margin:0;
+  color:var(--afl-muted);
+  line-height:1.6;
+}
+.affiliate-soft-warning {
+  grid-column:1 / -1;
+  display:flex;
+  gap:9px;
+  align-items:flex-start;
+  padding:12px 14px;
+  border:1px solid #fed7aa;
+  border-radius:12px;
+  background:#fff7ed;
+  color:#9a3412;
+  font-size:.84rem;
+  line-height:1.45;
+}
+.affiliate-empty-actions {
+  grid-column:1 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+/* BENEFICIOS */
+.affiliate-benefits { display:grid; gap:10px; margin-bottom:14px; }
+.affiliate-benefit {
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  color:var(--afl-text);
+  font-size:.9rem;
+  line-height:1.55;
+}
+.affiliate-benefit svg,.affiliate-note svg { color:var(--afl-orange); flex:0 0 auto; margin-top:3px; }
+.affiliate-note {
+  display:flex;
+  gap:9px;
+  align-items:flex-start;
+  padding:13px 14px;
+  border:1px solid var(--afl-line);
+  border-radius:13px;
+  background:#f8fafc;
+  color:var(--afl-muted);
+  font-size:.84rem;
+  line-height:1.55;
+}
+
+/* TÉRMINOS */
+.affiliate-terms-link {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-bottom:14px;
+  color:var(--afl-orange-dark);
+  font-size:.84rem;
+  font-weight:900;
+  text-decoration:none;
+}
+.affiliate-terms-link:hover { text-decoration:underline; }
+.affiliate-terms-declaration { color:var(--afl-muted); line-height:1.6; }
+.affiliate-checkbox { display:flex; gap:9px; align-items:flex-start; margin-bottom:16px; color:var(--afl-text); }
+.affiliate-checkbox input { width:17px; height:17px; accent-color:var(--afl-orange); }
+.affiliate-accepted-badge {
+  display:flex;
   gap:8px;
+  align-items:center;
   padding:11px 13px;
   margin-bottom:14px;
   border:1px solid rgba(20,128,94,.18);
@@ -332,12 +289,34 @@
   background:#effaf6;
   color:var(--afl-success);
   font-size:.84rem;
-  font-weight:750;
+  font-weight:800;
 }
-.affiliate-error-text { margin:0 0 12px; color:var(--afl-danger); font-size:.84rem; font-weight:700; }
+.affiliate-error-text { color:var(--afl-danger); font-weight:800; }
 
+/* FORMULARIOS */
+.affiliate-form { display:flex; flex-direction:column; gap:15px; }
+.affiliate-field { display:flex; flex-direction:column; gap:6px; }
+.affiliate-field-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.affiliate-field label { color:#475467; font-size:.76rem; font-weight:800; }
+.affiliate-field input,.affiliate-field textarea,.affiliate-field select {
+  width:100%;
+  min-height:44px;
+  padding:10px 12px;
+  border:1px solid #d8dee7;
+  border-radius:11px;
+  background:#fff;
+  color:var(--afl-text);
+  font:inherit;
+  outline:none;
+}
+.affiliate-field input:focus,.affiliate-field textarea:focus,.affiliate-field select:focus {
+  border-color:var(--afl-orange);
+  box-shadow:0 0 0 3px rgba(249,115,22,.12);
+}
+
+/* BOTONES */
 .affiliate-btn {
-  min-height: 44px;
+  min-height:44px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -347,69 +326,32 @@
   border-radius:999px;
   font:inherit;
   font-size:.86rem;
-  font-weight:800;
+  font-weight:900;
   cursor:pointer;
-  transition:transform .16s ease, background .16s ease, border-color .16s ease;
 }
-.affiliate-btn:active { transform:scale(.98); }
-.affiliate-btn-primary { background:var(--afl-orange); color:#fff; box-shadow:0 8px 20px rgba(249,115,22,.22); }
-.affiliate-btn-primary:hover:not(:disabled) { background:var(--afl-orange-dark); transform:translateY(-1px); }
+.affiliate-btn-primary { background:var(--afl-orange); color:#fff; }
+.affiliate-btn-primary:hover:not(:disabled) { background:var(--afl-orange-dark); }
 .affiliate-btn-primary:disabled { opacity:.5; cursor:not-allowed; }
 .affiliate-btn-outline { background:#fff; color:var(--afl-orange-dark); border-color:rgba(249,115,22,.35); }
-.affiliate-error-card .affiliate-btn-outline { background:var(--afl-orange); color:#fff; border-color:var(--afl-orange); }
-.affiliate-error-card .affiliate-btn-outline:hover { background:var(--afl-orange-dark); }
 
-.affiliate-form { display:flex; flex-direction:column; gap:15px; }
-.affiliate-field { display:flex; flex-direction:column; gap:6px; }
-.affiliate-field-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.affiliate-field label { color:#475467; font-size:.75rem; font-weight:800; }
-.affiliate-field input,
-.affiliate-field textarea,
-.affiliate-field select {
-  width:100%;
-  min-height:44px;
-  padding:10px 12px;
-  border:1px solid #d8dee7;
-  border-radius:12px;
-  background:#fff;
-  color:var(--afl-text);
-  font:inherit;
-  font-size:.9rem;
-  outline:none;
-  resize:vertical;
-}
-.affiliate-field input:focus,
-.affiliate-field textarea:focus,
-.affiliate-field select:focus { border-color:var(--afl-orange); box-shadow:0 0 0 3px rgba(249,115,22,.12); }
-
-@media (max-width: 620px) {
-  .affiliate-page { width:calc(100% - 20px); padding-top:18px; gap:14px; }
-  .affiliate-hero { min-height:250px; padding:26px 20px 54px; border-radius:20px; background:linear-gradient(180deg,rgba(13,23,40,.58),rgba(13,23,40,.94)),url('/assets/monumento-hero.png') center 35% / cover no-repeat; }
-  .affiliate-hero::after { left:20px; bottom:17px; font-size:.52rem; letter-spacing:.09em; }
-  .affiliate-title { font-size:clamp(1.8rem,10vw,2.75rem); }
-  .affiliate-subtitle { font-size:.9rem; }
-  .affiliate-card { padding:18px 16px; border-radius:17px; }
-  .affiliate-error-card { min-height:230px; padding:24px 20px !important; }
+@media (max-width:620px) {
+  .affiliate-page { width:calc(100% - 18px); padding:16px 0 48px; gap:12px; }
+  .affiliate-hero {
+    min-height:230px;
+    padding:24px 18px 52px;
+    border-radius:18px;
+    background:
+      linear-gradient(180deg,rgba(13,23,40,.56),rgba(13,23,40,.94)),
+      url('/assets/monumento-hero.png') center 35% / cover no-repeat;
+  }
+  .affiliate-hero::after { left:18px; bottom:16px; font-size:.5rem; letter-spacing:.08em; }
+  .affiliate-hero-icon { width:42px; height:42px; flex-basis:42px; }
+  .affiliate-title { font-size:clamp(1.75rem,9.5vw,2.65rem); }
+  .affiliate-card { padding:17px 15px; border-radius:15px; }
+  .affiliate-page > .affiliate-card:only-child { min-height:320px; padding:24px 18px; }
   .affiliate-field-grid { grid-template-columns:1fr; }
+  .affiliate-fallback-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .affiliate-empty-panel { grid-template-columns:1fr; min-height:330px; align-items:start; }
+  .affiliate-soft-warning,.affiliate-empty-actions { grid-column:1; }
   .affiliate-btn { width:100%; }
-
-  .affiliate-fallback-tabs {
-    grid-template-columns: repeat(2, minmax(0,1fr));
-  }
-
-  .affiliate-empty-panel {
-    min-height: 320px;
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .affiliate-empty-icon {
-    width: 56px;
-    height: 56px;
-  }
-
-  .affiliate-soft-warning,
-  .affiliate-empty-actions {
-    grid-column: 1;
-  }
 }
