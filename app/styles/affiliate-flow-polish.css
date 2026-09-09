@@ -1,0 +1,179 @@
+/* Rosario Market — claridad visual del Programa de Afiliados
+   Solo afecta clases affbuyer/affseller. */
+
+.affbuyer-dashboard,
+.affseller-dashboard {
+  --aff-navy: #071f34;
+  --aff-navy-soft: #0c2c48;
+  --aff-orange: #f97316;
+  --aff-orange-dark: #ea580c;
+  --aff-bg: #f7f9fc;
+  --aff-border: rgba(15, 23, 42, .09);
+  --aff-muted: #64748b;
+  position: relative;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 1.35rem clamp(.8rem, 2.2vw, 1.5rem) 3rem;
+}
+
+.affbuyer-dashboard::before,
+.affseller-dashboard::before {
+  display: block;
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(249,115,22,.22), transparent 28%),
+    linear-gradient(135deg, var(--aff-navy), var(--aff-navy-soft));
+  color: #fff;
+  font-weight: 800;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  letter-spacing: -.01em;
+  box-shadow: 0 14px 34px rgba(7,31,52,.13);
+}
+
+.affbuyer-dashboard::before {
+  content: "Tu panel de afiliado · elegí tiendas, compartí productos y seguí tus comisiones";
+}
+
+.affseller-dashboard::before {
+  content: "Tu panel de afiliados · publicá oportunidades, elegí colaboradores y controlá pagos";
+}
+
+.affbuyer-profile-card,
+.affseller-profile-card,
+.affbuyer-panel,
+.affseller-panel {
+  border: 1px solid var(--aff-border) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 10px 28px rgba(15,23,42,.055) !important;
+}
+
+.affbuyer-tabs,
+.affseller-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  gap: .45rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: .55rem;
+  margin: .85rem 0 1rem;
+  background: rgba(255,255,255,.94);
+  border: 1px solid var(--aff-border);
+  border-radius: 16px;
+  box-shadow: 0 7px 22px rgba(15,23,42,.06);
+  backdrop-filter: blur(12px);
+}
+.affbuyer-tabs::-webkit-scrollbar,
+.affseller-tabs::-webkit-scrollbar { display: none; }
+
+.affbuyer-tab,
+.affseller-tab {
+  flex: 0 0 auto;
+  min-height: 42px;
+  border-radius: 11px !important;
+  font-weight: 750 !important;
+  transition: background .18s ease, color .18s ease, transform .18s ease !important;
+}
+.affbuyer-tab:hover,
+.affseller-tab:hover { transform: translateY(-1px); }
+.affbuyer-tab-active,
+.affseller-tab-active {
+  background: var(--aff-navy) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgba(7,31,52,.16) !important;
+}
+
+.affbuyer-new-pill,
+.affseller-tab-count {
+  background: var(--aff-orange) !important;
+  color: #fff !important;
+  border: 2px solid rgba(255,255,255,.88);
+  box-shadow: 0 2px 8px rgba(249,115,22,.22);
+}
+
+.affbuyer-store-card,
+.affbuyer-carnet,
+.affseller-carnet {
+  border: 1px solid var(--aff-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 7px 20px rgba(15,23,42,.05) !important;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+}
+.affbuyer-store-card:hover,
+.affbuyer-carnet:hover,
+.affseller-carnet:hover {
+  transform: translateY(-2px);
+  border-color: rgba(249,115,22,.28) !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,.09) !important;
+}
+
+.affbuyer-view-store-btn,
+.affbuyer-save-btn,
+.affseller-save-btn,
+.affseller-primary-btn,
+.affbuyer-download-btn {
+  border-radius: 10px !important;
+}
+
+.affbuyer-view-store-btn,
+.affbuyer-save-btn,
+.affseller-save-btn {
+  background: var(--aff-orange) !important;
+  border-color: var(--aff-orange) !important;
+  color: #fff !important;
+}
+.affbuyer-view-store-btn:hover,
+.affbuyer-save-btn:hover,
+.affseller-save-btn:hover {
+  background: var(--aff-orange-dark) !important;
+}
+
+.affbuyer-subtabs {
+  padding: .35rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.affbuyer-subtab { border-radius: 9px !important; }
+.affbuyer-subtab-active {
+  background: #fff !important;
+  color: var(--aff-navy) !important;
+  box-shadow: 0 3px 10px rgba(15,23,42,.07);
+}
+
+.affbuyer-error,
+.affseller-error {
+  border-radius: 10px;
+  padding: .7rem .85rem;
+}
+
+@media (max-width: 680px) {
+  .affbuyer-dashboard,
+  .affseller-dashboard { padding-inline: .5rem; }
+
+  .affbuyer-dashboard::before,
+  .affseller-dashboard::before {
+    margin-inline: 0;
+    border-radius: 14px;
+    font-size: .92rem;
+    line-height: 1.4;
+  }
+
+  .affbuyer-tabs,
+  .affseller-tabs {
+    margin-inline: 0;
+    border-radius: 13px;
+    padding: .4rem;
+  }
+
+  .affbuyer-tab,
+  .affseller-tab {
+    min-height: 39px;
+    font-size: .78rem !important;
+  }
+}
