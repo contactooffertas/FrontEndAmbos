@@ -1,0 +1,218 @@
+/* Capa visual Rosario Market — identidad local sin alterar la lógica de la home */
+
+.hero {
+  background:
+    radial-gradient(circle at 8% 15%, rgba(249,115,22,.16), transparent 30%),
+    radial-gradient(circle at 88% 72%, rgba(14,165,233,.10), transparent 34%),
+    linear-gradient(118deg,#151515 0%,#0d1117 54%,#111827 100%);
+  padding: 2.75rem 1.5rem 3rem;
+  min-height: auto;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.hero::before {
+  background:
+    linear-gradient(105deg, transparent 0 67%, rgba(255,255,255,.025) 67% 68%, transparent 68%),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255,255,255,.018) 32px);
+}
+
+.hero::after {
+  content: "ROSARIO  ·  PARANÁ  ·  BARRIOS  ·  COMERCIO LOCAL";
+  position: absolute;
+  right: 2.5rem;
+  bottom: .65rem;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: rgba(255,255,255,.18);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hero-inner {
+  max-width: 1380px;
+  grid-template-columns: minmax(0,.88fr) minmax(480px,1.12fr);
+  gap: clamp(2rem,4vw,4.5rem);
+}
+
+/* La etiqueta anterior era demasiado parecida a una bandera. */
+.hero-tag { display: none; }
+
+.hero h1 {
+  font-size: clamp(2.45rem,4.25vw,4.6rem);
+  line-height: .98;
+  letter-spacing: -.035em;
+  max-width: 680px;
+  margin-bottom: 1.15rem;
+  text-wrap: balance;
+}
+
+.hero h1 em {
+  color: #ff6b00;
+  text-shadow: 0 0 28px rgba(249,115,22,.12);
+}
+
+.hero-desc {
+  max-width: 570px;
+  color: rgba(255,255,255,.72);
+  font-size: clamp(.96rem,1.15vw,1.08rem);
+  line-height: 1.65;
+  margin-bottom: 1.4rem;
+}
+
+.hero-actions { gap: .65rem; }
+.hero-actions .btn {
+  border-radius: 12px;
+  min-height: 46px;
+  box-shadow: none;
+}
+.hero-actions .btn-primary {
+  background: #ff6b00;
+  border-color: #ff6b00;
+}
+.hero-actions .btn-primary:hover {
+  background: #e95f00;
+  border-color: #e95f00;
+  transform: translateY(-1px);
+}
+
+/* Productos del hero: todos rectos, misma jerarquía y sin efecto inclinado. */
+.hero-visual {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: .75rem;
+  perspective: none;
+  align-items: stretch;
+}
+
+.hero-card,
+.hero-card:first-child {
+  grid-column: auto;
+  transform: none !important;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 15px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.16);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.hero-card:hover {
+  transform: none !important;
+  background: rgba(255,255,255,.075);
+  border-color: rgba(249,115,22,.36);
+  box-shadow: 0 14px 34px rgba(0,0,0,.22);
+}
+
+.hero-card img,
+.hero-card:first-child img {
+  width: 100%;
+  height: 152px;
+  object-fit: cover;
+  opacity: .92;
+}
+
+.hero-card-body {
+  padding: .75rem .8rem .8rem;
+  flex: 1;
+}
+.hero-card-name { font-size: .82rem; }
+.hero-card-price { font-size: .95rem; }
+.hero-card-visit {
+  background: transparent;
+  border-color: rgba(249,115,22,.38);
+  color: #fdba74;
+  border-radius: 8px;
+}
+
+/* Transición hacia la experiencia de cercanía */
+.nearby-section-header {
+  margin-bottom: 1.15rem;
+}
+.nearby-home-card {
+  border-radius: 16px;
+  border-color: rgba(15,23,42,.09);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.nearby-home-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(249,115,22,.28);
+  box-shadow: 0 10px 26px rgba(15,23,42,.08);
+}
+.nearby-home-card-distance { color: #15803d; }
+.nearby-radius-btn { border-radius: 999px; }
+.nearby-radius-btn.active {
+  background: #ff6b00;
+  border-color: #ff6b00;
+}
+
+/* Cards generales: menos genéricos y más consistentes con la marca. */
+.product-card,
+.biz-card,
+.category-card {
+  box-shadow: 0 2px 10px rgba(15,23,42,.035);
+}
+.product-card:hover,
+.biz-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(15,23,42,.10);
+}
+
+@media (max-width: 1050px) {
+  .hero-inner { grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .hero-visual { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .hero-card:nth-child(3) { display: none; }
+}
+
+@media (max-width: 900px) {
+  .hero { padding: 2.25rem 1.25rem 2.6rem; }
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero h1 { max-width: 720px; }
+  .hero-desc { max-width: 650px; }
+  .hero-visual {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    max-height: none;
+    overflow: visible;
+  }
+  .hero-card:nth-child(3) { display: flex; }
+  .hero::after { right: 1.25rem; }
+}
+
+@media (max-width: 640px) {
+  .hero { padding: 1.8rem 1rem 2.25rem; }
+  .hero::after {
+    content: "ROSARIO · COMERCIO LOCAL";
+    right: 1rem;
+    bottom: .45rem;
+    font-size: .5rem;
+    letter-spacing: .15em;
+  }
+  .hero h1 {
+    font-size: clamp(2.15rem,11vw,3.15rem);
+    line-height: 1;
+    margin-bottom: .9rem;
+  }
+  .hero-desc { font-size: .92rem; line-height: 1.55; margin-bottom: 1.1rem; }
+  .hero-actions .btn { min-height: 42px; }
+  .hero-visual {
+    display: flex;
+    overflow-x: auto;
+    gap: .65rem;
+    padding: .15rem 0 .4rem;
+    scroll-snap-type: x mandatory;
+  }
+  .hero-card,
+  .hero-card:first-child {
+    display: flex;
+    width: 70vw;
+    max-width: 250px;
+    flex: 0 0 70vw;
+    scroll-snap-align: start;
+  }
+  .hero-card img,
+  .hero-card:first-child img { height: 138px; }
+}
