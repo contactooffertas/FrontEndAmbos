@@ -49,20 +49,30 @@
 .home-v2-page .hero-tag,
 .home-v2-page .hero-stats { display: none !important; }
 
+/* Un único título visible, sin escapes ni saltos generados que puedan renderizar símbolos raros. */
 .home-v2-page .hero h1 {
   max-width: 620px;
   margin: 0 0 .9rem !important;
   font-family: var(--font-display);
-  font-size: clamp(2.45rem, 4.4vw, 4.5rem) !important;
-  line-height: .98 !important;
-  letter-spacing: -.045em;
-  color: #fff !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  color: transparent !important;
 }
 .home-v2-page .hero h1 br,
 .home-v2-page .hero h1 em { display: none !important; }
 .home-v2-page .hero h1::before,
-.home-v2-page .hero h1::after,
 .home-v2-page .hero h1 em::before { display: none !important; content: none !important; }
+.home-v2-page .hero h1::after {
+  content: 'Todo Rosario, en un solo lugar' !important;
+  display: block !important;
+  font-family: var(--font-display);
+  font-size: clamp(2.45rem, 4.4vw, 4.5rem) !important;
+  line-height: .98 !important;
+  font-weight: 900;
+  letter-spacing: -.045em;
+  color: #fff !important;
+  text-shadow: 0 7px 26px rgba(0,0,0,.22);
+}
 
 .home-v2-page .hero-desc {
   max-width: 590px !important;
@@ -84,13 +94,13 @@
 }
 .home-v2-page .hero-actions .btn::after { display: none !important; content: none !important; }
 
-/* Carrusel comercial compacto */
+/* Carrusel comercial compacto en PC */
 .home-v2-page .hero-visual {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: .65rem !important;
   align-items: stretch;
-  max-width: 700px;
+  max-width: 620px;
   margin-left: auto;
 }
 .home-v2-page .hero-card,
@@ -99,23 +109,23 @@
 .home-v2-page .hero-card:nth-child(3) {
   transform: none !important;
   min-width: 0;
-  border-radius: 14px !important;
+  border-radius: 13px !important;
   overflow: hidden;
   background: rgba(10,20,32,.80) !important;
   border: 1px solid rgba(255,255,255,.12) !important;
-  box-shadow: 0 10px 24px rgba(0,0,0,.18) !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.16) !important;
 }
 .home-v2-page .hero-card img,
 .home-v2-page .hero-card:first-child img {
   width: 100%;
-  height: 118px !important;
+  height: 102px !important;
   object-fit: cover;
 }
-.home-v2-page .hero-card-body { padding: .62rem .68rem .68rem !important; }
-.home-v2-page .hero-card-name { font-size: .72rem !important; }
-.home-v2-page .hero-card-price { font-size: .88rem !important; }
-.home-v2-page .hero-card-stars { margin-top: .25rem; }
-.home-v2-page .hero-card-visit { font-size: .64rem !important; padding: .3rem .48rem !important; }
+.home-v2-page .hero-card-body { padding: .56rem .62rem .62rem !important; }
+.home-v2-page .hero-card-name { font-size: .68rem !important; }
+.home-v2-page .hero-card-price { font-size: .82rem !important; }
+.home-v2-page .hero-card-stars { margin-top: .2rem; }
+.home-v2-page .hero-card-visit { font-size: .6rem !important; padding: .26rem .42rem !important; }
 
 /* Negocios cerca: grilla, sin scroll lateral */
 .home-v2-page #negocios-cerca {
@@ -167,7 +177,7 @@
       linear-gradient(to bottom, rgba(5,16,29,.98) 0%, rgba(5,16,29,.90) 44%, rgba(5,16,29,.44) 74%, rgba(5,16,29,.16) 100%),
       url('/assets/monumento-hero.jpg') 60% center / cover no-repeat !important;
   }
-  .home-v2-page .hero h1 { font-size: clamp(2rem, 10.5vw, 2.9rem) !important; }
+  .home-v2-page .hero h1::after { font-size: clamp(2rem, 10.5vw, 2.9rem) !important; }
   .home-v2-page .hero-desc { font-size: .9rem !important; }
   .home-v2-page .hero-actions .btn { flex: 1 1 100%; justify-content: center; }
   .home-v2-page .hero-visual {
@@ -179,12 +189,12 @@
   }
   .home-v2-page .hero-card,
   .home-v2-page .hero-card:first-child {
-    flex: 0 0 62vw;
-    max-width: 210px;
+    flex: 0 0 58vw;
+    max-width: 195px;
     scroll-snap-align: start;
   }
   .home-v2-page .hero-card img,
-  .home-v2-page .hero-card:first-child img { height: 105px !important; }
+  .home-v2-page .hero-card:first-child img { height: 98px !important; }
   .home-v2-page #negocios-cerca { width: calc(100% - .5rem); padding: 1.15rem .85rem !important; border-radius: 16px; }
   .home-v2-page .nearby-section-header { display: block !important; }
   .home-v2-page .nearby-radius-group { margin-top: .65rem; }
