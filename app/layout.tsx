@@ -4,6 +4,7 @@ import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
 import './styles/home-polish.css';
 import './styles/product-card-polish.css';
+import './styles/rosario-home.css';
 
 const SITE = 'https://www.rosariomarket.com.ar';
 
