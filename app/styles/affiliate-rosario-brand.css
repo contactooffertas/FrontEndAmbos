@@ -1,95 +1,64 @@
-/* Rosario Market — identidad segura para Programa de Afiliados
-   IMPORTANTE: esta capa SOLO cambia apariencia. No altera dimensiones,
-   display, posicionamiento ni flujo de los dashboards existentes. */
+/* Rosario Market — identidad de dashboards de Afiliados
+   Solo clases affbuyer/affseller. No modifica otras secciones del sitio. */
 
 :root {
-  --rm-aff-navy: #17243a;
-  --rm-aff-navy-deep: #0d1728;
-  --rm-aff-orange: #f97316;
-  --rm-aff-orange-dark: #ea580c;
-  --rm-aff-orange-soft: #fff1e8;
-  --rm-aff-surface: #ffffff;
-  --rm-aff-bg: #f6f7f9;
-  --rm-aff-text: #172033;
-  --rm-aff-muted: #667085;
-  --rm-aff-line: #e7e9ee;
-  --rm-aff-shadow: 0 8px 24px rgba(13,23,40,.07);
+  --rm-aff-navy:#17243a;
+  --rm-aff-navy-deep:#0d1728;
+  --rm-aff-orange:#f97316;
+  --rm-aff-orange-dark:#ea580c;
+  --rm-aff-orange-soft:#fff1e8;
+  --rm-aff-surface:#ffffff;
+  --rm-aff-soft:#f7f9fc;
+  --rm-aff-text:#172033;
+  --rm-aff-muted:#667085;
+  --rm-aff-line:#e4e8ee;
+  --rm-aff-shadow:0 10px 28px rgba(13,23,40,.07);
 }
 
-/* Entrada al programa: conserva completamente su layout original */
-.affiliate-page {
-  --afl-bg: var(--rm-aff-bg);
-  --afl-surface: var(--rm-aff-surface);
-  --afl-surface2: #f8fafc;
-  --afl-border: var(--rm-aff-line);
-  --afl-border2: #dfe3ea;
-  --afl-text: var(--rm-aff-text);
-  --afl-muted: #8a94a4;
-  --afl-muted2: var(--rm-aff-muted);
-  --afl-orange: var(--rm-aff-orange);
-  color: var(--rm-aff-text) !important;
-}
-
-.affiliate-hero {
-  color: #fff !important;
-  border-color: rgba(255,255,255,.12) !important;
-  background:
-    linear-gradient(90deg, rgba(13,23,40,.95), rgba(13,23,40,.72)),
-    url('/assets/monumento-hero.png') center 45% / cover no-repeat !important;
-  box-shadow: 0 16px 42px rgba(13,23,40,.14) !important;
-}
-.affiliate-title { color: #fff !important; }
-.affiliate-subtitle { color: rgba(255,255,255,.86) !important; }
-.affiliate-hero-icon { background: var(--rm-aff-orange) !important; color:#fff !important; }
-.affiliate-card {
-  background: #fff !important;
-  border-color: var(--rm-aff-line) !important;
-  box-shadow: var(--rm-aff-shadow) !important;
-}
-.affiliate-section-title { color: var(--rm-aff-navy) !important; }
-.affiliate-benefit,.affiliate-checkbox { color: var(--rm-aff-text) !important; }
-.affiliate-benefit svg,.affiliate-note svg,.affiliate-terms-link { color: var(--rm-aff-orange) !important; }
-.affiliate-note { background:#f8fafc !important; border-color:var(--rm-aff-line) !important; color:var(--rm-aff-muted) !important; }
-.affiliate-btn-primary { background:var(--rm-aff-orange) !important; color:#fff !important; }
-.affiliate-btn-primary:hover:not(:disabled) { background:var(--rm-aff-orange-dark) !important; }
-
-/* Dashboards: colores y acabados únicamente. Sin tocar layout. */
 .affbuyer-dashboard,
 .affseller-dashboard {
-  color: var(--rm-aff-text) !important;
+  color:var(--rm-aff-text) !important;
+  background:linear-gradient(180deg,#f9fbfd 0%,#f4f7fa 100%) !important;
 }
 
-.affbuyer-panel,
+/* Perfil: deja de verse como bloque blanco genérico */
 .affbuyer-profile-card,
-.affbuyer-carnet,
-.affbuyer-store-card,
-.affbuyer-store-detail-header,
-.affseller-panel,
-.affseller-profile-card,
-.affseller-carnet {
-  background: var(--rm-aff-surface) !important;
-  border-color: var(--rm-aff-line) !important;
-  box-shadow: var(--rm-aff-shadow) !important;
+.affseller-profile-card {
+  background:
+    radial-gradient(circle at 92% 8%,rgba(249,115,22,.11),transparent 30%),
+    linear-gradient(145deg,#ffffff,#f8fafc) !important;
+  border:1px solid var(--rm-aff-line) !important;
+  box-shadow:var(--rm-aff-shadow) !important;
+}
+
+.affbuyer-profile-card::before,
+.affseller-profile-card::before {
+  content:"";
+  display:block;
+  height:4px;
+  margin:-1px -1px 14px;
+  border-radius:18px 18px 0 0;
+  background:linear-gradient(90deg,var(--rm-aff-orange),#ff9a52);
 }
 
 .affbuyer-profile-title,
-.affbuyer-carnet-name,
 .affseller-profile-title,
+.affbuyer-carnet-name,
 .affseller-carnet-name {
-  color: var(--rm-aff-navy) !important;
+  color:var(--rm-aff-navy) !important;
 }
 
-/* Navegación interna coherente con la barra oscura de Rosario Market */
+/* Tabs = mismo lenguaje de la barra oscura de la web */
 .affbuyer-tabs,
 .affseller-tabs {
-  background: var(--rm-aff-navy) !important;
-  border-color: rgba(255,255,255,.08) !important;
-  box-shadow: 0 10px 26px rgba(13,23,40,.12) !important;
+  background:var(--rm-aff-navy) !important;
+  border-color:rgba(255,255,255,.08) !important;
+  box-shadow:0 10px 28px rgba(13,23,40,.14) !important;
 }
 .affbuyer-tab,
 .affseller-tab {
-  color: rgba(255,255,255,.76) !important;
-  background: transparent !important;
+  color:rgba(255,255,255,.76) !important;
+  background:transparent !important;
 }
 .affbuyer-tab:hover,
 .affseller-tab:hover {
@@ -100,52 +69,107 @@
 .affseller-tab-active {
   color:#fff !important;
   background:var(--rm-aff-orange) !important;
+  box-shadow:0 6px 16px rgba(249,115,22,.24) !important;
 }
 .affbuyer-new-pill,
-.affseller-tab-count {
+.affseller-tab-count,
+.affseller-tab-dot {
   background:#fff !important;
   color:var(--rm-aff-orange-dark) !important;
+  border-color:rgba(249,115,22,.22) !important;
 }
 
-.affbuyer-subtabs { background:#f2f4f7 !important; }
-.affbuyer-subtab { color:var(--rm-aff-muted) !important; }
-.affbuyer-subtab-active { background:#fff !important; color:var(--rm-aff-navy) !important; }
+/* Paneles y tarjetas: blanco con estructura, no "todo blanco" */
+.affbuyer-panel,
+.affseller-panel,
+.affbuyer-carnet,
+.affseller-carnet,
+.affbuyer-store-card,
+.affbuyer-store-detail-header,
+.affseller-product-card,
+.affseller-offer-card,
+.affseller-summary-card {
+  background:var(--rm-aff-surface) !important;
+  border:1px solid var(--rm-aff-line) !important;
+  box-shadow:var(--rm-aff-shadow) !important;
+}
 
-/* Formularios: visibles tanto habilitados como deshabilitados */
+.affbuyer-panel,
+.affseller-panel {
+  position:relative;
+  overflow:hidden;
+}
+.affbuyer-panel::before,
+.affseller-panel::before {
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:3px;
+  background:linear-gradient(90deg,var(--rm-aff-orange),rgba(249,115,22,.08));
+}
+
+.affbuyer-store-card,
+.affseller-carnet,
+.affbuyer-carnet {
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease !important;
+}
+.affbuyer-store-card:hover,
+.affseller-carnet:hover,
+.affbuyer-carnet:hover {
+  transform:translateY(-2px);
+  border-color:rgba(249,115,22,.32) !important;
+  box-shadow:0 14px 34px rgba(13,23,40,.10) !important;
+}
+
+.affbuyer-subtabs {
+  background:#eef2f6 !important;
+}
+.affbuyer-subtab {
+  color:var(--rm-aff-muted) !important;
+}
+.affbuyer-subtab-active {
+  background:#fff !important;
+  color:var(--rm-aff-navy) !important;
+  box-shadow:0 3px 10px rgba(13,23,40,.07) !important;
+}
+
+/* Formularios */
 .affbuyer-dashboard input,
 .affbuyer-dashboard select,
 .affbuyer-dashboard textarea,
 .affseller-dashboard input,
 .affseller-dashboard select,
-.affseller-dashboard textarea,
-.affiliate-page input,
-.affiliate-page select,
-.affiliate-page textarea {
+.affseller-dashboard textarea {
   background:#fff !important;
   color:var(--rm-aff-text) !important;
-  border-color:#d9dee7 !important;
+  border-color:#d7dde6 !important;
 }
 .affbuyer-dashboard input:disabled,
 .affbuyer-dashboard select:disabled,
 .affseller-dashboard input:disabled,
 .affseller-dashboard select:disabled {
-  background:#f4f6f8 !important;
+  background:#f2f4f7 !important;
   color:#475467 !important;
   opacity:1 !important;
   -webkit-text-fill-color:#475467 !important;
 }
 .affbuyer-dashboard input:focus,
 .affbuyer-dashboard select:focus,
+.affbuyer-dashboard textarea:focus,
 .affseller-dashboard input:focus,
-.affseller-dashboard select:focus {
+.affseller-dashboard select:focus,
+.affseller-dashboard textarea:focus {
   border-color:var(--rm-aff-orange) !important;
   box-shadow:0 0 0 3px rgba(249,115,22,.12) !important;
 }
 
-/* Acciones principales */
+/* Acciones */
 .affbuyer-save-btn,
 .affbuyer-view-store-btn,
 .affbuyer-apply-btn,
+.affbuyer-copy-btn,
 .affseller-save-btn,
 .affseller-primary-btn,
 .affseller-accept-btn,
@@ -153,21 +177,24 @@
   background:var(--rm-aff-orange) !important;
   border-color:var(--rm-aff-orange) !important;
   color:#fff !important;
+  box-shadow:0 7px 18px rgba(249,115,22,.20) !important;
 }
 .affbuyer-save-btn:hover,
 .affbuyer-view-store-btn:hover,
-.affseller-save-btn:hover {
+.affbuyer-apply-btn:hover,
+.affseller-save-btn:hover,
+.affseller-primary-btn:hover {
   background:var(--rm-aff-orange-dark) !important;
 }
 
 .affbuyer-edit-btn,
 .affbuyer-download-btn,
 .affbuyer-back-btn,
+.affbuyer-page-btn,
 .affseller-edit-btn,
-.affseller-page-btn,
-.affbuyer-page-btn {
+.affseller-page-btn {
   background:#fff !important;
-  border-color:#d9dee7 !important;
+  border-color:#d7dde6 !important;
   color:var(--rm-aff-navy) !important;
 }
 
@@ -175,20 +202,34 @@
 .affseller-search {
   background:#fff !important;
   border-color:var(--rm-aff-line) !important;
+  box-shadow:0 4px 14px rgba(13,23,40,.04) !important;
 }
-.affbuyer-search svg,.affseller-search svg { color:var(--rm-aff-orange) !important; }
+.affbuyer-search svg,
+.affseller-search svg { color:var(--rm-aff-orange) !important; }
 
-.affbuyer-error,.affseller-error { border-left-color:var(--rm-aff-orange) !important; }
-.affbuyer-empty,.affseller-empty { color:var(--rm-aff-muted) !important; }
+/* Estados vacíos y errores visibles */
+.affbuyer-empty,
+.affseller-empty {
+  background:linear-gradient(180deg,#fff,#f8fafc) !important;
+  border:1px dashed #cfd6df !important;
+  color:var(--rm-aff-muted) !important;
+}
+.affbuyer-error,
+.affseller-error {
+  background:#fff6f2 !important;
+  border-color:#fed7c3 !important;
+  border-left-color:var(--rm-aff-orange) !important;
+  color:#b42318 !important;
+}
 
-/* Mobile: deliberadamente NO imponemos alturas, paddings grandes,
-   pseudo-elementos ni posicionamiento sticky. El CSS funcional original
-   conserva el control total del layout. */
 @media (max-width:760px) {
-  .affiliate-hero {
-    background:
-      linear-gradient(180deg, rgba(13,23,40,.50), rgba(13,23,40,.92)),
-      url('/assets/monumento-hero.png') center 35% / cover no-repeat !important;
+  .affbuyer-tabs,
+  .affseller-tabs { border-radius:14px !important; }
+
+  .affbuyer-profile-card,
+  .affseller-profile-card,
+  .affbuyer-panel,
+  .affseller-panel {
+    box-shadow:0 7px 20px rgba(13,23,40,.06) !important;
   }
-  .affbuyer-tabs,.affseller-tabs { border-radius:14px !important; }
 }
