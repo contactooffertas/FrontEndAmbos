@@ -23,6 +23,30 @@ function getToken(): string | null {
   return localStorage.getItem("marketplace_token");
 }
 
+function clearStoredSession() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("marketplace_token");
+  localStorage.removeItem("marketplace_user");
+}
+
+/**
+ * Comprobación local rápida del exp del JWT. No sustituye a jwt.verify del
+ * backend: solo evita restaurar durante unos milisegundos un token que ya
+ * sabemos que está vencido antes de hacer la validación real contra la API.
+ */
+function tokenLooksExpired(token: string): boolean {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return true;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padding = "=".repeat((4 - (normalized.length % 4)) % 4);
+    const decoded = JSON.parse(window.atob(normalized + padding)) as { exp?: number };
+    return typeof decoded.exp === "number" && decoded.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 export interface AuthUser {
   id:                   string;
@@ -58,13 +82,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const swRef = useRef<ServiceWorkerRegistration | null>(null);
 
-  // ── Cargar usuario persistido ──
+  // ── Cargar Y VALIDAR usuario persistido ───────────────────────────────────
+  // Antes se restauraba marketplace_user sin mirar el token. Eso dejaba una
+  // "sesión fantasma": navbar/avatar visibles pero todos los endpoints
+  // protegidos devolvían 401. Ahora loading se mantiene hasta terminar esta
+  // validación y nunca exponemos un usuario cuya sesión ya no sirve.
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("marketplace_user");
-      if (stored) setUser(JSON.parse(stored));
-    } catch {}
-    setLoading(false);
+    let cancelled = false;
+
+    const restoreSession = async () => {
+      try {
+        const stored = localStorage.getItem("marketplace_user");
+        const token = localStorage.getItem("marketplace_token");
+
+        if (!stored || !token || tokenLooksExpired(token)) {
+          clearStoredSession();
+          if (!cancelled) setUser(null);
+          return;
+        }
+
+        let parsed: AuthUser;
+        try {
+          parsed = JSON.parse(stored) as AuthUser;
+        } catch {
+          clearStoredSession();
+          if (!cancelled) setUser(null);
+          return;
+        }
+
+        // Validación REAL con el mismo middleware JWT que protege Afiliados,
+        // carrito, pedidos, anuncios y push. Un 401/403 invalida toda la sesión.
+        try {
+          const res = await fetch(`${API}/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          });
+
+          if (res.status === 401 || res.status === 403) {
+            clearStoredSession();
+            if (!cancelled) setUser(null);
+            return;
+          }
+
+          // Si el servidor responde correctamente, recién ahora restauramos el
+          // usuario. Ante un problema temporal de red conservamos la sesión
+          // local si el JWT todavía no venció, para no expulsar al usuario por
+          // una caída puntual del servicio.
+          if (res.ok) {
+            if (!cancelled) setUser(parsed);
+            return;
+          }
+        } catch {
+          // offline / fallo transitorio: conservar sesión no vencida
+        }
+
+        if (!cancelled) setUser(parsed);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void restoreSession();
+    return () => { cancelled = true; };
   }, []);
 
   // ── Registrar Service Worker ──
@@ -165,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch {}
-    localStorage.removeItem("marketplace_token");
+    clearStoredSession();
     saveUser(null);
   };
 
