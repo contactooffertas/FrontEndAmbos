@@ -19,7 +19,7 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
 }
 
 export default function GeoPushSync() {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const lastSentRef = useRef<{ lat: number; lng: number; at: number } | null>(null);
   const sendingRef = useRef(false);
 
@@ -56,7 +56,6 @@ export default function GeoPushSync() {
 
         if (res.ok) {
           lastSentRef.current = { lat, lng, at: Date.now() };
-          updateUser({ lat, lng, locationEnabled: true });
         }
       } catch (err) {
         console.warn("[GeoPush] No se pudo sincronizar ubicación", err);
@@ -66,12 +65,8 @@ export default function GeoPushSync() {
     };
 
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        syncPosition(pos.coords.latitude, pos.coords.longitude);
-      },
-      (err) => {
-        console.warn("[GeoPush] watchPosition:", err.message);
-      },
+      (pos) => syncPosition(pos.coords.latitude, pos.coords.longitude),
+      (err) => console.warn("[GeoPush] watchPosition:", err.message),
       {
         enableHighAccuracy: false,
         maximumAge: 30_000,
@@ -95,7 +90,7 @@ export default function GeoPushSync() {
       navigator.geolocation.clearWatch(watchId);
       document.removeEventListener("visibilitychange", syncVisible);
     };
-  }, [user?.id, user?.locationEnabled, updateUser]);
+  }, [user?.id, user?.locationEnabled]);
 
   return null;
 }
