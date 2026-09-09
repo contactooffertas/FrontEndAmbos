@@ -1,0 +1,224 @@
+/* Ajustes visuales de identidad para la Home de Rosario Market.
+   Este archivo solo sobreescribe el hero existente; no toca su lógica. */
+
+.hero {
+  padding: 2.8rem 1.5rem 3.2rem !important;
+  background:
+    radial-gradient(circle at 12% 22%, rgba(249,115,22,0.12), transparent 30%),
+    radial-gradient(circle at 90% 85%, rgba(56,189,248,0.07), transparent 28%),
+    linear-gradient(120deg, #17120f 0%, #0d1119 48%, #111318 100%) !important;
+  isolation: isolate;
+}
+
+/* Identidad rosarina: una referencia muy sutil al Paraná, sin bandera ni postal. */
+.hero::before {
+  background:
+    radial-gradient(ellipse at 13% 50%, rgba(249,115,22,0.10) 0%, transparent 58%),
+    linear-gradient(105deg, transparent 0 72%, rgba(56,189,248,0.035) 72% 73%, transparent 73% 100%) !important;
+  opacity: 1;
+}
+
+.hero::after {
+  content: "ROSARIO · PARANÁ · BARRIOS · COMERCIO LOCAL";
+  position: absolute;
+  left: max(1.5rem, calc((100% - 1280px) / 2));
+  bottom: 0.75rem;
+  color: rgba(255,255,255,0.11);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-inner {
+  grid-template-columns: minmax(0, 0.9fr) minmax(520px, 1.1fr) !important;
+  gap: clamp(2rem, 4vw, 4.5rem) !important;
+  align-items: center !important;
+  z-index: 1;
+}
+
+/* Se elimina la etiqueta tipo bandera/pastilla. */
+.hero-tag {
+  display: none !important;
+}
+
+.hero h1 {
+  font-size: clamp(2.35rem, 3.7vw, 4.15rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.035em;
+  margin: 0 0 1.15rem !important;
+  max-width: 650px;
+}
+
+.hero-desc {
+  max-width: 590px !important;
+  font-size: clamp(0.95rem, 1.05vw, 1.08rem) !important;
+  line-height: 1.75 !important;
+  color: rgba(255,255,255,0.72) !important;
+  margin-bottom: 1.45rem !important;
+}
+
+.hero-actions .btn {
+  border-radius: 12px !important;
+  min-height: 46px;
+}
+
+/* Cards del hero: rectos, sobrios y del mismo peso visual. */
+.hero-visual {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.8rem !important;
+  perspective: none !important;
+  align-items: stretch;
+  transform: none !important;
+}
+
+.hero-card,
+.hero-card:first-child {
+  grid-column: auto !important;
+  transform: none !important;
+  border-radius: 14px !important;
+  background: rgba(24,24,27,0.88) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18) !important;
+  backdrop-filter: blur(5px) !important;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease !important;
+  min-width: 0;
+}
+
+.hero-card:hover,
+.hero-card:first-child:hover {
+  transform: translateY(-3px) !important;
+  border-color: rgba(249,115,22,0.32) !important;
+  box-shadow: 0 16px 34px rgba(0,0,0,0.26) !important;
+}
+
+.hero-card img,
+.hero-card:first-child img {
+  height: 132px !important;
+  opacity: 0.92 !important;
+  object-fit: cover !important;
+}
+
+.hero-card-body {
+  padding: 0.72rem 0.78rem 0.82rem !important;
+  gap: 0.35rem !important;
+}
+
+.hero-card-name {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+}
+
+.hero-card-footer-row {
+  align-items: center !important;
+}
+
+.hero-card-price {
+  font-size: 0.95rem !important;
+}
+
+.hero-card-visit {
+  background: transparent !important;
+  border-color: rgba(249,115,22,0.42) !important;
+  color: #fdba74 !important;
+  padding: 0.24rem 0.5rem !important;
+}
+
+.hero-card-visit:hover {
+  background: rgba(249,115,22,0.14) !important;
+  color: #fff !important;
+}
+
+/* La tarjeta promocionada conserva su importancia sin deformar el card. */
+.hero-card[style*="outline"] {
+  outline: none !important;
+  border-color: rgba(249,115,22,0.38) !important;
+}
+
+@media (max-width: 1100px) {
+  .hero-inner {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .hero-visual {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .hero-card:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 2.2rem 1.25rem 2.7rem !important;
+  }
+
+  .hero-inner {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero h1 {
+    max-width: 700px;
+    font-size: clamp(2.4rem, 7vw, 3.8rem) !important;
+  }
+
+  .hero-visual {
+    max-height: none !important;
+    overflow: visible !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .hero-card:first-child,
+  .hero-card:nth-child(3) {
+    display: block !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .hero {
+    padding: 1.8rem 1rem 2.4rem !important;
+  }
+
+  .hero::after {
+    left: 1rem;
+    bottom: 0.55rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.14em;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.15rem, 11vw, 3.05rem) !important;
+    line-height: 1.01 !important;
+  }
+
+  .hero-desc {
+    line-height: 1.62 !important;
+  }
+
+  .hero-visual {
+    display: flex !important;
+    gap: 0.7rem !important;
+    overflow-x: auto !important;
+    padding: 0.1rem 0 0.35rem !important;
+    scroll-snap-type: x mandatory;
+  }
+
+  .hero-card,
+  .hero-card:first-child {
+    display: block !important;
+    width: 72vw !important;
+    max-width: 250px !important;
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+  }
+
+  .hero-card img,
+  .hero-card:first-child img {
+    height: 138px !important;
+  }
+}
