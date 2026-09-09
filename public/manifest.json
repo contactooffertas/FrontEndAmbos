@@ -1,7 +1,7 @@
 {
-  "name": "Rosario Market - Las Mejores Ofertas",
+  "name": "Rosario Market",
   "short_name": "Rosario Market",
-  "description": "Encuentra las mejores ofertas cerca tuyo en tiempo real",
+  "description": "Descubrí negocios, productos y ofertas de Rosario cerca tuyo.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -12,76 +12,69 @@
   "lang": "es-AR",
   "icons": [
     {
-      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
+      "src": "/assets/offerton.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
+      "src": "/assets/offerton.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://www.rosariomarket.com.ar/assets/offerton-192-mono.png",
+      "src": "/assets/offerton-192-mono.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "monochrome"
     }
   ],
-
   "screenshots": [
     {
-      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
+      "src": "/assets/offerton.png",
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Pantalla principal de Offertas"
+      "label": "Rosario Market"
     },
     {
-      "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
+      "src": "/assets/offerton.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Búsqueda de productos"
+      "label": "Negocios y productos en Rosario Market"
     }
   ],
-
-  "categories": [
-    "shopping",
-    "marketplace"
-  ],
-
+  "categories": ["shopping", "marketplace"],
   "shortcuts": [
     {
-      "name": "Ver Ofertas",
-      "short_name": "Rosario Market",
-      "description": "Accede rápidamente a las mejores ofertas",
+      "name": "Explorar productos",
+      "short_name": "Productos",
+      "description": "Explorá productos y ofertas de comercios de Rosario",
       "url": "/?utm_source=shortcut",
       "icons": [
         {
-          "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
+          "src": "/assets/offerton.png",
           "sizes": "192x192",
           "type": "image/png"
         }
       ]
     },
     {
-      "name": "Mi Panel",
+      "name": "Mi panel",
       "short_name": "Panel",
-      "description": "Accede a tu panel de comprador o vendedor",
+      "description": "Accedé a tu panel de Rosario Market",
       "url": "/panel?utm_source=shortcut",
       "icons": [
         {
-          "src": "https://www.rosariomarket.com.ar/assets/offerton.png",
+          "src": "/assets/offerton.png",
           "sizes": "192x192",
           "type": "image/png"
         }
       ]
     }
   ],
-
   "share_target": {
     "action": "/share",
     "method": "POST",
@@ -93,18 +86,14 @@
       "files": [
         {
           "name": "media",
-          "accept": [
-            "image/*",
-            "video/*"
-          ]
+          "accept": ["image/*", "video/*"]
         }
       ]
     }
   },
-
   "protocol_handlers": [
     {
-      "protocol": "web+offertas",
+      "protocol": "web+rosariomarket",
       "url": "/search?q=%s"
     }
   ]
