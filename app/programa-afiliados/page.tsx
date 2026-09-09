@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Store, ShoppingBag, ExternalLink, CheckCircle2, Loader2,
   TrendingUp, Users, Wallet, ShieldCheck, ClipboardList, Save, Send,
+  RefreshCw, Info,
 } from "lucide-react";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
@@ -13,8 +14,9 @@ import SellerDashboard from "./SellerDashboard";
 import BuyerDashboard from "./BuyerDashboard";
 import "../styles/afiliados.css";
 
-const API = "https://new-backend-lovat.vercel.app/api";
-
+// Same-origin: evita que el navegador aplique CORS al flujo de afiliados.
+// El proxy de Next reenvía la petición al backend sin modificarlo.
+const API = "/api/backend-proxy";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -78,6 +80,80 @@ const EMPTY_BUYER_FORM: BuyerFormState = {
   privacyAccepted: false,
 };
 
+function AffiliateFallbackPanel({
+  role,
+  name,
+  error,
+  onRetry,
+}: {
+  role: AffiliateRole;
+  name: string;
+  error?: string;
+  onRetry: () => void;
+}) {
+  const isSeller = role === "seller";
+  const tabs = isSeller
+    ? ["Ofertas", "Solicitudes", "Afiliados", "Pagos"]
+    : ["Tiendas", "Solicitudes", "Mis ofertas", "Ganancias"];
+
+  return (
+    <MainLayout>
+      <div className="affiliate-page affiliate-page-fallback">
+        <div className="affiliate-hero">
+          <span className="affiliate-hero-icon">
+            {isSeller ? <Store size={22} /> : <ShoppingBag size={22} />}
+          </span>
+          <div>
+            <h1 className="affiliate-title">Programa de Afiliados</h1>
+            <p className="affiliate-subtitle">
+              {isSeller ? `Panel de ${name}` : `Hola ${name}, este es tu panel de afiliado`}
+            </p>
+          </div>
+        </div>
+
+        <div className="affiliate-fallback-tabs" aria-label="Secciones del panel">
+          {tabs.map((tab, index) => (
+            <span key={tab} className={`affiliate-fallback-tab${index === 0 ? " is-active" : ""}`}>
+              {tab}
+            </span>
+          ))}
+        </div>
+
+        <div className="affiliate-card affiliate-empty-panel">
+          <div className="affiliate-empty-icon">
+            {isSeller ? <Users size={28} /> : <Store size={28} />}
+          </div>
+          <div className="affiliate-empty-copy">
+            <span className="affiliate-empty-kicker">Panel disponible</span>
+            <h2>{isSeller ? "Todavía no hay afiliados para mostrar" : "Todavía no hay oportunidades para mostrar"}</h2>
+            <p>
+              {isSeller
+                ? "Cuando recibas solicitudes o tengas afiliados activos van a aparecer acá, sin ocultar tu panel."
+                : "Cuando haya tiendas, solicitudes u ofertas disponibles van a aparecer acá automáticamente."}
+            </p>
+          </div>
+
+          {error && (
+            <div className="affiliate-soft-warning">
+              <Info size={16} />
+              <span>No pudimos actualizar los datos en este momento. Tu panel sigue disponible.</span>
+            </div>
+          )}
+
+          <div className="affiliate-empty-actions">
+            <button type="button" className="affiliate-btn affiliate-btn-primary" onClick={onRetry}>
+              <RefreshCw size={15} /> Actualizar panel
+            </button>
+            <Link href="/programa-afiliados/terminos" className="affiliate-btn affiliate-btn-outline">
+              <ExternalLink size={14} /> Términos del programa
+            </Link>
+          </div>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
 export default function ProgramaAfiliadosPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -108,38 +184,40 @@ export default function ProgramaAfiliadosPage() {
     try {
       const res = await fetch(`${API}/affiliates/status`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
-      if (!res.ok) throw new Error("No se pudo cargar el estado del programa de afiliados");
-      const data: AffiliateStatus = await res.json();
-      setStatus(data);
-      setTermsAccepted(data.hasAcceptedTerms);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.message || "No se pudo actualizar el programa de afiliados");
+      const typedData = data as AffiliateStatus;
+      setStatus(typedData);
+      setTermsAccepted(typedData.hasAcceptedTerms);
 
-      if (data.role === "seller" && data.application) {
+      if (typedData.role === "seller" && typedData.application) {
         setSellerForm({
-          businessName: data.application.businessName || "",
-          contactName: data.application.contactName || "",
-          email: data.application.email || "",
-          phone: data.application.phone || "",
-          defaultPercentage: String(data.application.defaultPercentage ?? ""),
-          maxAffiliates: String(data.application.maxAffiliates ?? ""),
-          description: data.application.description || "",
+          businessName: typedData.application.businessName || "",
+          contactName: typedData.application.contactName || "",
+          email: typedData.application.email || "",
+          phone: typedData.application.phone || "",
+          defaultPercentage: String(typedData.application.defaultPercentage ?? ""),
+          maxAffiliates: String(typedData.application.maxAffiliates ?? ""),
+          description: typedData.application.description || "",
         });
       }
-      if (data.role === "user" && data.application) {
+      if (typedData.role === "user" && typedData.application) {
         setBuyerForm({
-          firstName: data.application.firstName || "",
-          lastName: data.application.lastName || "",
-          email: data.application.email || "",
-          phone: data.application.phone || "",
-          city: data.application.city || "",
-          province: data.application.province || "",
-          socialMedia: data.application.socialMedia || "",
-          salesExperience: data.application.salesExperience || "",
-          privacyAccepted: !!data.application.privacyAccepted,
+          firstName: typedData.application.firstName || "",
+          lastName: typedData.application.lastName || "",
+          email: typedData.application.email || "",
+          phone: typedData.application.phone || "",
+          city: typedData.application.city || "",
+          province: typedData.application.province || "",
+          socialMedia: typedData.application.socialMedia || "",
+          salesExperience: typedData.application.salesExperience || "",
+          privacyAccepted: !!typedData.application.privacyAccepted,
         });
       }
     } catch (err: any) {
-      setStatusError(err.message || "Error al cargar el programa de afiliados");
+      setStatusError(err.message || "No se pudieron actualizar los datos del programa");
     } finally {
       setStatusLoading(false);
     }
@@ -237,22 +315,28 @@ export default function ProgramaAfiliadosPage() {
     );
   }
 
+  const fallbackRole: AffiliateRole = user.role === "seller" || user.role === "admin" ? user.role : "user";
+
   if (statusError && !status) {
     return (
-      <MainLayout>
-        <div className="affiliate-page">
-          <div className="affiliate-card affiliate-error-card">
-            <p>{statusError}</p>
-            <button className="affiliate-btn affiliate-btn-outline" onClick={loadStatus}>
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </MainLayout>
+      <AffiliateFallbackPanel
+        role={fallbackRole}
+        name={user.name || "Rosario Market"}
+        error={statusError}
+        onRetry={loadStatus}
+      />
     );
   }
 
-  if (!status) return null;
+  if (!status) {
+    return (
+      <AffiliateFallbackPanel
+        role={fallbackRole}
+        name={user.name || "Rosario Market"}
+        onRetry={loadStatus}
+      />
+    );
+  }
 
   if (status.role === "admin") {
     return (
@@ -272,8 +356,6 @@ export default function ProgramaAfiliadosPage() {
   const isSeller = status.role === "seller";
   const isOnboarded = termsAccepted && status.hasApplication;
 
-  // Ya aceptó TyC y ya tiene su aplicación cargada -> directo al dashboard,
-  // sin volver a mostrar el hero de bienvenida ni los formularios.
   if (isOnboarded) {
     return (
       <MainLayout>
@@ -285,7 +367,7 @@ export default function ProgramaAfiliadosPage() {
             <div>
               <h1 className="affiliate-title">Programa de Afiliados</h1>
               <p className="affiliate-subtitle">
-                {isSeller ? `Panel de ${status.name}` : `Hola ${status.name}, estas son tus ofertas`}
+                {isSeller ? `Panel de ${status.name}` : `Hola ${status.name}, estas son tus oportunidades`}
               </p>
             </div>
           </div>
@@ -307,9 +389,7 @@ export default function ProgramaAfiliadosPage() {
             {isSeller ? <Store size={22} /> : <ShoppingBag size={22} />}
           </span>
           <div>
-            <h1 className="affiliate-title">
-              {isSeller ? `Bienvenido ${status.name}` : `Bienvenido ${status.name}`}
-            </h1>
+            <h1 className="affiliate-title">Bienvenido {status.name}</h1>
             <p className="affiliate-subtitle">
               {isSeller
                 ? "Invitá personas a vender tus productos y pagales únicamente por ventas confirmadas."
@@ -338,8 +418,7 @@ export default function ProgramaAfiliadosPage() {
             <div className="affiliate-note">
               <ShieldCheck size={14} />
               <span>
-                La plataforma únicamente registra las estadísticas de la actividad de tus afiliados.
-                El pago de comisiones lo realiza directamente tu negocio, fuera de la plataforma.
+                Rosario Market registra la actividad del programa. El pago de comisiones se realiza directamente entre el negocio y el afiliado.
               </span>
             </div>
           </div>
@@ -363,17 +442,16 @@ export default function ProgramaAfiliadosPage() {
             <div className="affiliate-note">
               <ShieldCheck size={14} />
               <span>
-                La plataforma no paga comisiones: cada negocio paga directamente y solo por
-                ventas confirmadas. Los pagos dependen exclusivamente del negocio.
+                Cada negocio paga directamente sus comisiones por ventas confirmadas. Rosario Market registra y organiza la información del programa.
               </span>
             </div>
           </div>
         )}
 
         <div className="affiliate-card">
-          <h2 className="affiliate-section-title">Términos y Condiciones</h2>
-          <Link href="/terminos" target="_blank" className="affiliate-terms-link">
-            <ExternalLink size={13} /> Leer términos y condiciones
+          <h2 className="affiliate-section-title">Términos del Programa de Afiliados</h2>
+          <Link href="/programa-afiliados/terminos" target="_blank" className="affiliate-terms-link">
+            <ExternalLink size={13} /> Leer términos específicos del programa
           </Link>
 
           {termsAccepted ? (
@@ -384,8 +462,7 @@ export default function ProgramaAfiliadosPage() {
           ) : (
             <>
               <p className="affiliate-terms-declaration">
-                Declaro haber leído completamente los Términos y Condiciones del Programa de
-                Afiliados y aceptarlos en su totalidad.
+                Declaro haber leído los términos específicos del Programa de Afiliados y aceptarlos en su totalidad.
               </p>
               <label className="affiliate-checkbox">
                 <input
@@ -393,7 +470,7 @@ export default function ProgramaAfiliadosPage() {
                   checked={termsChecked}
                   onChange={(e) => setTermsChecked(e.target.checked)}
                 />
-                <span>He leído y acepto los Términos y Condiciones.</span>
+                <span>He leído y acepto los Términos del Programa de Afiliados.</span>
               </label>
 
               {statusError && <p className="affiliate-error-text">{statusError}</p>}
@@ -436,77 +513,38 @@ export default function ProgramaAfiliadosPage() {
               <form className="affiliate-form" onSubmit={handleSellerSubmit}>
                 <div className="affiliate-field">
                   <label>Nombre del negocio</label>
-                  <input
-                    value={sellerForm.businessName}
-                    onChange={(e) => setSellerForm((p) => ({ ...p, businessName: e.target.value }))}
-                    required
-                  />
+                  <input value={sellerForm.businessName} onChange={(e) => setSellerForm((p) => ({ ...p, businessName: e.target.value }))} required />
                 </div>
                 <div className="affiliate-field">
                   <label>Persona responsable</label>
-                  <input
-                    value={sellerForm.contactName}
-                    onChange={(e) => setSellerForm((p) => ({ ...p, contactName: e.target.value }))}
-                    required
-                  />
+                  <input value={sellerForm.contactName} onChange={(e) => setSellerForm((p) => ({ ...p, contactName: e.target.value }))} required />
                 </div>
                 <div className="affiliate-field-grid">
                   <div className="affiliate-field">
                     <label>Email</label>
-                    <input
-                      type="email"
-                      value={sellerForm.email}
-                      onChange={(e) => setSellerForm((p) => ({ ...p, email: e.target.value }))}
-                      required
-                    />
+                    <input type="email" value={sellerForm.email} onChange={(e) => setSellerForm((p) => ({ ...p, email: e.target.value }))} required />
                   </div>
                   <div className="affiliate-field">
                     <label>Teléfono</label>
-                    <input
-                      value={sellerForm.phone}
-                      onChange={(e) => setSellerForm((p) => ({ ...p, phone: e.target.value }))}
-                      required
-                    />
+                    <input value={sellerForm.phone} onChange={(e) => setSellerForm((p) => ({ ...p, phone: e.target.value }))} required />
                   </div>
                 </div>
                 <div className="affiliate-field-grid">
                   <div className="affiliate-field">
                     <label>Porcentaje por defecto (%)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={sellerForm.defaultPercentage}
-                      onChange={(e) => setSellerForm((p) => ({ ...p, defaultPercentage: e.target.value }))}
-                      required
-                    />
+                    <input type="number" min={0} max={100} value={sellerForm.defaultPercentage} onChange={(e) => setSellerForm((p) => ({ ...p, defaultPercentage: e.target.value }))} required />
                   </div>
                   <div className="affiliate-field">
                     <label>Cantidad máxima de afiliados</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={sellerForm.maxAffiliates}
-                      onChange={(e) => setSellerForm((p) => ({ ...p, maxAffiliates: e.target.value }))}
-                      required
-                    />
+                    <input type="number" min={1} value={sellerForm.maxAffiliates} onChange={(e) => setSellerForm((p) => ({ ...p, maxAffiliates: e.target.value }))} required />
                   </div>
                 </div>
                 <div className="affiliate-field">
                   <label>Descripción del programa</label>
-                  <textarea
-                    rows={4}
-                    value={sellerForm.description}
-                    onChange={(e) => setSellerForm((p) => ({ ...p, description: e.target.value }))}
-                    required
-                  />
+                  <textarea rows={4} value={sellerForm.description} onChange={(e) => setSellerForm((p) => ({ ...p, description: e.target.value }))} required />
                 </div>
                 <button type="submit" className="affiliate-btn affiliate-btn-primary" disabled={submitting}>
-                  {submitting ? (
-                    <><Loader2 size={15} className="affiliate-spin" /> Guardando…</>
-                  ) : (
-                    <><Save size={15} /> Guardar</>
-                  )}
+                  {submitting ? <><Loader2 size={15} className="affiliate-spin" /> Guardando…</> : <><Save size={15} /> Guardar</>}
                 </button>
               </form>
             ) : (
@@ -514,91 +552,47 @@ export default function ProgramaAfiliadosPage() {
                 <div className="affiliate-field-grid">
                   <div className="affiliate-field">
                     <label>Nombre</label>
-                    <input
-                      value={buyerForm.firstName}
-                      onChange={(e) => setBuyerForm((p) => ({ ...p, firstName: e.target.value }))}
-                      required
-                    />
+                    <input value={buyerForm.firstName} onChange={(e) => setBuyerForm((p) => ({ ...p, firstName: e.target.value }))} required />
                   </div>
                   <div className="affiliate-field">
                     <label>Apellido</label>
-                    <input
-                      value={buyerForm.lastName}
-                      onChange={(e) => setBuyerForm((p) => ({ ...p, lastName: e.target.value }))}
-                      required
-                    />
+                    <input value={buyerForm.lastName} onChange={(e) => setBuyerForm((p) => ({ ...p, lastName: e.target.value }))} required />
                   </div>
                 </div>
                 <div className="affiliate-field-grid">
                   <div className="affiliate-field">
                     <label>Email</label>
-                    <input
-                      type="email"
-                      value={buyerForm.email}
-                      onChange={(e) => setBuyerForm((p) => ({ ...p, email: e.target.value }))}
-                      required
-                    />
+                    <input type="email" value={buyerForm.email} onChange={(e) => setBuyerForm((p) => ({ ...p, email: e.target.value }))} required />
                   </div>
                   <div className="affiliate-field">
                     <label>Teléfono</label>
-                    <input
-                      value={buyerForm.phone}
-                      onChange={(e) => setBuyerForm((p) => ({ ...p, phone: e.target.value }))}
-                      required
-                    />
+                    <input value={buyerForm.phone} onChange={(e) => setBuyerForm((p) => ({ ...p, phone: e.target.value }))} required />
                   </div>
                 </div>
                 <div className="affiliate-field-grid">
                   <div className="affiliate-field">
                     <label>Ciudad</label>
-                    <input
-                      value={buyerForm.city}
-                      onChange={(e) => setBuyerForm((p) => ({ ...p, city: e.target.value }))}
-                      required
-                    />
+                    <input value={buyerForm.city} onChange={(e) => setBuyerForm((p) => ({ ...p, city: e.target.value }))} required />
                   </div>
                   <div className="affiliate-field">
                     <label>Provincia</label>
-                    <input
-                      value={buyerForm.province}
-                      onChange={(e) => setBuyerForm((p) => ({ ...p, province: e.target.value }))}
-                      required
-                    />
+                    <input value={buyerForm.province} onChange={(e) => setBuyerForm((p) => ({ ...p, province: e.target.value }))} required />
                   </div>
                 </div>
                 <div className="affiliate-field">
                   <label>Redes sociales (opcional)</label>
-                  <input
-                    value={buyerForm.socialMedia}
-                    onChange={(e) => setBuyerForm((p) => ({ ...p, socialMedia: e.target.value }))}
-                  />
+                  <input value={buyerForm.socialMedia} onChange={(e) => setBuyerForm((p) => ({ ...p, socialMedia: e.target.value }))} />
                 </div>
                 <div className="affiliate-field">
                   <label>Experiencia en ventas (opcional)</label>
-                  <textarea
-                    rows={3}
-                    value={buyerForm.salesExperience}
-                    onChange={(e) => setBuyerForm((p) => ({ ...p, salesExperience: e.target.value }))}
-                  />
+                  <textarea rows={3} value={buyerForm.salesExperience} onChange={(e) => setBuyerForm((p) => ({ ...p, salesExperience: e.target.value }))} />
                 </div>
                 <label className="affiliate-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={buyerForm.privacyAccepted}
-                    onChange={(e) => setBuyerForm((p) => ({ ...p, privacyAccepted: e.target.checked }))}
-                  />
+                  <input type="checkbox" checked={buyerForm.privacyAccepted} onChange={(e) => setBuyerForm((p) => ({ ...p, privacyAccepted: e.target.checked }))} />
                   <span>Acepto la política de privacidad.</span>
                 </label>
-                <button
-                  type="submit"
-                  className="affiliate-btn affiliate-btn-primary"
-                  disabled={submitting || !buyerForm.privacyAccepted}
-                >
-                  {submitting ? (
-                    <><Loader2 size={15} className="affiliate-spin" /> Enviando…</>
-                  ) : (
-                    <><Send size={15} /> Enviar solicitud</>
-                  )}
+                <button type="submit" className="affiliate-btn affiliate-btn-primary" disabled={submitting || !buyerForm.privacyAccepted}>
+                  {submitting ? <><Loader2 size={15} className="affiliate-spin" /> Enviando…</> : <><Send size={15} /> Enviar solicitud</>}
                 </button>
               </form>
             )}
