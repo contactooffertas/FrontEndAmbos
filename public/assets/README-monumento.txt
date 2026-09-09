@@ -1,0 +1,1 @@
+La imagen real del Monumento se sirve desde /assets/monumento-rosario-hero.svg mientras se migra a un archivo raster local.
