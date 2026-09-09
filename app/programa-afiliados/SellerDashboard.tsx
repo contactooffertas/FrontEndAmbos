@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import "../styles/afiliados-vendedor.css";
 
-const API = "/api/backend-proxy/affiliates/seller";
+const API = "https://new-backend-lovat.vercel.app/api/affiliates/seller";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -131,6 +131,9 @@ interface MyAffiliateItem {
   buyer: ApplicantBuyerData | null;
 }
 
+// El backend ya calcula dueDate/daysRemaining siempre a partir del ciclo de
+// pago del vendedor, así que estos valores nunca deberían llegar en null;
+// se dejan como nullable únicamente por seguridad ante datos muy viejos.
 interface PendingSaleItem {
   saleId: string;
   productName: string;
@@ -192,6 +195,7 @@ interface SellerDashboardProps {
   businessName: string;
 }
 
+/** ── NUEVO: desglose del badge de notificaciones para pintar contador por tab */
 interface NotificationBadge {
   count: number;
   pendingApplications: number;
@@ -256,12 +260,28 @@ function BuyerCarnet({
       </div>
       <div className="affseller-carnet-divider" />
       <div className="affseller-carnet-details">
-        <p><span>Email</span> {buyer.email}</p>
-        <p><span>Teléfono</span> {buyer.phone}</p>
-        {buyer.socialMedia && <p><span>Redes</span> {buyer.socialMedia}</p>}
-        {buyer.salesExperience && <p><span>Experiencia</span> {buyer.salesExperience}</p>}
+        <p>
+          <span>Email</span> {buyer.email}
+        </p>
+        <p>
+          <span>Teléfono</span> {buyer.phone}
+        </p>
+        {buyer.socialMedia && (
+          <p>
+            <span>Redes</span> {buyer.socialMedia}
+          </p>
+        )}
+        {buyer.salesExperience && (
+          <p>
+            <span>Experiencia</span> {buyer.salesExperience}
+          </p>
+        )}
       </div>
-      <a href={buildWhatsAppLink(buyer.phone, businessName)} target="_blank" rel="noopener noreferrer" className="affseller-whatsapp-btn">
+       <a href={buildWhatsAppLink(buyer.phone, businessName)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="affseller-whatsapp-btn"
+      >
         <MessageCircle size={15} /> Contactar por WhatsApp
       </a>
       {footer}
@@ -269,7 +289,14 @@ function BuyerCarnet({
   );
 }
 
-function ProfileEditCard({ onPaymentTermChange }: { onPaymentTermChange?: (days: 15 | 30) => void }): JSX.Element {
+/** Card de perfil propio del vendedor, editable in-place.
+ *  Avisa al padre (onPaymentTermChange) el ciclo de pago elegido, aunque
+ *  ahora el cálculo real de vencimientos lo hace siempre el backend. */
+function ProfileEditCard({
+  onPaymentTermChange,
+}: {
+  onPaymentTermChange?: (days: 15 | 30) => void;
+}): JSX.Element {
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [draft, setDraft] = useState<SellerProfile | null>(null);
   const [editing, setEditing] = useState(false);
@@ -277,10 +304,13 @@ function ProfileEditCard({ onPaymentTermChange }: { onPaymentTermChange?: (days:
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const notifyTerm = useCallback((value: number) => {
-    const normalized: 15 | 30 = value === 15 ? 15 : 30;
-    onPaymentTermChange?.(normalized);
-  }, [onPaymentTermChange]);
+  const notifyTerm = useCallback(
+    (value: number) => {
+      const normalized: 15 | 30 = value === 15 ? 15 : 30;
+      onPaymentTermChange?.(normalized);
+    },
+    [onPaymentTermChange]
+  );
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -298,7 +328,9 @@ function ProfileEditCard({ onPaymentTermChange }: { onPaymentTermChange?: (days:
     }
   }, [notifyTerm]);
 
-  useEffect(() => { void loadProfile(); }, [loadProfile]);
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
 
   const handleField = (field: keyof SellerProfile, value: string) => {
     setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
@@ -341,7 +373,11 @@ function ProfileEditCard({ onPaymentTermChange }: { onPaymentTermChange?: (days:
   };
 
   if (loading) {
-    return <div className="affseller-profile-card"><div className="affseller-loading"><Loader2 size={18} className="affseller-spin" /> Cargando tu perfil...</div></div>;
+    return (
+      <div className="affseller-profile-card">
+        <div className="affseller-loading"><Loader2 size={18} className="affseller-spin" /> Cargando tu perfil...</div>
+      </div>
+    );
   }
 
   if (!profile || !draft) {
@@ -358,36 +394,85 @@ function ProfileEditCard({ onPaymentTermChange }: { onPaymentTermChange?: (days:
       <div className="affseller-profile-header">
         <p className="affseller-profile-title">Mi perfil de vendedor</p>
         {!editing ? (
-          <button type="button" className="affseller-edit-btn" onClick={() => setEditing(true)}><Pencil size={14} /> Editar</button>
+          <button type="button" className="affseller-edit-btn" onClick={() => setEditing(true)}>
+            <Pencil size={14} /> Editar
+          </button>
         ) : (
           <div className="affseller-profile-actions">
-            <button type="button" className="affseller-cancel-btn" disabled={saving} onClick={handleCancel}><X size={14} /> Cancelar</button>
-            <button type="button" className="affseller-save-btn" disabled={saving} onClick={() => void handleSave()}>{saving ? <Loader2 size={14} className="affseller-spin" /> : <Save size={14} />} Guardar</button>
+            <button type="button" className="affseller-cancel-btn" disabled={saving} onClick={handleCancel}>
+              <X size={14} /> Cancelar
+            </button>
+            <button type="button" className="affseller-save-btn" disabled={saving} onClick={() => void handleSave()}>
+              {saving ? <Loader2 size={14} className="affseller-spin" /> : <Save size={14} />} Guardar
+            </button>
           </div>
         )}
       </div>
+
       {error && <p className="affseller-error">{error}</p>}
+
       <div className="affseller-profile-grid">
-        <label><span>Nombre del negocio</span><input value={draft.businessName} disabled={!editing} onChange={(e) => handleField("businessName", e.target.value)} /></label>
-        <label><span>Nombre de contacto</span><input value={draft.contactName} disabled={!editing} onChange={(e) => handleField("contactName", e.target.value)} /></label>
-        <label><span>Email</span><input type="email" value={draft.email} disabled={!editing} onChange={(e) => handleField("email", e.target.value)} /></label>
-        <label><span>Teléfono</span><input value={draft.phone} disabled={!editing} onChange={(e) => handleField("phone", e.target.value)} /></label>
-        <label><span>Comisión por defecto (%)</span><input type="number" min={0} max={100} value={draft.defaultPercentage} disabled={!editing} onChange={(e) => handleField("defaultPercentage", e.target.value)} /></label>
-        <label><span>Máximo de afiliados</span><input type="number" min={1} value={draft.maxAffiliates} disabled={!editing} onChange={(e) => handleField("maxAffiliates", e.target.value)} /></label>
+        <label>
+          <span>Nombre del negocio</span>
+          <input value={draft.businessName} disabled={!editing} onChange={(e) => handleField("businessName", e.target.value)} />
+        </label>
+        <label>
+          <span>Nombre de contacto</span>
+          <input value={draft.contactName} disabled={!editing} onChange={(e) => handleField("contactName", e.target.value)} />
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" value={draft.email} disabled={!editing} onChange={(e) => handleField("email", e.target.value)} />
+        </label>
+        <label>
+          <span>Teléfono</span>
+          <input value={draft.phone} disabled={!editing} onChange={(e) => handleField("phone", e.target.value)} />
+        </label>
+        <label>
+          <span>Comisión por defecto (%)</span>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={draft.defaultPercentage}
+            disabled={!editing}
+            onChange={(e) => handleField("defaultPercentage", e.target.value)}
+          />
+        </label>
+        <label>
+          <span>Máximo de afiliados</span>
+          <input
+            type="number"
+            min={1}
+            value={draft.maxAffiliates}
+            disabled={!editing}
+            onChange={(e) => handleField("maxAffiliates", e.target.value)}
+          />
+        </label>
         <label>
           <span>Ciclo de pago a afiliados</span>
-          <select value={String(draft.paymentTermDays ?? 30)} disabled={!editing} onChange={(e) => handleTermChange(e.target.value)}>
+          <select
+            value={String(draft.paymentTermDays ?? 30)}
+            disabled={!editing}
+            onChange={(e) => handleTermChange(e.target.value)}
+          >
             <option value="15">Cada 15 días</option>
             <option value="30">Cada 30 días</option>
           </select>
-          <small className="affseller-field-hint">Se aplica a las ventas nuevas a partir de que guardes este cambio.</small>
+          <small className="affseller-field-hint">
+            Se aplica a las ventas nuevas a partir de que guardes este cambio.
+          </small>
         </label>
-        <label className="affseller-profile-grid-full"><span>Descripción</span><input value={draft.description} disabled={!editing} onChange={(e) => handleField("description", e.target.value)} /></label>
+        <label className="affseller-profile-grid-full">
+          <span>Descripción</span>
+          <input value={draft.description} disabled={!editing} onChange={(e) => handleField("description", e.target.value)} />
+        </label>
       </div>
     </div>
   );
 }
 
+/* ── NUEVO: pastilla numérica para pintar cantidad de pendientes en un tab */
 function TabCount({ value }: { value: number }): JSX.Element | null {
   if (value <= 0) return null;
   return <span className="affseller-tab-count">{value > 99 ? "99+" : value}</span>;
@@ -395,14 +480,21 @@ function TabCount({ value }: { value: number }): JSX.Element | null {
 
 export default function SellerDashboard({ businessName }: SellerDashboardProps): JSX.Element {
   const [tab, setTab] = useState<TabKey>("ofertas");
+
+  // Se conserva solo para mostrar la etiqueta del ciclo elegido en el perfil;
+  // el cálculo real de vencimientos ahora lo hace siempre el backend.
   const [, setPaymentTermDays] = useState<15 | 30>(30);
+
+  /* ── NUEVO: badge de notificaciones (desglose por tab) --- */
   const [badge, setBadge] = useState<NotificationBadge>({ count: 0, pendingApplications: 0, urgentOrDisputed: 0 });
 
   const loadBadge = useCallback(async () => {
     try {
       const data = await authFetch<NotificationBadge>("/notifications-badge");
       setBadge(data);
-    } catch {}
+    } catch {
+      // silencioso: el badge no es crítico para el uso del dashboard
+    }
   }, []);
 
   useEffect(() => {
@@ -411,6 +503,7 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     return () => clearInterval(interval);
   }, [loadBadge]);
 
+  // --- Tab: Ofertas (catálogo paginado de 5 en 5) ---
   const [products, setProducts] = useState<SellerProductItem[]>([]);
   const [productsMeta, setProductsMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 5 });
   const [productsLoading, setProductsLoading] = useState(false);
@@ -424,7 +517,9 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     try {
       const query = new URLSearchParams({ page: String(page), limit: "5" });
       if (searchTerm) query.set("search", searchTerm);
-      const data = await authFetch<{ items: SellerProductItem[] } & PaginationMeta>(`/products?${query.toString()}`);
+      const data = await authFetch<{ items: SellerProductItem[] } & PaginationMeta>(
+        `/products?${query.toString()}`
+      );
       setProducts(data.items);
       setProductsMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
     } catch (err) {
@@ -436,16 +531,22 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
 
   useEffect(() => {
     if (tab !== "ofertas") return;
-    const timeout = setTimeout(() => { void loadProducts(1, search); }, 350);
+    const timeout = setTimeout(() => {
+      void loadProducts(1, search);
+    }, 350);
     return () => clearTimeout(timeout);
-  }, [tab, search, loadProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, search]);
 
   const handleToggleOffer = async (product: SellerProductItem) => {
     setSavingProductId(product.productId);
     setProductsError("");
     try {
       if (product.isOffer && product.offerId) {
-        await authFetch(`/offers/${product.offerId}`, { method: "DELETE" });
+        await authFetch(`/offers/${product.offerId}/toggle`, {
+          method: "PATCH",
+          body: JSON.stringify({ active: !product.offerActive }),
+        });
       } else {
         await authFetch(`/offers`, {
           method: "POST",
@@ -460,51 +561,126 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     }
   };
 
+  const handleCommissionChange = async (product: SellerProductItem, value: string) => {
+    if (!product.offerId) return;
+    const percentage = Number(value);
+    if (Number.isNaN(percentage)) return;
+    setSavingProductId(product.productId);
+    try {
+      await authFetch(`/offers`, {
+        method: "POST",
+        body: JSON.stringify({ productId: product.productId, commissionPercentage: percentage }),
+      });
+      await loadProducts(productsMeta.page, search);
+    } catch (err) {
+      setProductsError(errorMessage(err));
+    } finally {
+      setSavingProductId(null);
+    }
+  };
+
+  // --- Tab: Solicitudes (por oferta, 5 en 5) ---
   const [offers, setOffers] = useState<OfferSummary[]>([]);
+  const [offersLoading, setOffersLoading] = useState(false);
+  const [selectedOfferId, setSelectedOfferId] = useState<string>("");
   const [applications, setApplications] = useState<OfferApplicationItem[]>([]);
+  const [applicationsMeta, setApplicationsMeta] = useState<PaginationMeta>({
+    page: 1, totalPages: 1, total: 0, limit: 5,
+  });
   const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [applicationsError, setApplicationsError] = useState("");
-  const [applicationsMeta, setApplicationsMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 5 });
-  const [selectedOfferId, setSelectedOfferId] = useState("");
+  const [decidingId, setDecidingId] = useState<string | null>(null);
 
-  const loadApplications = useCallback(async (page = 1) => {
+  const loadOffers = useCallback(async () => {
+    setOffersLoading(true);
+    try {
+      const data = await authFetch<{ items: OfferSummary[] }>(`/offers`);
+      setOffers(data.items);
+      if (data.items.length > 0 && !selectedOfferId) {
+        setSelectedOfferId(data.items[0].offerId);
+      }
+    } catch (err) {
+      setApplicationsError(errorMessage(err));
+    } finally {
+      setOffersLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadApplications = useCallback(async (offerId: string, page: number) => {
+    if (!offerId) {
+      setApplications([]);
+      return;
+    }
     setApplicationsLoading(true);
     setApplicationsError("");
     try {
-      const data = await authFetch<{ offers: OfferSummary[]; applications: OfferApplicationItem[] } & PaginationMeta>(`/applications?page=${page}&limit=5${selectedOfferId ? `&offerId=${selectedOfferId}` : ""}`);
-      setOffers(data.offers || []);
-      setApplications(data.applications || []);
+      const query = new URLSearchParams({ page: String(page), limit: "5", status: "pending" });
+      const data = await authFetch<{ items: OfferApplicationItem[] } & PaginationMeta>(
+        `/offers/${offerId}/applications?${query.toString()}`
+      );
+      setApplications(data.items);
       setApplicationsMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
     } catch (err) {
       setApplicationsError(errorMessage(err));
     } finally {
       setApplicationsLoading(false);
     }
-  }, [selectedOfferId]);
+  }, []);
 
-  useEffect(() => { if (tab === "solicitudes") void loadApplications(1); }, [tab, selectedOfferId, loadApplications]);
+  useEffect(() => {
+    if (tab === "solicitudes") void loadOffers();
+  }, [tab, loadOffers]);
 
-  const handleApplication = async (applicationId: string, action: "accept" | "reject" | "block") => {
+  useEffect(() => {
+    if (tab === "solicitudes" && selectedOfferId) void loadApplications(selectedOfferId, 1);
+  }, [tab, selectedOfferId, loadApplications]);
+
+  const handleAccept = async (applicationId: string) => {
+    setDecidingId(applicationId);
     try {
-      await authFetch(`/applications/${applicationId}/${action}`, { method: "PATCH" });
-      await loadApplications(applicationsMeta.page);
-      await loadBadge();
+      await authFetch(`/applications/${applicationId}/accept`, { method: "POST" });
+      await loadApplications(selectedOfferId, applicationsMeta.page);
+      await loadOffers();
     } catch (err) {
       setApplicationsError(errorMessage(err));
+    } finally {
+      setDecidingId(null);
     }
   };
 
+  const handleReject = async (applicationId: string) => {
+    setDecidingId(applicationId);
+    try {
+      await authFetch(`/applications/${applicationId}/reject`, { method: "POST" });
+      await loadApplications(selectedOfferId, applicationsMeta.page);
+      await loadOffers();
+    } catch (err) {
+      setApplicationsError(errorMessage(err));
+    } finally {
+      setDecidingId(null);
+    }
+  };
+
+  // --- Tab: Mis Afiliados (5 en 5) ---
   const [affiliates, setAffiliates] = useState<MyAffiliateItem[]>([]);
+  const [affiliatesMeta, setAffiliatesMeta] = useState<PaginationMeta>({
+    page: 1, totalPages: 1, total: 0, limit: 5,
+  });
   const [affiliatesLoading, setAffiliatesLoading] = useState(false);
   const [affiliatesError, setAffiliatesError] = useState("");
-  const [affiliatesMeta, setAffiliatesMeta] = useState<PaginationMeta>({ page: 1, totalPages: 1, total: 0, limit: 5 });
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
 
-  const loadAffiliates = useCallback(async (page = 1) => {
+  const loadAffiliates = useCallback(async (page: number) => {
     setAffiliatesLoading(true);
     setAffiliatesError("");
     try {
-      const data = await authFetch<{ items: MyAffiliateItem[] } & PaginationMeta>(`/affiliates?page=${page}&limit=5`);
-      setAffiliates(data.items || []);
+      const query = new URLSearchParams({ page: String(page), limit: "5" });
+      const data = await authFetch<{ items: MyAffiliateItem[] } & PaginationMeta>(
+        `/mis-afiliados?${query.toString()}`
+      );
+      setAffiliates(data.items);
       setAffiliatesMeta({ page: data.page, totalPages: data.totalPages, total: data.total, limit: data.limit });
     } catch (err) {
       setAffiliatesError(errorMessage(err));
@@ -513,17 +689,73 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     }
   }, []);
 
-  useEffect(() => { if (tab === "afiliados") void loadAffiliates(1); }, [tab, loadAffiliates]);
+  useEffect(() => {
+    if (tab === "afiliados") void loadAffiliates(1);
+  }, [tab, loadAffiliates]);
 
+  const handleRate = async (applicationId: string, rating: number) => {
+    setActingId(applicationId);
+    try {
+      await authFetch(`/applications/${applicationId}/rating`, {
+        method: "PATCH",
+        body: JSON.stringify({ rating }),
+      });
+      await loadAffiliates(affiliatesMeta.page);
+    } catch (err) {
+      setAffiliatesError(errorMessage(err));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const handleBlockToggle = async (item: MyAffiliateItem) => {
+    setActingId(item.applicationId);
+    try {
+      await authFetch(`/applications/${item.applicationId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: item.status === "blocked" ? "accepted" : "blocked" }),
+      });
+      await loadAffiliates(affiliatesMeta.page);
+    } catch (err) {
+      setAffiliatesError(errorMessage(err));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const handleDelete = async (applicationId: string) => {
+    const confirmed = window.confirm("¿Eliminar definitivamente a este afiliado?");
+    if (!confirmed) return;
+    setActingId(applicationId);
+    try {
+      await authFetch(`/applications/${applicationId}`, { method: "DELETE" });
+      await loadAffiliates(affiliatesMeta.page);
+    } catch (err) {
+      setAffiliatesError(errorMessage(err));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const handleCopyLink = async (applicationId: string, link: string) => {
+    await navigator.clipboard.writeText(link);
+    setCopiedId(applicationId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // --- Tab: Pagos (cuánto tenés que pagarle a cada afiliado) ---
   const [payables, setPayables] = useState<PayablesSummary | null>(null);
   const [payablesLoading, setPayablesLoading] = useState(false);
   const [payablesError, setPayablesError] = useState("");
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [updatingProofId, setUpdatingProofId] = useState<string | null>(null);
+  const alertShownRef = useRef(false);
 
   const loadPayables = useCallback(async () => {
     setPayablesLoading(true);
     setPayablesError("");
     try {
-      const data = await authFetch<PayablesSummary>("/payables");
+      const data = await authFetch<PayablesSummary>("/resumen");
       setPayables(data);
     } catch (err) {
       setPayablesError(errorMessage(err));
@@ -532,82 +764,538 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
     }
   }, []);
 
-  useEffect(() => { if (tab === "pagos") void loadPayables(); }, [tab, loadPayables]);
+  // Se carga siempre al montar (no solo al entrar a la pestaña) para poder
+  // disparar la alerta de vencimiento apenas el vendedor entra al panel.
+  useEffect(() => {
+    void loadPayables();
+  }, [loadPayables]);
+
+  useEffect(() => {
+    if (!payables || alertShownRef.current) return;
+    if (payables.urgentSales.length === 0) return;
+    alertShownRef.current = true;
+
+    const totalUrgent = payables.urgentSales.reduce((sum, s) => sum + s.commissionAmount, 0);
+    const soonest = payables.urgentSales[0];
+    const affiliateName = soonest.affiliate ? `${soonest.affiliate.firstName} ${soonest.affiliate.lastName}` : "un afiliado";
+
+    void Swal.fire({
+      icon: "warning",
+      title: "Tenés un pago por vencer",
+      html: `
+        <p>Tenés que pagar <strong>${formatMoney(totalUrgent)}</strong> a tus afiliados.</p>
+        <p>${daysLabel(soonest.daysRemaining)} el pago a <strong>${affiliateName}</strong> por <strong>${soonest.productName}</strong> (${formatMoney(soonest.commissionAmount)}).</p>
+      `,
+      confirmButtonText: "Ver pagos pendientes",
+      confirmButtonColor: "#6d28d9",
+    }).then((result) => {
+      if (result.isConfirmed) setTab("pagos");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payables]);
+
+  // NUEVO: click directo → marca pagado sin pedir comprobante. El link de
+  // comprobante se sigue pudiendo cargar después desde "Ver / cambiar
+  // comprobante" en el historial de pagos, así que no se pierde la función,
+  // solo se saca del paso obligatorio para marcar como pagado.
+  const handleMarkPaid = async (saleId: string) => {
+    setPayingId(saleId);
+    setPayablesError("");
+    try {
+      await authFetch(`/sales/${saleId}/pay`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      });
+      await loadPayables();
+      await loadAffiliates(affiliatesMeta.page);
+    } catch (err) {
+      setPayablesError(errorMessage(err));
+    } finally {
+      setPayingId(null);
+    }
+  };
+
+  const handleUpdateProof = async (saleId: string, currentProofUrl: string | null) => {
+    const { value: proofUrl, isDismissed } = await Swal.fire({
+      title: "Comprobante de pago",
+      input: "url",
+      inputLabel: "Link del comprobante",
+      inputValue: currentProofUrl || "",
+      inputPlaceholder: "https://...",
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#6d28d9",
+    });
+    if (isDismissed || !proofUrl) return;
+
+    setUpdatingProofId(saleId);
+    setPayablesError("");
+    try {
+      await authFetch(`/sales/${saleId}/proof`, {
+        method: "PATCH",
+        body: JSON.stringify({ proofUrl }),
+      });
+      await loadPayables();
+    } catch (err) {
+      setPayablesError(errorMessage(err));
+    } finally {
+      setUpdatingProofId(null);
+    }
+  };
 
   return (
     <div className="affseller-dashboard">
-      <ProfileEditCard onPaymentTermChange={(days) => setPaymentTermDays(days)} />
+      <ProfileEditCard onPaymentTermChange={setPaymentTermDays} />
 
       <div className="affseller-tabs">
-        <button className={`affseller-tab ${tab === "ofertas" ? "affseller-tab-active" : ""}`} onClick={() => setTab("ofertas")}><Package size={16} /> Ofertas</button>
-        <button className={`affseller-tab ${tab === "solicitudes" ? "affseller-tab-active" : ""}`} onClick={() => setTab("solicitudes")}><Users size={16} /> Solicitudes <TabCount value={badge.pendingApplications} /></button>
-        <button className={`affseller-tab ${tab === "afiliados" ? "affseller-tab-active" : ""}`} onClick={() => setTab("afiliados")}><IdCard size={16} /> Afiliados</button>
-        <button className={`affseller-tab ${tab === "pagos" ? "affseller-tab-active" : ""}`} onClick={() => setTab("pagos")}><Wallet size={16} /> Pagos <TabCount value={badge.urgentOrDisputed} /></button>
+        <button
+          type="button"
+          className={`affseller-tab ${tab === "ofertas" ? "affseller-tab-active" : ""}`}
+          onClick={() => setTab("ofertas")}
+        >
+          <Package size={15} /> Ofertas
+        </button>
+        <button
+          type="button"
+          className={`affseller-tab ${tab === "solicitudes" ? "affseller-tab-active" : ""}`}
+          onClick={() => setTab("solicitudes")}
+        >
+          <IdCard size={15} /> Solicitudes <TabCount value={badge.pendingApplications} />
+        </button>
+        <button
+          type="button"
+          className={`affseller-tab ${tab === "afiliados" ? "affseller-tab-active" : ""}`}
+          onClick={() => setTab("afiliados")}
+        >
+          <Users size={15} /> Mis Afiliados <TabCount value={badge.urgentOrDisputed} />
+        </button>
+        <button
+          type="button"
+          className={`affseller-tab ${tab === "pagos" ? "affseller-tab-active" : ""}`}
+          onClick={() => setTab("pagos")}
+        >
+          <Wallet size={15} /> Pagos
+          {payables && (payables.urgentSales.length > 0 || payables.disputedSales.length > 0) && (
+            <span className="affseller-tab-dot" />
+          )}
+        </button>
       </div>
 
       {tab === "ofertas" && (
         <div className="affseller-panel">
-          <div className="affseller-panel-header">
-            <div><h2>Productos para afiliados</h2><p>Elegí qué productos querés ofrecer dentro del programa.</p></div>
-            <div className="affseller-search"><Search size={15} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar producto" /></div>
+          <div className="affseller-search">
+            <Search size={15} />
+            <input
+              type="text"
+              placeholder="Buscar producto por nombre..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
+
           {productsError && <p className="affseller-error">{productsError}</p>}
-          {productsLoading ? <div className="affseller-loading"><Loader2 className="affseller-spin" /> Cargando productos...</div> : products.length === 0 ? <p className="affseller-empty">No hay productos para mostrar.</p> : (
+
+          {productsLoading ? (
+            <div className="affseller-loading">
+              <Loader2 size={18} className="affseller-spin" /> Cargando productos...
+            </div>
+          ) : products.length === 0 ? (
+            <p className="affseller-empty">No encontramos productos.</p>
+          ) : (
             <div className="affseller-product-list">
               {products.map((product) => (
-                <div key={product.productId} className="affseller-product-card">
+                <div key={product.productId} className="affseller-product-row">
                   <div className="affseller-product-info">
-                    {product.image ? <img src={product.image} alt={product.name} className="affseller-product-image" /> : <div className="affseller-product-image-placeholder"><Package size={20} /></div>}
-                    <div><h3>{product.name}</h3><p>{formatMoney(product.price)}</p></div>
+                    {product.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.image} alt={product.name} className="affseller-product-thumb" />
+                    ) : (
+                      <div className="affseller-product-thumb affseller-product-thumb-empty" />
+                    )}
+                    <div>
+                      <p className="affseller-product-name">{product.name}</p>
+                      <p className="affseller-product-price">${product.price}</p>
+                    </div>
                   </div>
-                  <button type="button" className={product.isOffer ? "affseller-secondary-btn" : "affseller-primary-btn"} disabled={savingProductId === product.productId} onClick={() => void handleToggleOffer(product)}>
-                    {savingProductId === product.productId ? <Loader2 size={14} className="affseller-spin" /> : product.isOffer ? <><Trash2 size={14} /> Quitar</> : <><Check size={14} /> Ofrecer</>}
-                  </button>
+                  <div className="affseller-product-actions">
+                    {product.isOffer && (
+                      <div className="affseller-commission-field">
+                        <label>Comisión %</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          defaultValue={product.commissionPercentage ?? 0}
+                          onBlur={(e) => void handleCommissionChange(product, e.target.value)}
+                        />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className={`affseller-toggle-btn ${
+                        product.isOffer && product.offerActive ? "affseller-toggle-active" : ""
+                      }`}
+                      disabled={savingProductId === product.productId}
+                      onClick={() => void handleToggleOffer(product)}
+                    >
+                      {savingProductId === product.productId ? (
+                        <Loader2 size={14} className="affseller-spin" />
+                      ) : product.isOffer && product.offerActive ? (
+                        "Oferta activa"
+                      ) : (
+                        "Habilitar oferta"
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+
           <Pagination meta={productsMeta} onChange={(page) => void loadProducts(page, search)} />
         </div>
       )}
 
       {tab === "solicitudes" && (
         <div className="affseller-panel">
-          <div className="affseller-panel-header"><div><h2>Solicitudes</h2><p>Revisá quién quiere promocionar tus productos.</p></div></div>
-          {applicationsError && <p className="affseller-error">{applicationsError}</p>}
-          {offers.length > 0 && <select value={selectedOfferId} onChange={(e) => setSelectedOfferId(e.target.value)}><option value="">Todas las ofertas</option>{offers.map((offer) => <option key={offer.offerId} value={offer.offerId}>{offer.productName}</option>)}</select>}
-          {applicationsLoading ? <div className="affseller-loading"><Loader2 className="affseller-spin" /> Cargando solicitudes...</div> : applications.length === 0 ? <p className="affseller-empty">No hay solicitudes nuevas.</p> : (
-            <div className="affseller-carnet-list">
-              {applications.map((app) => app.buyer ? <BuyerCarnet key={app.applicationId} buyer={app.buyer} businessName={businessName} footer={<div className="affseller-carnet-actions"><button onClick={() => void handleApplication(app.applicationId, "accept")}><CheckCircle2 size={14} /> Aceptar</button><button onClick={() => void handleApplication(app.applicationId, "reject")}><XCircle size={14} /> Rechazar</button></div>} /> : null)}
+          {offersLoading ? (
+            <div className="affseller-loading">
+              <Loader2 size={18} className="affseller-spin" /> Cargando ofertas...
             </div>
+          ) : offers.length === 0 ? (
+            <p className="affseller-empty">Todavía no tenés ofertas activas.</p>
+          ) : (
+            <>
+              <div className="affseller-offer-select">
+                <label>Oferta</label>
+                <select value={selectedOfferId} onChange={(e) => setSelectedOfferId(e.target.value)}>
+                  {offers.map((offer) => (
+                    <option key={offer.offerId} value={offer.offerId}>
+                      {offer.productName} · {offer.pendingCount} pendientes · {offer.acceptedCount} afiliados
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {applicationsError && <p className="affseller-error">{applicationsError}</p>}
+
+              {applicationsLoading ? (
+                <div className="affseller-loading">
+                  <Loader2 size={18} className="affseller-spin" /> Cargando solicitudes...
+                </div>
+              ) : applications.length === 0 ? (
+                <p className="affseller-empty">No hay solicitudes pendientes para esta oferta.</p>
+              ) : (
+                <div className="affseller-carnet-grid">
+                  {applications.map((application) =>
+                    application.buyer ? (
+                      <BuyerCarnet
+                        key={application.applicationId}
+                        buyer={application.buyer}
+                        businessName={businessName}
+                        footer={
+                          <div className="affseller-carnet-actions">
+                            <button
+                              type="button"
+                              className="affseller-accept-btn"
+                              disabled={decidingId === application.applicationId}
+                              onClick={() => void handleAccept(application.applicationId)}
+                            >
+                              <CheckCircle2 size={15} /> Aceptar
+                            </button>
+                            <button
+                              type="button"
+                              className="affseller-reject-btn"
+                              disabled={decidingId === application.applicationId}
+                              onClick={() => void handleReject(application.applicationId)}
+                            >
+                              <XCircle size={15} /> Rechazar
+                            </button>
+                          </div>
+                        }
+                      />
+                    ) : null
+                  )}
+                </div>
+              )}
+
+              <Pagination
+                meta={applicationsMeta}
+                onChange={(page) => void loadApplications(selectedOfferId, page)}
+              />
+            </>
           )}
-          <Pagination meta={applicationsMeta} onChange={(page) => void loadApplications(page)} />
         </div>
       )}
 
       {tab === "afiliados" && (
         <div className="affseller-panel">
-          <div className="affseller-panel-header"><div><h2>Mis afiliados</h2><p>Personas que actualmente promocionan tus productos.</p></div></div>
           {affiliatesError && <p className="affseller-error">{affiliatesError}</p>}
-          {affiliatesLoading ? <div className="affseller-loading"><Loader2 className="affseller-spin" /> Cargando afiliados...</div> : affiliates.length === 0 ? <p className="affseller-empty">Todavía no tenés afiliados activos.</p> : (
-            <div className="affseller-carnet-list">
-              {affiliates.map((item) => item.buyer ? <BuyerCarnet key={item.applicationId} buyer={item.buyer} businessName={businessName} footer={<div className="affseller-affiliate-summary"><span>{item.productName || "Producto"}</span><strong>{formatMoney(item.totalCommissionPending)} pendiente</strong></div>} /> : null)}
+
+          {affiliatesLoading ? (
+            <div className="affseller-loading">
+              <Loader2 size={18} className="affseller-spin" /> Cargando afiliados...
+            </div>
+          ) : affiliates.length === 0 ? (
+            <p className="affseller-empty">Todavía no tenés afiliados aceptados.</p>
+          ) : (
+            <div className="affseller-carnet-grid">
+              {affiliates.map((item) =>
+                item.buyer ? (
+                  <BuyerCarnet
+                    key={item.applicationId}
+                    buyer={item.buyer}
+                    businessName={businessName}
+                    footer={
+                      <div className="affseller-affiliate-footer">
+                        <div className="affseller-affiliate-meta">
+                          <p>
+                            <span>Producto</span> {item.productName}
+                          </p>
+                          <p>
+                            <span>Afiliado desde</span> {formatDate(item.affiliatedSince)}
+                          </p>
+                          <p>
+                            <span>Ventas registradas</span> {item.salesCount}
+                          </p>
+                          <div className="affseller-amount-box">
+                            <p className="affseller-amount-line">
+                              <span>Monto total vendido</span>
+                              <strong className="affseller-amount-value">{formatMoney(item.totalSalesAmount)}</strong>
+                            </p>
+                            <p className="affseller-amount-line">
+                              <span>Comisión devengada</span>
+                              <strong className="affseller-amount-value affseller-amount-positive">
+                                {formatMoney(item.totalCommissionOwed)}
+                              </strong>
+                            </p>
+                            {item.totalCommissionPending > 0 && (
+                              <p className="affseller-amount-line">
+                                <span>Le falta pagar</span>
+                                <strong className="affseller-amount-value affseller-amount-pending">
+                                  {formatMoney(item.totalCommissionPending)}
+                                </strong>
+                              </p>
+                            )}
+                          </div>
+                          <p className={`affseller-status-badge affseller-status-${item.status}`}>
+                            {item.status === "blocked" ? "Bloqueado" : "Activo"}
+                          </p>
+                        </div>
+
+                        <div className="affseller-rating">
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              disabled={actingId === item.applicationId}
+                              onClick={() => void handleRate(item.applicationId, value)}
+                              className={`affseller-star ${
+                                (item.rating ?? 0) >= value ? "affseller-star-filled" : ""
+                              }`}
+                            >
+                              <Star size={16} />
+                            </button>
+                          ))}
+                        </div>
+
+                        {item.affiliateLink && (
+                          <button
+                            type="button"
+                            className="affseller-copy-link-btn"
+                            onClick={() => void handleCopyLink(item.applicationId, item.affiliateLink as string)}
+                          >
+                            {copiedId === item.applicationId ? (
+                              <>
+                                <Check size={14} /> Copiado
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={14} /> Copiar link de afiliado
+                              </>
+                            )}
+                          </button>
+                        )}
+
+                        <div className="affseller-carnet-actions">
+                          <button
+                            type="button"
+                            className="affseller-block-btn"
+                            disabled={actingId === item.applicationId}
+                            onClick={() => void handleBlockToggle(item)}
+                          >
+                            <Ban size={15} /> {item.status === "blocked" ? "Desbloquear" : "Bloquear"}
+                          </button>
+                          <button
+                            type="button"
+                            className="affseller-delete-btn"
+                            disabled={actingId === item.applicationId}
+                            onClick={() => void handleDelete(item.applicationId)}
+                          >
+                            <Trash2 size={15} /> Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  />
+                ) : null
+              )}
             </div>
           )}
+
           <Pagination meta={affiliatesMeta} onChange={(page) => void loadAffiliates(page)} />
         </div>
       )}
 
       {tab === "pagos" && (
         <div className="affseller-panel">
-          <div className="affseller-panel-header"><div><h2>Pagos a afiliados</h2><p>Seguimiento de comisiones pendientes y pagadas.</p></div></div>
           {payablesError && <p className="affseller-error">{payablesError}</p>}
-          {payablesLoading ? <div className="affseller-loading"><Loader2 className="affseller-spin" /> Cargando pagos...</div> : !payables || payables.pendingSales.length === 0 ? <p className="affseller-empty">No hay comisiones pendientes de pago.</p> : (
-            <div className="affseller-payables">
-              <div className="affseller-summary-card"><span>Total pendiente</span><strong>{formatMoney(payables.totalToPay)}</strong></div>
-              {payables.pendingSales.map((sale) => <div key={sale.saleId} className="affseller-payment-row"><div><strong>{sale.productName}</strong><span>{formatDate(sale.date)} · {daysLabel(sale.daysRemaining)}</span></div><strong>{formatMoney(sale.commissionAmount)}</strong></div>)}
+
+          {payablesLoading && !payables ? (
+            <div className="affseller-loading">
+              <Loader2 size={18} className="affseller-spin" /> Cargando tus pagos pendientes...
             </div>
-          )}
+          ) : payables ? (
+            <>
+              <div className="affseller-payables-summary">
+                <div className="affseller-payables-card affseller-payables-card-pending">
+                  <p className="affseller-payables-label">Tenés que pagar</p>
+                  <p className="affseller-payables-value">{formatMoney(payables.totalToPay)}</p>
+                </div>
+                <div className="affseller-payables-card">
+                  <p className="affseller-payables-label">Ya pagado (histórico)</p>
+                  <p className="affseller-payables-value">{formatMoney(payables.totalPaidHistoric)}</p>
+                </div>
+              </div>
+
+              {payables.disputedSales.length > 0 && (
+                <div className="affseller-dispute-banner">
+                  <AlertTriangle size={18} />
+                  <div>
+                    <p className="affseller-dispute-title">
+                      {payables.disputedSales.length === 1
+                        ? "Un afiliado rechazó un pago"
+                        : `${payables.disputedSales.length} afiliados rechazaron un pago`}
+                    </p>
+                    <p className="affseller-dispute-sub">
+                      Revisá el detalle abajo, coordiná el pago por fuera de la plataforma y volvé a marcarlo como pagado.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {payables.byAffiliate.length === 0 ? (
+                <p className="affseller-empty">No tenés pagos pendientes a afiliados.</p>
+              ) : (
+                <div className="affseller-payables-groups">
+                  {payables.byAffiliate.map((group) => (
+                    <div key={group.affiliate?.userId ?? Math.random()} className="affseller-payables-group">
+                      <div className="affseller-payables-group-header">
+                        <div>
+                          <p className="affseller-payables-group-name">
+                            {group.affiliate ? `${group.affiliate.firstName} ${group.affiliate.lastName}` : "Afiliado"}
+                          </p>
+                          <p className="affseller-payables-group-sub">
+                            {group.affiliate?.email} · {group.affiliate?.phone}
+                          </p>
+                        </div>
+                        <p className="affseller-payables-group-total">{formatMoney(group.totalPending)}</p>
+                      </div>
+
+                      <div className="affseller-sales-list">
+                        {group.sales.map((sale) => (
+                          <div
+                            key={sale.saleId}
+                            className={`affseller-sale-row ${sale.daysRemaining <= 5 ? "affseller-sale-row-urgent" : ""} ${
+                              sale.paymentDisputed ? "affseller-sale-row-disputed" : ""
+                            }`}
+                          >
+                            <div>
+                              <p className="affseller-sale-product">{sale.productName}</p>
+                              <p className="affseller-sale-date">{formatDate(sale.date)}</p>
+                              {sale.paymentDisputed && (
+                                <p className="affseller-dispute-reason">
+                                  <AlertTriangle size={13} /> El afiliado dice que no cobró: &quot;{sale.disputeReason}&quot;
+                                </p>
+                              )}
+                            </div>
+                            <div className="affseller-sale-amounts">
+                              <p className="affseller-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                              <p className="affseller-sale-commission">A pagar: {formatMoney(sale.commissionAmount)}</p>
+                            </div>
+                            <div className="affseller-sale-due">
+                              <span className={`affseller-due-badge ${sale.daysRemaining <= 5 ? "affseller-due-badge-urgent" : ""}`}>
+                                {daysLabel(sale.daysRemaining)}
+                              </span>
+                              <span className="affseller-due-date">Vence: {formatDate(sale.dueDate)}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="affseller-pay-btn"
+                              disabled={payingId === sale.saleId}
+                              onClick={() => void handleMarkPaid(sale.saleId)}
+                            >
+                              {payingId === sale.saleId ? (
+                                <Loader2 size={14} className="affseller-spin" />
+                              ) : (
+                                <DollarSign size={14} />
+                              )}
+                              Marcar pagado
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="affseller-history-section">
+                <p className="affseller-history-title">
+                  <History size={16} /> Historial de pagos realizados
+                </p>
+                {payables.paidSales.length === 0 ? (
+                  <p className="affseller-empty">Todavía no le pagaste a ningún afiliado.</p>
+                ) : (
+                  <div className="affseller-sales-list">
+                    {payables.paidSales.map((sale) => (
+                      <div key={sale.saleId} className="affseller-sale-row affseller-sale-row-paid">
+                        <div>
+                          <p className="affseller-sale-product">{sale.productName}</p>
+                          <p className="affseller-sale-date">
+                            {sale.affiliate ? `${sale.affiliate.firstName} ${sale.affiliate.lastName} · ` : ""}
+                            Vendido: {formatDate(sale.date)}
+                          </p>
+                        </div>
+                        <div className="affseller-sale-amounts">
+                          <p className="affseller-sale-total">Venta: {formatMoney(sale.totalAmount)}</p>
+                          <p className="affseller-sale-commission">Pagado: {formatMoney(sale.commissionAmount)}</p>
+                        </div>
+                        <div className="affseller-sale-due">
+                          <span className="affseller-due-badge affseller-due-badge-paid">Pagado</span>
+                          <span className="affseller-due-date">El {formatDate(sale.paidAt)}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="affseller-proof-btn"
+                          disabled={updatingProofId === sale.saleId}
+                          onClick={() => void handleUpdateProof(sale.saleId, sale.proofUrl)}
+                        >
+                          {updatingProofId === sale.saleId ? (
+                            <Loader2 size={14} className="affseller-spin" />
+                          ) : (
+                            <FileText size={14} />
+                          )}
+                          {sale.proofUrl ? "Ver / cambiar comprobante" : "Agregar comprobante"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
         </div>
       )}
     </div>
