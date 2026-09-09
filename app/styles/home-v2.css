@@ -1,199 +1,246 @@
-/* Rosario Market — Home única */
+/* Rosario Market — Home V3
+   Una sola capa visual para la portada. Mantiene toda la lógica existente. */
 
-.home-v2-page { overflow-x: clip; }
+.home-v2-page { overflow-x: clip; background:#f7f9fc; }
 
+/* HERO — la ciudad es protagonista */
 .home-v2-page .hero {
   position: relative;
-  width: min(1560px, calc(100% - 1.25rem));
-  margin: .65rem auto 0;
-  padding: 2.4rem clamp(1.25rem, 4vw, 3.5rem) !important;
-  border-radius: 24px;
+  width: 100%;
+  min-height: 610px;
+  margin: 0 auto;
+  padding: 0 !important;
   overflow: hidden;
   color: #fff;
   background:
-    linear-gradient(90deg, rgba(5,16,29,.98) 0%, rgba(5,16,29,.92) 38%, rgba(5,16,29,.46) 64%, rgba(5,16,29,.12) 100%),
-    url('/assets/monumento-hero.png') center 45% / cover no-repeat !important;
-  box-shadow: 0 18px 46px rgba(15,23,42,.14);
+    linear-gradient(90deg, rgba(7,32,52,.96) 0%, rgba(7,32,52,.88) 30%, rgba(7,32,52,.48) 52%, rgba(7,32,52,.08) 76%, rgba(7,32,52,.03) 100%),
+    url('/assets/monumento-hero.png') center 46% / cover no-repeat !important;
+  box-shadow: inset 0 -70px 100px rgba(4,24,40,.12);
 }
-
 .home-v2-page .hero::before {
-  content: '' !important;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 10% 28%, rgba(249,115,22,.16), transparent 25%) !important;
+  content:'' !important;
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,24,40,.10),transparent 45%,rgba(5,24,40,.20)) !important;
 }
-
 .home-v2-page .hero::after {
-  content: 'RÍO · BARRIOS · GENTE · COMERCIO LOCAL';
-  position: absolute;
-  right: 1.25rem;
-  bottom: .7rem;
-  color: rgba(255,255,255,.68);
-  font-size: .55rem;
-  font-weight: 800;
-  letter-spacing: .14em;
+  content:'ROSARIO · NUESTRAS RAÍCES · NUESTRO FUTURO';
+  position:absolute;
+  right:clamp(1.2rem,4vw,4.5rem);
+  bottom:1.4rem;
+  color:rgba(255,255,255,.86);
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-shadow:0 2px 10px rgba(0,0,0,.45);
 }
-
 .home-v2-page .hero-inner {
-  position: relative;
-  z-index: 2;
-  max-width: 1420px !important;
-  margin: 0 auto !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr);
-  gap: clamp(1.5rem, 3vw, 3rem) !important;
-  align-items: center;
+  position:relative;
+  z-index:2;
+  width:min(1500px,calc(100% - 3rem));
+  min-height:610px;
+  margin:0 auto !important;
+  padding:clamp(4rem,8vh,6.5rem) 0 5.5rem !important;
+  display:grid !important;
+  grid-template-columns:minmax(460px,.9fr) minmax(430px,.72fr);
+  gap:clamp(2.5rem,6vw,7rem) !important;
+  align-items:center;
 }
+.home-v2-page .hero-inner > div:first-child { max-width:700px; }
+.home-v2-page .hero-tag,.home-v2-page .hero-stats { display:none !important; }
 
-.home-v2-page .hero-tag,
-.home-v2-page .hero-stats { display: none !important; }
-
+/* El texto real queda en el DOM para SEO; visualmente se presenta como la nueva marca. */
 .home-v2-page .hero h1 {
-  max-width: 620px;
-  margin: 0 0 .9rem !important;
-  font-family: var(--font-display);
-  font-size: 0 !important;
-  line-height: 1 !important;
-  color: transparent !important;
+  margin:0 0 1.25rem !important;
+  max-width:760px;
+  font-size:0 !important;
+  line-height:.92 !important;
+  color:transparent !important;
 }
-.home-v2-page .hero h1 br,
-.home-v2-page .hero h1 em { display: none !important; }
-.home-v2-page .hero h1::before,
-.home-v2-page .hero h1 em::before { display: none !important; content: none !important; }
+.home-v2-page .hero h1 br,.home-v2-page .hero h1 em { display:none !important; }
+.home-v2-page .hero h1::before {
+  content:'Todo Rosario,' !important;
+  display:block !important;
+  font-family:var(--font-display);
+  font-size:clamp(3.5rem,5.5vw,6.4rem) !important;
+  line-height:.92;
+  font-weight:900;
+  letter-spacing:-.055em;
+  color:#fff !important;
+  text-shadow:0 5px 24px rgba(0,0,0,.22);
+}
 .home-v2-page .hero h1::after {
-  content: 'Todo Rosario, en un solo lugar' !important;
-  display: block !important;
-  font-family: var(--font-display);
-  font-size: clamp(2.45rem, 4.4vw, 4.5rem) !important;
-  line-height: .98 !important;
-  font-weight: 900;
-  letter-spacing: -.045em;
-  color: #fff !important;
-  text-shadow: 0 7px 26px rgba(0,0,0,.22);
+  content:'en un solo lugar' !important;
+  display:block !important;
+  margin-top:.12em;
+  font-family:var(--font-display);
+  font-size:clamp(3.25rem,5.2vw,6rem) !important;
+  line-height:.92;
+  font-weight:900;
+  letter-spacing:-.055em;
+  color:#ff7417 !important;
+  text-shadow:0 5px 24px rgba(0,0,0,.20);
 }
-
 .home-v2-page .hero-desc {
-  max-width: 590px !important;
-  margin: 0 0 1.15rem !important;
-  font-size: 1rem !important;
-  line-height: 1.55;
-  color: rgba(255,255,255,.82) !important;
+  max-width:620px !important;
+  margin:0 0 1.35rem !important;
+  font-size:clamp(1rem,1.25vw,1.18rem) !important;
+  line-height:1.6;
+  color:rgba(255,255,255,.92) !important;
+  text-shadow:0 2px 10px rgba(0,0,0,.28);
 }
-.home-v2-page .hero-desc::before,
-.home-v2-page .hero-desc::after { display: none !important; content: none !important; }
-
-.home-v2-page .hero-actions { display: flex !important; gap: .6rem !important; flex-wrap: wrap; }
+.home-v2-page .hero-actions { display:flex !important; gap:.7rem !important; flex-wrap:wrap; }
 .home-v2-page .hero-actions .btn {
-  min-height: 43px;
-  border-radius: 11px !important;
-  padding: .62rem 1.1rem !important;
-  font-size: .84rem !important;
-  font-weight: 800 !important;
+  min-height:46px;
+  border-radius:999px !important;
+  padding:.7rem 1.45rem !important;
+  font-size:.88rem !important;
+  font-weight:800 !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.12);
 }
-.home-v2-page .hero-actions .btn::after { display: none !important; content: none !important; }
 
+/* Productos comerciales del hero: presentes, pero no compiten con Rosario */
 .home-v2-page .hero-visual {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .65rem !important;
-  align-items: stretch;
-  max-width: 620px;
-  margin-left: auto;
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:.65rem !important;
+  align-items:end;
+  width:min(100%,590px);
+  margin-left:auto;
+  align-self:end;
+  margin-bottom:1.1rem;
 }
 .home-v2-page .hero-card,
 .home-v2-page .hero-card:first-child,
 .home-v2-page .hero-card:nth-child(2),
 .home-v2-page .hero-card:nth-child(3) {
-  transform: none !important;
-  min-width: 0;
-  border-radius: 13px !important;
-  overflow: hidden;
-  background: rgba(10,20,32,.80) !important;
-  border: 1px solid rgba(255,255,255,.12) !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,.16) !important;
+  position:relative;
+  transform:none !important;
+  min-width:0;
+  overflow:hidden;
+  border-radius:16px !important;
+  background:rgba(7,27,44,.82) !important;
+  border:1px solid rgba(255,255,255,.22) !important;
+  box-shadow:0 14px 35px rgba(0,0,0,.22) !important;
+  backdrop-filter:blur(10px);
 }
-.home-v2-page .hero-card img,
-.home-v2-page .hero-card:first-child img {
-  width: 100%;
-  height: 102px !important;
-  object-fit: cover;
+.home-v2-page .hero-card img,.home-v2-page .hero-card:first-child img {
+  width:100%; height:112px !important; object-fit:cover;
 }
-.home-v2-page .hero-card-body { padding: .56rem .62rem .62rem !important; }
-.home-v2-page .hero-card-name { font-size: .68rem !important; }
-.home-v2-page .hero-card-price { font-size: .82rem !important; }
-.home-v2-page .hero-card-stars { margin-top: .2rem; }
-.home-v2-page .hero-card-visit { font-size: .6rem !important; padding: .26rem .42rem !important; }
+.home-v2-page .hero-card-body { padding:.62rem .7rem .7rem !important; }
+.home-v2-page .hero-card-name { font-size:.72rem !important; color:#fff !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.home-v2-page .hero-card-stars { margin-top:.18rem; }
+.home-v2-page .hero-card-rating-text { color:rgba(255,255,255,.68) !important; }
+.home-v2-page .hero-card-price { font-size:.9rem !important; color:#ff7417 !important; font-weight:900; }
+.home-v2-page .hero-card-visit { font-size:.62rem !important; padding:.28rem .48rem !important; border-radius:8px; }
 
+/* NEGOCIOS CERCA — panel ancho, sin desbordes */
 .home-v2-page #negocios-cerca {
-  width: min(1420px, calc(100% - 1.25rem));
-  max-width: none !important;
-  margin: 1.25rem auto 0 !important;
-  padding: 1.6rem clamp(.9rem, 2.5vw, 1.7rem) !important;
-  background: #fff;
-  border: 1px solid rgba(15,23,42,.08);
-  border-radius: 20px;
-  box-shadow: 0 10px 28px rgba(15,23,42,.06);
-  overflow: hidden;
+  position:relative;
+  z-index:4;
+  width:min(1540px,calc(100% - 3rem));
+  max-width:none !important;
+  margin:-2.15rem auto 1.4rem !important;
+  padding:1.25rem 1.35rem 1.4rem !important;
+  background:rgba(255,255,255,.98);
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:22px;
+  box-shadow:0 18px 50px rgba(15,23,42,.13);
+  overflow:hidden;
 }
 .home-v2-page .nearby-section-header {
-  display: flex !important;
-  justify-content: space-between;
-  align-items: flex-start !important;
-  gap: .9rem;
-  flex-wrap: wrap;
-  min-width: 0;
+  display:flex !important;
+  justify-content:space-between;
+  align-items:center !important;
+  gap:1rem;
+  flex-wrap:wrap;
+  min-width:0;
 }
-.home-v2-page .nearby-section-header-text { flex: 1 1 320px; min-width: 0 !important; }
-.home-v2-page .nearby-radius-group { display: flex !important; gap: .4rem !important; flex-wrap: wrap !important; max-width: 100%; }
-.home-v2-page .nearby-radius-group > .nearby-radius-btn:nth-of-type(4) { display: none !important; }
+.home-v2-page .nearby-section-header-text { flex:1 1 320px; min-width:0 !important; }
+.home-v2-page #negocios-cerca .section-title { font-size:clamp(1.35rem,2vw,1.8rem); }
+.home-v2-page .nearby-radius-group { display:flex !important; gap:.45rem !important; flex-wrap:wrap !important; max-width:100%; }
+.home-v2-page .nearby-radius-btn { border-radius:999px !important; min-width:64px; }
 .home-v2-page .nearby-home-list {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
-  gap: .75rem !important;
-  width: 100%;
-  overflow: visible !important;
-  padding: .2rem 0 0 !important;
+  display:grid !important;
+  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  gap:.8rem !important;
+  width:100%;
+  overflow:visible !important;
+  padding:.65rem 0 0 !important;
 }
-.home-v2-page .nearby-home-card { width: 100% !important; min-width: 0 !important; max-width: none !important; }
-
-.home-v2-page .section { width: min(1280px, 100%); box-sizing: border-box; }
-.home-v2-page .banner { max-width: 1232px; margin: 1rem auto 4rem !important; }
-
-@media (max-width: 1050px) {
-  .home-v2-page .hero-inner { grid-template-columns: 1fr; }
-  .home-v2-page .hero-visual { max-width: 100%; margin: .5rem 0 0; }
+.home-v2-page .nearby-home-card {
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  border-radius:14px !important;
+  box-shadow:0 5px 16px rgba(15,23,42,.06);
 }
 
-@media (max-width: 620px) {
+.home-v2-page .section { width:min(1380px,calc(100% - 2rem)); box-sizing:border-box; }
+.home-v2-page .banner { max-width:1340px; margin:1rem auto 4rem !important; }
+
+@media (max-width:1250px) {
+  .home-v2-page .hero-inner { grid-template-columns:minmax(390px,1fr) minmax(360px,.8fr); }
+  .home-v2-page .nearby-home-list { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+}
+
+@media (max-width:900px) {
+  .home-v2-page .hero { min-height:auto; background-position:58% center !important; }
+  .home-v2-page .hero-inner {
+    min-height:650px;
+    width:calc(100% - 2rem);
+    grid-template-columns:1fr;
+    align-content:end;
+    gap:1.5rem !important;
+    padding:6rem 0 4.4rem !important;
+  }
+  .home-v2-page .hero-inner > div:first-child { max-width:650px; }
+  .home-v2-page .hero-visual { width:100%; max-width:650px; margin:0; }
+}
+
+@media (max-width:620px) {
   .home-v2-page .hero {
-    width: calc(100% - .5rem);
-    padding: 1.45rem .9rem 1.8rem !important;
-    border-radius: 16px;
+    min-height:680px;
     background:
-      linear-gradient(to bottom, rgba(5,16,29,.98) 0%, rgba(5,16,29,.90) 44%, rgba(5,16,29,.44) 74%, rgba(5,16,29,.16) 100%),
-      url('/assets/monumento-hero.png') 60% center / cover no-repeat !important;
+      linear-gradient(180deg,rgba(5,24,40,.18) 0%,rgba(5,24,40,.20) 30%,rgba(5,24,40,.80) 61%,rgba(5,24,40,.98) 100%),
+      url('/assets/monumento-hero.png') 56% top / auto 70% no-repeat,
+      #071f34 !important;
   }
-  .home-v2-page .hero h1::after { font-size: clamp(2rem, 10.5vw, 2.9rem) !important; }
-  .home-v2-page .hero-desc { font-size: .9rem !important; }
-  .home-v2-page .hero-actions .btn { flex: 1 1 100%; justify-content: center; }
+  .home-v2-page .hero-inner {
+    width:calc(100% - 1.5rem);
+    min-height:680px;
+    padding:15rem 0 3.6rem !important;
+    align-content:end;
+  }
+  .home-v2-page .hero h1::before { font-size:clamp(2.55rem,13vw,3.65rem) !important; }
+  .home-v2-page .hero h1::after { font-size:clamp(2.4rem,12vw,3.45rem) !important; }
+  .home-v2-page .hero-desc { font-size:.92rem !important; line-height:1.5; }
+  .home-v2-page .hero-actions .btn { flex:1 1 auto; justify-content:center; }
+  .home-v2-page .hero::after { right:.8rem; bottom:.65rem; font-size:.45rem; letter-spacing:.10em; }
   .home-v2-page .hero-visual {
-    display: flex !important;
-    overflow-x: auto !important;
-    gap: .6rem !important;
-    scroll-snap-type: x mandatory;
-    padding-bottom: .25rem;
+    display:flex !important;
+    overflow-x:auto !important;
+    gap:.55rem !important;
+    scroll-snap-type:x mandatory;
+    scrollbar-width:none;
+    padding-bottom:.2rem;
   }
-  .home-v2-page .hero-card,
-  .home-v2-page .hero-card:first-child {
-    flex: 0 0 58vw;
-    max-width: 195px;
-    scroll-snap-align: start;
+  .home-v2-page .hero-visual::-webkit-scrollbar { display:none; }
+  .home-v2-page .hero-card,.home-v2-page .hero-card:first-child {
+    flex:0 0 43vw;
+    max-width:170px;
+    scroll-snap-align:start;
   }
-  .home-v2-page .hero-card img,
-  .home-v2-page .hero-card:first-child img { height: 98px !important; }
-  .home-v2-page #negocios-cerca { width: calc(100% - .5rem); padding: 1.15rem .85rem !important; border-radius: 16px; }
-  .home-v2-page .nearby-section-header { display: block !important; }
-  .home-v2-page .nearby-radius-group { margin-top: .65rem; }
-  .home-v2-page .nearby-home-list { grid-template-columns: 1fr !important; }
+  .home-v2-page .hero-card img,.home-v2-page .hero-card:first-child img { height:82px !important; }
+  .home-v2-page #negocios-cerca {
+    width:calc(100% - 1rem);
+    margin:-1.5rem auto 1rem !important;
+    padding:1.05rem .8rem 1.1rem !important;
+    border-radius:18px;
+  }
+  .home-v2-page .nearby-section-header { display:block !important; }
+  .home-v2-page .nearby-radius-group { margin-top:.7rem; }
+  .home-v2-page .nearby-home-list { grid-template-columns:1fr !important; gap:.55rem !important; }
+  .home-v2-page .section { width:calc(100% - 1rem); }
 }
