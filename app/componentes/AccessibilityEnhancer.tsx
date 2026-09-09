@@ -3,10 +3,6 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-/**
- * Mejora progresiva para controles heredados que todavía están renderizados
- * como div clickeables. No cambia su lógica ni su aspecto.
- */
 export default function AccessibilityEnhancer() {
   const pathname = usePathname();
 
