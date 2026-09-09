@@ -27,7 +27,6 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Carga: nunca deja un bloque blanco vacío */
 .affiliate-loading {
   width: min(720px, calc(100% - 24px));
   min-height: 240px;
@@ -53,7 +52,6 @@
 }
 @keyframes affiliate-spin { to { transform: rotate(360deg); } }
 
-/* Cabecera con identidad de la Home/Nosotros */
 .affiliate-hero {
   position: relative;
   overflow: hidden;
@@ -112,7 +110,6 @@
   line-height: 1.6;
 }
 
-/* Tarjetas */
 .affiliate-card {
   padding: clamp(20px, 3vw, 30px);
   border: 1px solid var(--afl-line);
@@ -130,7 +127,6 @@
   letter-spacing: .1em;
 }
 
-/* Error visible y útil: no parece una tarjeta vacía */
 .affiliate-error-card {
   position: relative;
   overflow: hidden;
@@ -168,7 +164,119 @@
   font-weight: 650;
 }
 
-/* Beneficios */
+/* Fallback real del panel: siempre visible aun cuando no llegan datos */
+.affiliate-page-fallback {
+  min-height: 620px;
+}
+
+.affiliate-fallback-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px;
+  border-radius: 18px;
+  background: var(--afl-navy);
+  box-shadow: 0 12px 30px rgba(13,23,40,.13);
+}
+
+.affiliate-fallback-tab {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: rgba(255,255,255,.76);
+  font-size: .82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.affiliate-fallback-tab.is-active {
+  background: var(--afl-orange);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(249,115,22,.22);
+}
+
+.affiliate-empty-panel {
+  min-height: 290px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 18px 20px;
+  border-color: #dfe4ea;
+  background:
+    radial-gradient(circle at 94% 6%, rgba(249,115,22,.10), transparent 28%),
+    linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+}
+
+.affiliate-empty-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--afl-orange-soft);
+  color: var(--afl-orange-dark);
+  border: 1px solid rgba(249,115,22,.18);
+}
+
+.affiliate-empty-copy {
+  min-width: 0;
+}
+
+.affiliate-empty-kicker {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--afl-orange-dark);
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.affiliate-empty-copy h2 {
+  margin: 0 0 8px;
+  color: var(--afl-navy);
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  line-height: 1.15;
+}
+
+.affiliate-empty-copy p {
+  margin: 0;
+  max-width: 680px;
+  color: var(--afl-muted);
+  font-size: .92rem;
+  line-height: 1.6;
+}
+
+.affiliate-soft-warning {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.affiliate-soft-warning svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.affiliate-empty-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
 .affiliate-benefits {
   display: grid;
   gap: 10px;
@@ -198,7 +306,6 @@
   line-height: 1.55;
 }
 
-/* Términos */
 .affiliate-terms-link {
   display: inline-flex;
   align-items: center;
@@ -229,7 +336,6 @@
 }
 .affiliate-error-text { margin:0 0 12px; color:var(--afl-danger); font-size:.84rem; font-weight:700; }
 
-/* Botones */
 .affiliate-btn {
   min-height: 44px;
   display:inline-flex;
@@ -253,7 +359,6 @@
 .affiliate-error-card .affiliate-btn-outline { background:var(--afl-orange); color:#fff; border-color:var(--afl-orange); }
 .affiliate-error-card .affiliate-btn-outline:hover { background:var(--afl-orange-dark); }
 
-/* Formularios */
 .affiliate-form { display:flex; flex-direction:column; gap:15px; }
 .affiliate-field { display:flex; flex-direction:column; gap:6px; }
 .affiliate-field-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -287,4 +392,24 @@
   .affiliate-error-card { min-height:230px; padding:24px 20px !important; }
   .affiliate-field-grid { grid-template-columns:1fr; }
   .affiliate-btn { width:100%; }
+
+  .affiliate-fallback-tabs {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .affiliate-empty-panel {
+    min-height: 320px;
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .affiliate-empty-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .affiliate-soft-warning,
+  .affiliate-empty-actions {
+    grid-column: 1;
+  }
 }
