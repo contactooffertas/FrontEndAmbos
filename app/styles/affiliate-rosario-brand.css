@@ -1,5 +1,5 @@
 /* Rosario Market — identidad de dashboards de Afiliados
-   Solo clases affbuyer/affseller. No modifica otras secciones del sitio. */
+   Solo clases affbuyer/affseller y estados propios del módulo. */
 
 :root {
   --rm-aff-navy:#17243a;
@@ -21,7 +21,6 @@
   background:linear-gradient(180deg,#f9fbfd 0%,#f4f7fa 100%) !important;
 }
 
-/* Perfil: deja de verse como bloque blanco genérico */
 .affbuyer-profile-card,
 .affseller-profile-card {
   background:
@@ -48,7 +47,6 @@
   color:var(--rm-aff-navy) !important;
 }
 
-/* Tabs = mismo lenguaje de la barra oscura de la web */
 .affbuyer-tabs,
 .affseller-tabs {
   background:var(--rm-aff-navy) !important;
@@ -79,7 +77,6 @@
   border-color:rgba(249,115,22,.22) !important;
 }
 
-/* Paneles y tarjetas: blanco con estructura, no "todo blanco" */
 .affbuyer-panel,
 .affseller-panel,
 .affbuyer-carnet,
@@ -123,19 +120,14 @@
   box-shadow:0 14px 34px rgba(13,23,40,.10) !important;
 }
 
-.affbuyer-subtabs {
-  background:#eef2f6 !important;
-}
-.affbuyer-subtab {
-  color:var(--rm-aff-muted) !important;
-}
+.affbuyer-subtabs { background:#eef2f6 !important; }
+.affbuyer-subtab { color:var(--rm-aff-muted) !important; }
 .affbuyer-subtab-active {
   background:#fff !important;
   color:var(--rm-aff-navy) !important;
   box-shadow:0 3px 10px rgba(13,23,40,.07) !important;
 }
 
-/* Formularios */
 .affbuyer-dashboard input,
 .affbuyer-dashboard select,
 .affbuyer-dashboard textarea,
@@ -165,7 +157,6 @@
   box-shadow:0 0 0 3px rgba(249,115,22,.12) !important;
 }
 
-/* Acciones */
 .affbuyer-save-btn,
 .affbuyer-view-store-btn,
 .affbuyer-apply-btn,
@@ -207,7 +198,6 @@
 .affbuyer-search svg,
 .affseller-search svg { color:var(--rm-aff-orange) !important; }
 
-/* Estados vacíos y errores visibles */
 .affbuyer-empty,
 .affseller-empty {
   background:linear-gradient(180deg,#fff,#f8fafc) !important;
@@ -222,6 +212,100 @@
   color:#b42318 !important;
 }
 
+/* Fallback del panel: si la API no responde, el módulo sigue pareciendo panel. */
+.affiliate-page-fallback {
+  width:min(980px,calc(100% - 24px));
+  max-width:980px !important;
+}
+
+.affiliate-fallback-tabs {
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding:7px;
+  border-radius:16px;
+  background:var(--rm-aff-navy);
+  box-shadow:0 10px 28px rgba(13,23,40,.14);
+}
+.affiliate-fallback-tabs::-webkit-scrollbar { display:none; }
+
+.affiliate-fallback-tab {
+  flex:0 0 auto;
+  padding:10px 14px;
+  border-radius:11px;
+  color:rgba(255,255,255,.72);
+  font-size:.82rem;
+  font-weight:750;
+}
+.affiliate-fallback-tab.is-active {
+  background:var(--rm-aff-orange);
+  color:#fff;
+}
+
+.affiliate-empty-panel {
+  display:grid;
+  grid-template-columns:56px 1fr;
+  gap:16px;
+  align-items:start;
+  padding:26px !important;
+  border:1px solid var(--rm-aff-line) !important;
+  background:linear-gradient(180deg,#fff,#f8fafc) !important;
+  box-shadow:var(--rm-aff-shadow) !important;
+}
+
+.affiliate-empty-icon {
+  display:grid;
+  place-items:center;
+  width:56px;
+  height:56px;
+  border-radius:17px;
+  background:var(--rm-aff-orange-soft);
+  color:var(--rm-aff-orange-dark);
+}
+
+.affiliate-empty-copy h2 {
+  margin:4px 0 7px;
+  color:var(--rm-aff-navy);
+  font-size:clamp(1.15rem,3vw,1.45rem);
+}
+.affiliate-empty-copy p {
+  margin:0;
+  max-width:680px;
+  color:var(--rm-aff-muted);
+  line-height:1.6;
+}
+.affiliate-empty-kicker {
+  color:var(--rm-aff-orange-dark);
+  font-size:.7rem;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+
+.affiliate-soft-warning {
+  grid-column:1/-1;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:11px 13px;
+  border:1px solid #fed7c3;
+  border-radius:12px;
+  background:#fff7f2;
+  color:#9a3412;
+  font-size:.82rem;
+  line-height:1.45;
+}
+
+.affiliate-empty-actions {
+  grid-column:1/-1;
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  padding-top:3px;
+}
+.affiliate-empty-actions a { text-decoration:none; }
+
 @media (max-width:760px) {
   .affbuyer-tabs,
   .affseller-tabs { border-radius:14px !important; }
@@ -232,4 +316,14 @@
   .affseller-panel {
     box-shadow:0 7px 20px rgba(13,23,40,.06) !important;
   }
+
+  .affiliate-page-fallback { width:calc(100% - 16px); }
+  .affiliate-empty-panel {
+    grid-template-columns:1fr;
+    padding:20px 16px !important;
+  }
+  .affiliate-empty-icon { width:48px;height:48px;border-radius:14px; }
+  .affiliate-soft-warning,
+  .affiliate-empty-actions { grid-column:1; }
+  .affiliate-empty-actions .affiliate-btn { width:100%; }
 }
