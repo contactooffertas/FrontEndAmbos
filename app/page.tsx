@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HomeContent from "./componentes/HomeContent";
+import "./styles/home-v2.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 const SITE = "https://www.rosariomarket.com.ar";
@@ -97,6 +98,11 @@ export default async function Page() {
     inLanguage: "es-AR",
     description:
       "Marketplace local para descubrir negocios, productos y ofertas de Rosario, Santa Fe.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE}/?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
   };
 
   const organizationJsonLd = {
@@ -104,6 +110,7 @@ export default async function Page() {
     "@type": "Organization",
     name: "Rosario Market",
     url: `${SITE}/`,
+    logo: `${SITE}/assets/offerton.png`,
     areaServed: {
       "@type": "City",
       name: "Rosario",
@@ -115,7 +122,7 @@ export default async function Page() {
   };
 
   return (
-    <>
+    <div className="home-v2-page">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
@@ -129,6 +136,6 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
       <HomeContent />
-    </>
+    </div>
   );
 }
