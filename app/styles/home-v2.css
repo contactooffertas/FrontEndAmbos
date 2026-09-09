@@ -199,20 +199,32 @@
   .home-v2-page .hero-visual { width:100%; max-width:650px; margin:0; }
 }
 
+@keyframes rosarioHeroRiseMobile {
+  from { opacity:0; transform:translateY(24px); filter:blur(2px); }
+  to { opacity:1; transform:translateY(0); filter:blur(0); }
+}
+
 @media (max-width:620px) {
   .home-v2-page .hero {
     min-height:680px;
     background:
-      linear-gradient(180deg,rgba(5,24,40,.18) 0%,rgba(5,24,40,.20) 30%,rgba(5,24,40,.80) 61%,rgba(5,24,40,.98) 100%),
+      linear-gradient(180deg,rgba(5,24,40,.12) 0%,rgba(5,24,40,.14) 31%,rgba(5,24,40,.64) 60%,rgba(5,24,40,.96) 100%),
       url('/assets/monumento-hero.png') 56% top / auto 70% no-repeat,
       #071f34 !important;
   }
   .home-v2-page .hero-inner {
     width:calc(100% - 1.5rem);
     min-height:680px;
-    padding:15rem 0 3.6rem !important;
-    align-content:end;
+    padding:2.8rem 0 3.6rem !important;
+    align-content:stretch;
+    grid-template-rows:auto 1fr auto;
   }
+  .home-v2-page .hero-inner > div:first-child {
+    align-self:start;
+    max-width:100%;
+    animation:rosarioHeroRiseMobile .72s cubic-bezier(.22,1,.36,1) both;
+  }
+  .home-v2-page .hero h1 { margin-bottom:.95rem !important; }
   .home-v2-page .hero h1::before { font-size:clamp(2.55rem,13vw,3.65rem) !important; }
   .home-v2-page .hero h1::after { font-size:clamp(2.4rem,12vw,3.45rem) !important; }
   .home-v2-page .hero-desc { font-size:.92rem !important; line-height:1.5; }
@@ -225,6 +237,8 @@
     scroll-snap-type:x mandatory;
     scrollbar-width:none;
     padding-bottom:.2rem;
+    align-self:end;
+    margin-top:auto;
   }
   .home-v2-page .hero-visual::-webkit-scrollbar { display:none; }
   .home-v2-page .hero-card,.home-v2-page .hero-card:first-child {
@@ -243,4 +257,8 @@
   .home-v2-page .nearby-radius-group { margin-top:.7rem; }
   .home-v2-page .nearby-home-list { grid-template-columns:1fr !important; gap:.55rem !important; }
   .home-v2-page .section { width:calc(100% - 1rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-page .hero-inner > div:first-child { animation:none !important; }
 }
