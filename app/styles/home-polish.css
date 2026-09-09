@@ -12,9 +12,9 @@
   background-image:
     linear-gradient(90deg, rgba(7,18,32,.98) 0%, rgba(7,18,32,.94) 38%, rgba(7,18,32,.78) 62%, rgba(7,18,32,.84) 100%),
     linear-gradient(0deg, rgba(7,18,32,.62), rgba(7,18,32,.62)),
-    url("https://upload.wikimedia.org/wikipedia/commons/d/d0/Monumento_de_Rosario_a_la_bandera_visto_desde_arriba.JPG") !important;
+    url("https://upload.wikimedia.org/wikipedia/commons/8/86/Monumento_a_la_Bandera_finalizado.jpg") !important;
   background-size: cover !important;
-  background-position: center 45% !important;
+  background-position: center 42% !important;
   background-repeat: no-repeat !important;
 }
 
@@ -49,18 +49,9 @@
   display: block !important;
 }
 
-/* Los cards rotativos antiguos no pertenecen al nuevo hero. Los productos
-   siguen estando en la sección real de ofertas debajo. */
-.hero-visual {
-  display: none !important;
-}
+.hero-visual { display: none !important; }
+.hero-tag { display: none !important; }
 
-.hero-tag {
-  display: none !important;
-}
-
-/* Reutilizamos el H1 existente pero cambiamos su presentación sin tocar
-   la lógica de HomeContent. */
 .hero h1 {
   max-width: 700px;
   margin: 0 0 1.15rem !important;
@@ -118,12 +109,8 @@
   font-weight: 800 !important;
   padding: .72rem 1.4rem !important;
 }
+.hero-actions .btn-primary { box-shadow: 0 8px 24px rgba(249,115,22,.25); }
 
-.hero-actions .btn-primary {
-  box-shadow: 0 8px 24px rgba(249,115,22,.25);
-}
-
-/* Beneficios locales, alineados con la interfaz nueva. */
 .hero-inner::after {
   content: "⌖  Negocios cerca tuyo     ·     ▣  Productos reales de Rosario     ·     ♡  Apoyá el comercio local";
   display: block;
@@ -142,22 +129,10 @@
   white-space: normal;
 }
 
-/* La transición hacia el contenido ya no deja un vacío enorme. */
-.hero + .section {
-  padding-top: 2.2rem !important;
-}
-
-.section {
-  width: 100%;
-}
-
-#offers .section-header {
-  margin-bottom: 1.2rem;
-}
-
-#offers .section-title {
-  letter-spacing: -.025em;
-}
+.hero + .section { padding-top: 2.2rem !important; }
+.section { width: 100%; }
+#offers .section-header { margin-bottom: 1.2rem; }
+#offers .section-title { letter-spacing: -.025em; }
 
 .nearby-home-card {
   border-radius: 15px !important;
@@ -170,38 +145,20 @@
   border-color: rgba(249,115,22,.22) !important;
   box-shadow: 0 10px 24px rgba(15,23,42,.08);
 }
-
-.nearby-radius-btn {
-  border-radius: 999px !important;
-  font-weight: 650 !important;
-}
-.nearby-radius-btn.active {
-  box-shadow: 0 4px 12px rgba(249,115,22,.16);
-}
-
-.category-card {
-  border-radius: 15px !important;
-  border-width: 1px !important;
-  box-shadow: 0 4px 16px rgba(15,23,42,.035);
-}
-
-.banner {
-  box-shadow: 0 14px 35px rgba(194,65,12,.15);
-}
+.nearby-radius-btn { border-radius: 999px !important; font-weight: 650 !important; }
+.nearby-radius-btn.active { box-shadow: 0 4px 12px rgba(249,115,22,.16); }
+.category-card { border-radius: 15px !important; border-width: 1px !important; box-shadow: 0 4px 16px rgba(15,23,42,.035); }
+.banner { box-shadow: 0 14px 35px rgba(194,65,12,.15); }
 
 @media (max-width: 900px) {
   .hero {
     padding: 2.5rem 1.1rem 3.1rem !important;
-    background-position: 58% center !important;
+    background-position: center 38% !important;
   }
-
   .hero h1 { max-width: 650px; }
   .hero h1::before,
   .hero h1 em::before,
-  .hero h1::after {
-    font-size: clamp(2.55rem, 8vw, 4.35rem);
-  }
-
+  .hero h1::after { font-size: clamp(2.55rem, 8vw, 4.35rem); }
   .hero-desc { max-width: 570px !important; }
 }
 
@@ -211,8 +168,8 @@
     background-image:
       linear-gradient(90deg, rgba(7,18,32,.97) 0%, rgba(7,18,32,.91) 56%, rgba(7,18,32,.78) 100%),
       linear-gradient(0deg, rgba(7,18,32,.58), rgba(7,18,32,.58)),
-      url("https://upload.wikimedia.org/wikipedia/commons/d/d0/Monumento_de_Rosario_a_la_bandera_visto_desde_arriba.JPG") !important;
-    background-position: 62% center !important;
+      url("https://upload.wikimedia.org/wikipedia/commons/8/86/Monumento_a_la_Bandera_finalizado.jpg") !important;
+    background-position: center 32% !important;
   }
 
   .hero::after {
@@ -223,10 +180,7 @@
     opacity: .85;
   }
 
-  .hero h1 {
-    margin-bottom: .9rem !important;
-  }
-
+  .hero h1 { margin-bottom: .9rem !important; }
   .hero h1::before,
   .hero h1 em::before,
   .hero h1::after {
@@ -234,15 +188,8 @@
     line-height: 1;
   }
 
-  .hero-desc::before {
-    font-size: .9rem;
-    line-height: 1.55;
-  }
-
-  .hero-actions {
-    gap: .55rem !important;
-  }
-
+  .hero-desc::before { font-size: .9rem; line-height: 1.55; }
+  .hero-actions { gap: .55rem !important; }
   .hero-actions .btn {
     min-height: 43px;
     padding: .62rem 1rem !important;
@@ -257,25 +204,13 @@
     line-height: 1.55;
   }
 
-  .hero + .section {
-    padding-top: 1.5rem !important;
-  }
-
-  .section {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
+  .hero + .section { padding-top: 1.5rem !important; }
+  .section { padding-left: 1rem !important; padding-right: 1rem !important; }
 }
 
 @media (max-width: 390px) {
   .hero h1::before,
   .hero h1 em::before,
-  .hero h1::after {
-    font-size: clamp(2rem, 11.3vw, 2.75rem);
-  }
-
-  .hero-actions .btn {
-    width: 100%;
-    justify-content: center;
-  }
+  .hero h1::after { font-size: clamp(2rem, 11.3vw, 2.75rem); }
+  .hero-actions .btn { width: 100%; justify-content: center; }
 }
