@@ -4,7 +4,6 @@ import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
 import './styles/home-polish.css';
 import './styles/product-card-polish.css';
-import './styles/rosario-home.css';
 
 const SITE = 'https://www.rosariomarket.com.ar';
 
@@ -29,74 +28,39 @@ export const metadata: Metadata = {
     'negocios cerca mío',
     'Santa Fe',
   ],
-  alternates: {
-    canonical: '/',
-  },
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'Rosario Market | Negocios y productos cerca tuyo',
-    description:
-      'Descubrí negocios, productos y ofertas de Rosario. Explorá comercios locales y encontrá opciones cerca tuyo.',
+    description: 'Descubrí negocios, productos y ofertas de Rosario. Explorá comercios locales y encontrá opciones cerca tuyo.',
     url: SITE,
     siteName: 'Rosario Market',
     locale: 'es_AR',
     type: 'website',
-    images: [
-      {
-        url: '/assets/offerton.png',
-        width: 512,
-        height: 512,
-        alt: 'Rosario Market',
-      },
-    ],
+    images: [{ url: '/assets/offerton.png', width: 512, height: 512, alt: 'Rosario Market' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Rosario Market | Negocios y productos en Rosario',
-    description:
-      'Encontrá negocios, productos y ofertas de Rosario cerca tuyo.',
+    title: 'Rosario Market | Negocios y productos cerca tuyo',
+    description: 'Descubrí negocios, productos y ofertas de Rosario.',
     images: ['/assets/offerton.png'],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  viewportFit: 'cover',
   themeColor: '#f97316',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es-AR">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fraunces:wght@700;900&display=swap"
-          rel="stylesheet"
-        />
-
-        <link rel="icon" href="/assets/ofertas.webp" type="image/webp" />
-        <link rel="shortcut icon" href="/assets/ofertas.webp" type="image/webp" />
-
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Rosario Market" />
-        <link rel="apple-touch-icon" href="/assets/ofertas.webp" />
-
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#f97316" />
-        <meta name="msapplication-navbutton-color" content="#f97316" />
-        <meta name="format-detection" content="telephone=no" />
-      </head>
+    <html lang="es">
       <body>
-        <PWAManifestUpdater />
-        <Providers>{children}</Providers>
+        <Providers>
+          <PWAManifestUpdater />
+          {children}
+        </Providers>
       </body>
     </html>
   );
