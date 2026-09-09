@@ -1,0 +1,194 @@
+/* Pulido de tarjetas de producto.
+   Solo modifica presentación: no cambia carrito, navegación, favoritos ni reportes. */
+
+.product-card {
+  border-radius: 18px;
+  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
+}
+
+.product-image-wrap {
+  background: #f4f4f5;
+}
+
+.product-image-wrap img {
+  aspect-ratio: 4 / 3;
+  height: auto;
+  min-height: 180px;
+  max-height: 250px;
+  object-fit: cover;
+}
+
+.product-body {
+  padding: 0.9rem 1rem 0.8rem;
+}
+
+.product-business {
+  font-size: 0.69rem;
+  line-height: 1.35;
+  letter-spacing: 0.045em;
+}
+
+.product-name {
+  margin-top: 0.45rem;
+  font-size: 0.98rem;
+  font-weight: 750;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.product-prices {
+  margin-top: 0.65rem;
+}
+
+.product-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.product-card-footer {
+  padding: 0.72rem 0.9rem 0.85rem;
+  border-top-color: rgba(15, 23, 42, 0.07);
+}
+
+.product-card-footer > .btn.btn-primary {
+  min-height: 44px;
+  border-radius: 11px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  box-shadow: 0 5px 14px rgba(249, 115, 22, 0.18);
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+.product-card-footer > .btn.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.25);
+}
+
+.product-secondary-btn {
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-color: rgba(8, 145, 178, 0.28);
+  background: rgba(8, 145, 178, 0.05);
+  box-shadow: none;
+}
+
+.product-secondary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(8, 145, 178, 0.10);
+}
+
+.product-fav-btn {
+  width: 35px;
+  height: 35px;
+  background: rgba(255,255,255,0.94);
+  border-color: rgba(249,115,22,0.24);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.10);
+}
+
+@media (max-width: 700px) {
+  .products-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    width: 100%;
+  }
+
+  .product-card {
+    width: 100%;
+    max-width: 430px;
+    justify-self: center;
+    border-radius: 16px;
+  }
+
+  .product-image-wrap img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    height: auto !important;
+    min-height: 0;
+    max-height: 260px;
+  }
+
+  .product-body {
+    padding: 0.78rem 0.85rem 0.68rem;
+  }
+
+  .product-business {
+    font-size: 0.64rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .product-name {
+    font-size: 0.94rem;
+    margin-top: 0.35rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .product-price {
+    font-size: 1.16rem;
+  }
+
+  .product-card-footer {
+    padding: 0.65rem 0.75rem 0.75rem !important;
+    gap: 0.42rem !important;
+  }
+
+  .product-card-footer > .btn.btn-primary {
+    min-height: 46px;
+    padding: 0.62rem 0.8rem !important;
+    font-size: 0.82rem;
+    border-radius: 11px;
+  }
+
+  .product-card-footer > div[style*="display: flex"] {
+    gap: 0.4rem !important;
+  }
+
+  .product-secondary-btn {
+    min-height: 40px;
+    padding: 0.48rem 0.65rem;
+    font-size: 0.72rem;
+  }
+
+  /* Ya existe compartir sobre la foto: abajo queda como acción compacta. */
+  .product-card-footer > div .product-secondary-btn:not(.is-flex) {
+    flex: 0 0 42px;
+    width: 42px;
+    padding: 0;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .product-card-footer > div .product-secondary-btn:not(.is-flex) svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .product-fav-btn {
+    top: 0.55rem;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 420px) {
+  .product-card {
+    max-width: none;
+  }
+
+  .product-image-wrap img {
+    aspect-ratio: 4 / 3;
+    max-height: 230px;
+  }
+
+  .product-card-footer > .btn.btn-primary {
+    min-height: 44px;
+  }
+}
