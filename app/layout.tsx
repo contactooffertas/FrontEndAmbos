@@ -3,6 +3,7 @@ import { Providers } from '../app/context/Providers';
 import PWAManifestUpdater from './componentes/PWAManifestUpdater';
 import './globals.css';
 import './styles/product-card-polish.css';
+import './styles/affiliate-flow-polish.css';
 
 const SITE = 'https://www.rosariomarket.com.ar';
 
