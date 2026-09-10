@@ -194,7 +194,7 @@ export default function OrdenesPage() {
       incoming.forEach(id => { if (!prevOrderIds.current.has(id)) isNew.add(id); });
       if (isNew.size > 0 && prevOrderIds.current.size > 0) {
         setNewOrderIds(isNew);
-        if (Notification.permission === "granted") {
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
           new Notification("📦 Nueva orden recibida", {
             body: `Tenés ${isNew.size} pedido${isNew.size > 1 ? "s" : ""} nuevo${isNew.size > 1 ? "s" : ""}`,
           });
@@ -208,7 +208,9 @@ export default function OrdenesPage() {
 
   useEffect(() => {
     if (!user) return;
-    if (Notification.permission === "default") Notification.requestPermission();
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
     fetchOrders();
     const interval = setInterval(() => fetchOrders(true), 15000);
     return () => clearInterval(interval);
