@@ -22,7 +22,7 @@ const NAV_CATEGORIES = [
   { id:"10",name:"Mascotas",iconName:"PawPrint",slug:"mascotas" },
 ];
 
-const API="https://new-backend-lovat.vercel.app/api";
+// Navbar validado para Turbopack: no usar escapes \\n literales entre declaraciones.\nconst API="https://new-backend-lovat.vercel.app/api";
 type Notice={id:string;title:string;body:string;url?:string;kind?:"announcement"|"chat"};
 
 export default function Navbar(){
