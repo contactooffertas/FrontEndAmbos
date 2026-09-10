@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Download, RefreshCw } from "lucide-react";
+import { useTracking } from "../context/TrackingContext";
 
 type AppVersion = { version: string; versionCode: number; apkUrl: string; label?: string };
 const FALLBACK_APK = "https://github.com/contactooffertas/FrontEndAmbos/releases/download/android-v3.0.0/Rosario-Market-3.0.apk";
@@ -36,6 +37,7 @@ function removeLegacyInstallButtons() {
 }
 
 export default function AndroidDownloadButton() {
+  const { track } = useTracking();
   const [target, setTarget] = useState<Element | null>(null);
   const [latest, setLatest] = useState<AppVersion | null>(null);
   const [ua, setUa] = useState("");
@@ -76,6 +78,7 @@ export default function AndroidDownloadButton() {
       download={isUpdate ? undefined : "Rosario-Market-3.0.apk"}
       aria-label={isUpdate ? "Actualizar Rosario Market" : "Descargar Rosario Market para Android"}
       title={isUpdate ? `Actualizar a Rosario Market ${latest?.version}` : "Descargar Rosario Market"}
+      onClick={() => track(isUpdate ? "apk_update" : "apk_download", { version: latest?.version || "3.0.0", source: "navbar" })}
       style={{ order:9999,width:38,height:38,minWidth:38,flex:"0 0 38px",display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.28)",borderRadius:10,color:"#f97316",textDecoration:"none",padding:0,boxSizing:"border-box" }}
     >
       {isUpdate ? <RefreshCw size={18} /> : <Download size={18} />}
