@@ -1,4 +1,4 @@
-name: Build Rosario Market Android 2.0
+name: Build Rosario Market Android 3.0
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,11 +38,21 @@ jobs:
         run: gradle assembleDebug --stacktrace
 
       - name: Rename APK
-        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-2.0.apk
+        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-3.0.apk
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rosario-Market-2.0-APK
-          path: Rosario-Market-2.0.apk
+          name: Rosario-Market-3.0-APK
+          path: Rosario-Market-3.0.apk
           retention-days: 30
+
+      - name: Publish APK for website download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view android-v3.0.0 >/dev/null 2>&1; then
+            gh release upload android-v3.0.0 Rosario-Market-3.0.apk --clobber
+          else
+            gh release create android-v3.0.0 Rosario-Market-3.0.apk --title "Rosario Market 3.0" --notes "Rosario Market Android 3.0"
+          fi
