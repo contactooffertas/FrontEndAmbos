@@ -1,6 +1,7 @@
 // app/context/TrackingContext.tsx
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "./authContext";
 
 type TrackFn = (event: string, props?: Record<string, any>) => void;
@@ -24,6 +25,8 @@ const TrackingContext = createContext<{ track: TrackFn, anonymousId: string }>({
 
 export function TrackingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [anonymousId, setAnonymousId] = useState("");
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const track: TrackFn = (event, props = {}) => {
+  const track: TrackFn = useCallback((event, props = {}) => {
     if (!anonymousId) return;
     const payload = {
       business_id: props.businessId || "global",
@@ -82,7 +85,34 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("track error", e);
     }
-  };
+  }, [anonymousId, user]);
+
+  useEffect(() => {
+    if (!anonymousId || typeof window === "undefined") return;
+    const qs = searchParams?.toString() || "";
+    const params = new URLSearchParams(qs);
+    const startedAt = Date.now();
+    const referrer = document.referrer || "direct";
+    const source = params.get("utm_source") || (referrer === "direct" ? "direct" : referrer);
+    const medium = params.get("utm_medium") || "";
+    const campaign = params.get("utm_campaign") || "";
+    const isAndroidApp = /RosarioMarketAndroid\//i.test(navigator.userAgent || "");
+
+    track("page_enter", {
+      source,
+      referrer,
+      utm_source: params.get("utm_source") || undefined,
+      utm_medium: medium || undefined,
+      utm_campaign: campaign || undefined,
+      landing_path: pathname || "/",
+      platform: isAndroidApp ? "android_app" : "web",
+    });
+
+    return () => {
+      const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+      track("page_leave", { seconds, landing_path: pathname || "/", platform: isAndroidApp ? "android_app" : "web" });
+    };
+  }, [anonymousId, pathname, searchParams, track]);
 
   return (
     <TrackingContext.Provider value={{ track, anonymousId }}>
