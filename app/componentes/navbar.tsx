@@ -83,6 +83,9 @@ export default function Navbar() {
   const [pendingOrders,  setPendingOrders]  = useState(0);
   const [shippedOrders,  setShippedOrders]  = useState(0);
   const [installing,     setInstalling]     = useState(false);
+  const installDialogRef = useRef<HTMLDialogElement>(null);
+  const [installHelp, setInstallHelp] = useState("");
+  useEffect(() => { if (isInstalled) installDialogRef.current?.close(); }, [isInstalled]);
   const [pushNotifs,     setPushNotifs]     = useState<PushNotif[]>([]);
   // ── Toast flotante: SOLO para eventos que llegan en vivo (push/socket),
   //    nunca para lo que ya traemos del historial al montar ─────────────────
@@ -398,23 +401,33 @@ export default function Navbar() {
 
   const handleLogout = () => { logout(); setDropdownOpen(false); router.push("/"); };
 
-  const handleInstall = async () => {
+  const handleInstall = () => {
+    if (installing || isInstalled) return;
+    setInstallHelp("");
+    installDialogRef.current?.showModal();
+  };
+
+  const confirmInstall = async () => {
     if (installing || isInstalled) return;
     if (isIOSDevice) {
-      alert('En Safari, tocá Compartir y luego "Agregar a pantalla de inicio". Si abriste la web desde Instagram o WhatsApp, abrila primero en Safari.');
+      setInstallHelp('En Safari, tocá Compartir, elegí "Agregar a pantalla de inicio" y confirmá con "Agregar". Si estás en Instagram o WhatsApp, abrí primero esta página en Safari.');
       return;
     }
     if (!isInstallable) {
-      alert(/android/i.test(navigator.userAgent)
-        ? 'Abrí Rosario Market en Chrome. En el menú ⋮ buscá "Instalar aplicación" o "Agregar a pantalla de inicio". Si no aparece, la instalación todavía no está disponible en este navegador.'
-        : 'Buscá el ícono de instalación en la barra de direcciones o la opción de instalar en el menú del navegador. Si no aparece, probá con Chrome o Edge. En Safari para Mac, buscá Archivo → Agregar al Dock.');
+      setInstallHelp(/android/i.test(navigator.userAgent)
+        ? 'Abrí esta página en Chrome y tocá el menú ⋮ → "Instalar aplicación" o "Agregar a pantalla de inicio". Si no aparece, este navegador todavía no ofrece la instalación.'
+        : 'Buscá "Instalar" en la barra de direcciones o en el menú de Chrome o Edge. En Safari para Mac: Archivo → Agregar al Dock.');
       return;
     }
     setInstalling(true);
     try {
-      await install();
+      // Keep prompt() in the confirmation click's user activation.
+      const result = install();
+      installDialogRef.current?.close();
+      await result;
     } catch {
-      alert('No se pudo abrir la instalación. Probá desde el menú de tu navegador.');
+      setInstallHelp("No se pudo abrir la instalación. Podés volver a intentarlo desde el botón Instalar o desde el menú del navegador.");
+      installDialogRef.current?.showModal();
     } finally {
       setInstalling(false);
     }
@@ -504,6 +517,26 @@ export default function Navbar() {
 
   return (
     <>
+      <dialog
+        ref={installDialogRef}
+        aria-labelledby="install-app-title"
+        aria-describedby="install-app-description"
+        style={{ margin: "auto", width: "min(420px, calc(100vw - 32px))", maxHeight: "85dvh", overflowY: "auto", padding: 24, border: "1px solid #fed7aa", borderRadius: 20, background: "#fff", color: "#172033", boxShadow: "0 20px 80px #0005" }}
+      >
+        <Smartphone size={32} color="#f97316" aria-hidden="true" />
+        <h2 id="install-app-title" style={{ margin: "14px 0 10px", fontSize: "1.3rem", lineHeight: 1.3 }}>
+          {installHelp ? "Agregá Rosario Market" : "¿Deseás instalar Rosario Market?"}
+        </h2>
+        <p id="install-app-description" aria-live="polite" style={{ lineHeight: 1.6, marginBottom: 20 }}>
+          {installHelp || "Tené Rosario Market a mano desde el ícono de tu pantalla de inicio. Es gratis y no necesitás iniciar sesión."}
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {!installHelp && <button type="button" className="btn btn-primary" onClick={confirmInstall} disabled={installing}>Sí, continuar</button>}
+          <button type="button" className="btn btn-ghost" onClick={() => installDialogRef.current?.close()}>
+            {installHelp ? "Entendido" : "Ahora no"}
+          </button>
+        </div>
+      </dialog>
       <style>{`
         @keyframes slideInRight {
           from { transform: translateX(110%); opacity: 0; }
