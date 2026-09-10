@@ -17,6 +17,26 @@ function compareVersions(a: string, b: string) {
   return 0;
 }
 
+function removeLegacyInstallButtons() {
+  const selectors = [
+    ".btn-pwa-install",
+    "[data-pwa-install]",
+    "[data-install-pwa]",
+    "[aria-label*='instalar' i]",
+    "[title*='instalar' i]",
+  ];
+  document.querySelectorAll(selectors.join(",")).forEach((el) => {
+    if ((el as HTMLElement).id !== "rosario-market-apk-action") el.remove();
+  });
+
+  // Si una versión vieja dejó más de un control APK, conservamos solamente
+  // el control oficial actual, ubicado al final de navbar-actions.
+  const official = document.getElementById("rosario-market-apk-action");
+  document.querySelectorAll("#rosario-market-apk-action").forEach((el, i) => {
+    if (i > 0 && el !== official) el.remove();
+  });
+}
+
 export default function AndroidDownloadButton() {
   const [target, setTarget] = useState<Element | null>(null);
   const [latest, setLatest] = useState<AppVersion | null>(null);
@@ -24,16 +44,19 @@ export default function AndroidDownloadButton() {
 
   useEffect(() => {
     setUa(navigator.userAgent || "");
-
-    // Este componente es el UNICO botón de descarga/actualización.
-    // Se monta siempre al final del navbar (lado derecho), nunca junto al logo.
     const actions = document.querySelector(".navbar-actions");
     setTarget(actions);
+
+    removeLegacyInstallButtons();
+    const observer = new MutationObserver(removeLegacyInstallButtons);
+    observer.observe(document.body, { childList: true, subtree: true });
 
     fetch("/app-version.json", { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setLatest)
       .catch(() => setLatest({ version: "2.0.0", versionCode: 2, apkUrl: FALLBACK_APK }));
+
+    return () => observer.disconnect();
   }, []);
 
   const nativeVersion = useMemo(
@@ -43,7 +66,6 @@ export default function AndroidDownloadButton() {
   const insideAndroidApp = !!nativeVersion || /;\s*wv\)/i.test(ua) || /\bwv\b/i.test(ua);
   const hasUpdate = !!(nativeVersion && latest && compareVersions(latest.version, nativeVersion) > 0);
 
-  // Dentro de la APK actualizada no mostramos descarga.
   if (!target || (insideAndroidApp && !hasUpdate)) return null;
 
   const isUpdate = insideAndroidApp && hasUpdate;
@@ -56,23 +78,7 @@ export default function AndroidDownloadButton() {
       download={isUpdate ? undefined : "Rosario-Market-2.0.apk"}
       aria-label={isUpdate ? "Actualizar Rosario Market" : "Descargar Rosario Market para Android"}
       title={isUpdate ? `Actualizar a Rosario Market ${latest?.version}` : "Descargar Rosario Market"}
-      style={{
-        order: 9999,
-        width: 38,
-        height: 38,
-        minWidth: 38,
-        flex: "0 0 38px",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(249,115,22,0.08)",
-        border: "1px solid rgba(249,115,22,0.28)",
-        borderRadius: 10,
-        color: "#f97316",
-        textDecoration: "none",
-        padding: 0,
-        boxSizing: "border-box"
-      }}
+      style={{ order:9999,width:38,height:38,minWidth:38,flex:"0 0 38px",display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.28)",borderRadius:10,color:"#f97316",textDecoration:"none",padding:0,boxSizing:"border-box" }}
     >
       {isUpdate ? <RefreshCw size={18} /> : <Download size={18} />}
     </a>,
