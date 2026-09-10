@@ -17,6 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Add Rosario Market app icon
+        run: |
+          mkdir -p android-v2/app/src/main/res/drawable
+          curl -fL "https://raw.githubusercontent.com/contactooffertas/FrontEndAmbos/main/public/assets/navbarbolsa.png" -o android-v2/app/src/main/res/drawable/app_icon.png
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
