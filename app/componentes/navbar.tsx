@@ -35,6 +35,7 @@ export default function Navbar(){
   const [notices,setNotices]=useState<Notice[]>([]);
   const [notifOpen,setNotifOpen]=useState(false);
   const [chatUnread,setChatUnread]=useState(0);
+  const [pendingOrders,setPendingOrders]=useState(0);
   const dropdownRef=useRef<HTMLDivElement>(null);
   const notifRef=useRef<HTMLDivElement>(null);
 
@@ -57,14 +58,18 @@ export default function Navbar(){
 
     const loadCenter=async()=>{
       try{
-        const [annRes,chatRes]=await Promise.all([
+        const [annRes,chatRes,ordersRes]=await Promise.all([
           fetch(`${API}/announcements/active`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"}),
-          fetch(`${API}/chat/conversations`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"})
+          fetch(`${API}/chat/conversations`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"}),
+          user.role==="seller"
+            ? fetch(`${API}/orders/seller`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"})
+            : Promise.resolve(null)
         ]);
 
         if(cancelled)return;
         const annData=annRes.ok?await annRes.json():{announcements:[]};
         const chats=chatRes.ok?await chatRes.json():[];
+        const sellerOrders=ordersRes && ordersRes.ok ? await ordersRes.json() : [];
         if(cancelled)return;
 
         const announcements=Array.isArray(annData?.announcements)?annData.announcements:[];
@@ -72,6 +77,10 @@ export default function Navbar(){
         const chatItems=Array.isArray(chats)?chats.filter((c:any)=>Number(c.unreadCount||0)>0):[];
         const unreadTotal=chatItems.reduce((sum:number,c:any)=>sum+Number(c.unreadCount||0),0);
         setChatUnread(unreadTotal);
+        const pendingOrderItems = Array.isArray(sellerOrders)
+          ? sellerOrders.filter((o:any)=>o.status==="pending")
+          : [];
+        setPendingOrders(pendingOrderItems.length);
 
         const annNotices:Notice[]=unseenAnnouncements.slice(0,20).map((x:any)=>({
           id:String(x._id),
@@ -87,7 +96,13 @@ export default function Navbar(){
           url:`/chatpage?conversationId=${c._id}`,
           kind:"chat"
         }));
-        setNotices([...chatNotices,...annNotices]);
+        const orderNotices:Notice[]=pendingOrderItems.slice(0,10).map((o:any)=>({
+          id:`order-${o._id}`,
+          title:"Nueva orden de compra",
+          body:`${o.buyer?.name||"Un comprador"} realizó un pedido`,
+          url:"/ordenes"
+        }));
+        setNotices([...orderNotices,...chatNotices,...annNotices]);
       }catch{}
     };
 
@@ -122,7 +137,7 @@ export default function Navbar(){
             <Link href="/profile"><MapPin size={15}/>Negocios cerca</Link>
             <Link href="/chatpage"><MessageCircle size={15}/>Mensajes / Chat</Link>
             <Link href="/programa-afiliados"><Handshake size={15}/>Programa de Afiliados</Link>
-            {user.role==="seller"&&<><Link href="/negocio"><Store size={15}/>Mi negocio</Link><Link href="/mis-productos"><Package size={15}/>Mis productos</Link><Link href="/ordenes"><Package size={15}/>Pedidos recibidos</Link></>}
+            {user.role==="seller"&&<><Link href="/negocio"><Store size={15}/>Mi negocio</Link><Link href="/mis-productos"><Package size={15}/>Mis productos</Link><Link href="/ordenes"><Package size={15}/>Pedidos recibidos{pendingOrders>0&&<span className="badge" style={{position:"static",marginLeft:"auto"}}>{pendingOrders>9?"9+":pendingOrders}</span>}</Link></>}
             <Link href="/panel?tab=purchases"><Package size={15}/>Mis compras</Link>
             <Link href="/eliminaUsuario"><Shield size={15}/>Seguridad y eliminar cuenta</Link>
             <button onClick={()=>void logout()}><LogOut size={15}/>Cerrar sesión</button>
@@ -130,7 +145,7 @@ export default function Navbar(){
         </div>:<div className="auth-buttons"><Link href="/login" className="login-link">Iniciar sesión</Link><Link href="/register" className="register-button">Registrarse</Link></div>}
       </div>
     </div></header>
-    <nav className="category-bar"><div className="category-bar-inner"><Link href="/" className={`category-item ${pathname==="/"?"active":""}`}><Home size={20}/></Link>{NAV_CATEGORIES.map(c=><Link key={c.id} href={`/categoria/${c.slug}`} className={`category-item ${currentSlug===c.slug?"active":""}`} title={c.name}><CategoryIcon name={c.iconName} size={21}/></Link>)}</div></nav>
+    <nav className="category-bar"><div className="category-bar-inner"><Link href="/" className={`category-item ${pathname==="/"?"active":""}`}><Home size={20}/></Link>{user?.role==="seller"&&<Link href="/ordenes" className={`category-item ${pathname==="/ordenes"?"active":""}`} title="Órdenes"><Package size={20}/>{pendingOrders>0&&<span className="badge">{pendingOrders>9?"9+":pendingOrders}</span>}</Link>}{NAV_CATEGORIES.map(c=><Link key={c.id} href={`/categoria/${c.slug}`} className={`category-item ${currentSlug===c.slug?"active":""}`} title={c.name}><CategoryIcon name={c.iconName} size={21}/></Link>)}</div></nav>
     <style>{`.bell-btn{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:1.5px solid #f97316;background:#1c1c1c;color:#f97316;cursor:pointer}.badge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:99px;font-size:9px;padding:2px 4px}.notif-panel{position:fixed;top:4.5rem;left:.5rem;right:.5rem;max-width:340px;margin-left:auto;max-height:70vh;overflow:auto;background:#111;border:1px solid #ffffff1a;border-radius:14px;z-index:99999;color:white}.notif-head{display:flex;justify-content:space-between;padding:.75rem 1rem}.notif-head button,.notif-row{background:none;border:0;color:inherit}.notif-row{width:100%;display:flex;flex-direction:column;text-align:left;padding:.75rem 1rem;border-top:1px solid #ffffff12}.notif-empty{padding:1rem;color:#aaa}`}</style>
   </>;
 }
