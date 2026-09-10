@@ -33,7 +33,8 @@ export default function Navbar(){
   const [dropdownOpen,setDropdownOpen]=useState(false);
   const [searchQuery,setSearchQuery]=useState("");
   const [notices,setNotices]=useState<Notice[]>([]);
-  const [notifOpen,setNotifOpen]=useState(false);\n  const [chatUnread,setChatUnread]=useState(0);
+  const [notifOpen,setNotifOpen]=useState(false);
+  const [chatUnread,setChatUnread]=useState(0);
   const dropdownRef=useRef<HTMLDivElement>(null);
   const notifRef=useRef<HTMLDivElement>(null);
 
