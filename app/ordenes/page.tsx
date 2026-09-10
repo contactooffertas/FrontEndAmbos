@@ -346,119 +346,13 @@ export default function OrdenesPage() {
   </p>
 
   <div style={{ marginTop: "1rem", textAlign: "left" }}>
-    <p style={{ fontWeight: 700, marginBottom: "0.5rem" }}>
-      Información importante sobre el envío:
-    </p>
-    <ul style={{ paddingLeft: "1.2rem", fontSize: "0.9rem", lineHeight: "1.6" }}>
-      <li>El envío se arregla directamente entre el vendedor (vos) y el comprador.</li>
-      <li>El comprador debe contactarte primero para coordinar costos y detalles.</li>
-      <li>Es fundamental que hayas cargado correctamente tu número de celular.</li>
-      <li>Los costos y demás condiciones de entrega se definen por WhatsApp.</li>
-    </ul>
-  </div>
-</div>
-        ) : (
-          <div className="ordenes-list">
-            {filtered.map(order => {
-              const status = order.status || "pending";
-              const si    = STATUS_LABELS[status] || STATUS_LABELS.pending;
-              const isNew = newOrderIds.has(order._id);
-              return (
-                <div key={order._id} className={`orden-card${isNew ? " is-new" : ""}`}>
-
-                  {/* Cabecera */}
-                  <div className="orden-card-head">
-                    <div>
-                      {isNew && <div className="orden-new-badge">🔔 NUEVO</div>}
-                      <p className="orden-id">#{order._id.slice(-8).toUpperCase()}</p>
-                      <p className="orden-buyer">{order.buyer?.name || "Comprador"}</p>
-                      <p className="orden-meta">
-                        {order.buyer?.email}{order.buyer?.email ? " · " : ""}
-                        {order.date ? new Date(order.date).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "Sin fecha"}
-                      </p>
-                      {/* Reputación comprador en cabecera */}
-                      {(order.buyer?.buyerTotalRatings ?? 0) > 0 && (
-                        <div className="orden-buyer-rep">
-                          <Star size={11} fill="#60a5fa" color="#60a5fa" />
-                          <span>{order.buyer?.buyerRating?.toFixed(1)} reputación ({order.buyer?.buyerTotalRatings} votes)</span>
+    <div className="orden-shipping-note">
+                          <span className="orden-shipping-note-icon">!</span>
+                          <p>
+                            <strong>Antes de despachar</strong>
+                            Coordiná el costo de envío y los detalles de entrega con el comprador. Podés usar su WhatsApp si lo cargaste correctamente o contactarlo por email.
+                          </p>
                         </div>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div className="orden-status-badge" style={{ background: `${si.color}18`, color: si.color }}>
-                        {si.icon} {si.label}
-                      </div>
-                      {(status === "delivered" || status === "returned") && (
-                        <button className="btn-borrar-orden" onClick={() => handleDelete(order._id)} title="Borrar orden">
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Items */}
-                  <div className="orden-items">
-                    {(order.items || []).map((item, i) => (
-                      <div key={i} className="orden-item-row">
-                        <span className="orden-item-name">
-                          <span className="orden-item-qty">{item.quantity}x</span>{item.name}
-                        </span>
-                        <span className="orden-item-price">
-                          ${(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString("es-AR")}
-                        </span>
-                      </div>
-                    ))}
-                    <div className="orden-total-row">
-                      <span className="orden-total-label">Total</span>
-                      <span className="orden-total-val">${Number(order.total || 0).toLocaleString("es-AR")}</span>
-                    </div>
-              <h3 style={{ color: "#ffffff" }}>
-            Esperá la confirmación del comprador. 
-            Una vez que reciba el pedido y confirme la entrega, vas a poder calificar la operación y dejar tu valoración.
-             </h3>
-                  </div>
-                  {/* Acciones según estado */}
-                  <div className="orden-actions">
-                        {status === "pending" && (
-                      <>
-                        <button
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            backgroundColor: "#0d6efd",
-                            color: "#fff",
-                            border: "none",
-                            padding: "8px 14px",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            opacity: dispatching === order._id ? 0.7 : 1,
-                          }}
-                          onClick={() => handleShip(order._id)}
-                          disabled={dispatching === order._id}
-                        >
-                          <Truck size={15} />
-                          {dispatching === order._id
-                            ? "Despachando..."
-                            : "Despachar pedido"}
-                        </button>
-                        <p
-                          style={{
-                            marginTop: "8px",
-                            backgroundColor: "#fff3cd",
-                            color: "#856404",
-                            padding: "8px 10px",
-                            borderRadius: "6px",
-                            fontSize: "13px",
-                            fontWeight: "500",
-                          }}
-                        >
-                          ⚠️ Antes de despachar el pedido, asegurate de arreglar
-                          el gasto de envío y todos los detalles logísticos con
-                          el comprador, ya tiene tu numero de whatsapp si lo cargaste correctamente o contactalo por mail que esta debajo de su nombre.
-                        </p>
                       </>
                     )}
                     {status === "delivered" && (
