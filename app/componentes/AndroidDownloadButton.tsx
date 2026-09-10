@@ -24,17 +24,26 @@ export default function AndroidDownloadButton() {
 
   useEffect(() => {
     setUa(navigator.userAgent || "");
-    setTarget(document.querySelector(".navbar-actions"));
+
+    // Este componente es el UNICO botón de descarga/actualización.
+    // Se monta siempre al final del navbar (lado derecho), nunca junto al logo.
+    const actions = document.querySelector(".navbar-actions");
+    setTarget(actions);
+
     fetch("/app-version.json", { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setLatest)
       .catch(() => setLatest({ version: "2.0.0", versionCode: 2, apkUrl: FALLBACK_APK }));
   }, []);
 
-  const nativeVersion = useMemo(() => ua.match(/RosarioMarketAndroid\/([0-9.]+)/i)?.[1] || null, [ua]);
+  const nativeVersion = useMemo(
+    () => ua.match(/RosarioMarketAndroid\/([0-9.]+)/i)?.[1] || null,
+    [ua]
+  );
   const insideAndroidApp = !!nativeVersion || /;\s*wv\)/i.test(ua) || /\bwv\b/i.test(ua);
   const hasUpdate = !!(nativeVersion && latest && compareVersions(latest.version, nativeVersion) > 0);
 
+  // Dentro de la APK actualizada no mostramos descarga.
   if (!target || (insideAndroidApp && !hasUpdate)) return null;
 
   const isUpdate = insideAndroidApp && hasUpdate;
@@ -42,15 +51,26 @@ export default function AndroidDownloadButton() {
 
   return createPortal(
     <a
+      id="rosario-market-apk-action"
       href={href}
       download={isUpdate ? undefined : "Rosario-Market-2.0.apk"}
       aria-label={isUpdate ? "Actualizar Rosario Market" : "Descargar Rosario Market para Android"}
       title={isUpdate ? `Actualizar a Rosario Market ${latest?.version}` : "Descargar Rosario Market"}
       style={{
-        width: 38, height: 38, minWidth: 38, flex: "0 0 38px",
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.28)",
-        borderRadius: 10, color: "#f97316", textDecoration: "none", padding: 0,
+        order: 9999,
+        width: 38,
+        height: 38,
+        minWidth: 38,
+        flex: "0 0 38px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(249,115,22,0.08)",
+        border: "1px solid rgba(249,115,22,0.28)",
+        borderRadius: 10,
+        color: "#f97316",
+        textDecoration: "none",
+        padding: 0,
         boxSizing: "border-box"
       }}
     >
