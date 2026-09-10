@@ -155,31 +155,68 @@ html[data-rm-business="no"] .profile-quick-links a[href="/mis-productos"] {
 
 @media (max-width: 780px) {
   .rm-seller-banner {
-    width: calc(100% - 20px);
-    margin-top: 1rem;
-    padding: 1.1rem 1rem;
-    grid-template-columns: auto 1fr;
-    border-radius: 17px;
+    width: calc(100% - 24px);
+    margin-top: .8rem;
+    padding: 1rem;
+    grid-template-columns: 44px minmax(0,1fr);
+    gap: .75rem .85rem;
+    border-radius: 18px;
   }
   .rm-seller-banner__icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+    border-radius: 13px;
+  }
+  .rm-seller-banner__copy h2 {
+    font-size: 1.25rem;
+    line-height: 1.12;
+    margin-bottom: .3rem;
+  }
+  .rm-seller-banner__copy p {
+    font-size: .82rem;
+    line-height: 1.45;
+  }
+  .rm-seller-banner__eyebrow {
+    font-size: .61rem;
+    letter-spacing: .09em;
+    margin-bottom: .28rem;
   }
   .rm-seller-banner__actions {
     grid-column: 1 / -1;
-    justify-content: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .55rem;
+    width: 100%;
   }
   .rm-seller-banner__primary,
   .rm-seller-banner__secondary {
-    flex: 1 1 180px;
+    min-height: 50px;
+    width: 100%;
+    padding: .65rem .75rem;
+    border-radius: 14px;
+    font-size: .79rem;
+    box-sizing: border-box;
+    white-space: normal;
+    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
-  .rm-seller-banner { grid-template-columns: 1fr; }
-  .rm-seller-banner__icon { width: 46px; height: 46px; }
-  .rm-seller-banner__actions { grid-column: 1; flex-direction: column; }
+  .rm-seller-banner {
+    width: calc(100% - 20px);
+    padding: .9rem;
+    grid-template-columns: 40px minmax(0,1fr);
+    gap: .65rem .75rem;
+  }
+  .rm-seller-banner__icon { width: 40px; height: 40px; flex-basis: 40px; border-radius: 12px; }
+  .rm-seller-banner__copy h2 { font-size: 1.08rem; }
+  .rm-seller-banner__copy p { font-size: .78rem; line-height: 1.4; }
+  .rm-seller-banner__actions { grid-template-columns: 1fr; gap: .45rem; }
   .rm-seller-banner__primary,
-  .rm-seller-banner__secondary { width: 100%; box-sizing: border-box; }
+  .rm-seller-banner__secondary {
+    min-height: 48px;
+    border-radius: 13px;
+    font-size: .78rem;
+  }
 }
