@@ -1,0 +1,44 @@
+name: Build Rosario Market Android 2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-android-v2.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Android 2.0 branch
+        uses: actions/checkout@v4
+        with:
+          ref: rosario-market-android-v2
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        working-directory: android-v2
+        run: gradle assembleDebug --stacktrace
+
+      - name: Rename APK
+        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-2.0.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rosario-Market-2.0-APK
+          path: Rosario-Market-2.0.apk
+          retention-days: 30
