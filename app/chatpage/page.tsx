@@ -613,6 +613,8 @@ function ChatPageInner() {
     });
 
     socket.on("new_announcement", (ann: Announcement) => {
+      const role = (user as any)?.role === "seller" ? "seller" : "buyer";
+      if (ann.audience !== "all" && ann.audience !== role) return;
       setAnnouncements((prev) => prev.some((a) => a._id === ann._id) ? prev : [ann, ...prev]);
       setGlowActive(true);
       setTimeout(() => setGlowActive(false), 8000);
@@ -640,6 +642,47 @@ function ChatPageInner() {
   }, [token]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
+
+  // Respaldo REST para WebView/Android y redes inestables: si Socket.IO se
+  // corta, el chat sigue actualizándose como una app de mensajería normal.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    const sync = async () => {
+      if (document.visibilityState === "hidden") return;
+      try {
+        const convRes = await fetch(`${API}/chat/conversations`, {
+          headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+        });
+        if (convRes.ok && !cancelled) {
+          const data: Conversation[] = await convRes.json();
+          setConversations(data.sort((a,b)=>new Date(b.updatedAt).getTime()-new Date(a.updatedAt).getTime()));
+        }
+        const current = activeIdRef.current;
+        if (current) {
+          const msgRes = await fetch(`${API}/chat/conversations/${current}/messages`, {
+            headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+          });
+          if (msgRes.ok && !cancelled) {
+            const data = await msgRes.json();
+            const incoming: Message[] = Array.isArray(data) ? data : (data.messages ?? []);
+            setMessages(prev => {
+              const map = new Map(prev.map(m => [m._id,m]));
+              incoming.forEach(m => map.set(m._id,m));
+              return Array.from(map.values()).sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime());
+            });
+            void fetch(`${API}/chat/conversations/${current}/read`, {
+              method:"POST", headers:{Authorization:`Bearer ${token}`}
+            }).catch(()=>{});
+          }
+        }
+      } catch {}
+    };
+    const timer=setInterval(sync,7000);
+    const onVisible=()=>{ if(document.visibilityState==="visible") void sync(); };
+    document.addEventListener("visibilitychange",onVisible);
+    return()=>{cancelled=true;clearInterval(timer);document.removeEventListener("visibilitychange",onVisible)};
+  }, [token]);
 
   useEffect(() => {
     if (!token || convsLoading) return;
