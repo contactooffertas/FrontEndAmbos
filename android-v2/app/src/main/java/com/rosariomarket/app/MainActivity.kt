@@ -2,10 +2,12 @@ package com.rosariomarket.app
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.webkit.GeolocationPermissions
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -23,7 +25,28 @@ class MainActivity : AppCompatActivity() {
     private val backgroundPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { if (it) GeofenceManager.refresh(this) }
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    private inner class AndroidShareBridge {
+        @JavascriptInterface
+        fun share(title: String, text: String, url: String) {
+            runOnUiThread {
+                val message = buildString {
+                    if (text.isNotBlank()) append(text.trim())
+                    if (url.isNotBlank()) {
+                        if (isNotEmpty()) append("\n")
+                        append(url.trim())
+                    }
+                }
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, title)
+                    putExtra(Intent.EXTRA_TEXT, message)
+                }
+                startActivity(Intent.createChooser(intent, "Compartir producto"))
+            }
+        }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NotificationHelper.createChannel(this)
@@ -37,6 +60,9 @@ class MainActivity : AppCompatActivity() {
         // Incluye la versión instalada para poder ofrecer "Actualizar" sólo cuando corresponda.
         val appVersion = packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
         webView.settings.userAgentString = webView.settings.userAgentString + " RosarioMarketAndroid/$appVersion"
+
+        // Puente mínimo para abrir el selector nativo de Android desde las cards.
+        webView.addJavascriptInterface(AndroidShareBridge(), "RosarioMarketAndroid")
 
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = object : WebChromeClient() {
