@@ -74,18 +74,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <link rel="preconnect" href="https://new-backend-lovat.vercel.app" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://new-backend-lovat.vercel.app" />
-        <link
-          rel="preload"
-          as="image"
-          href="/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=1920&q=72"
-          media="(min-width: 621px)"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=828&q=68"
-          media="(max-width: 620px)"
-        />
       </head>
       <body>
         <Providers>

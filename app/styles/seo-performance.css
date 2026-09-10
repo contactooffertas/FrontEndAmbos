@@ -1,13 +1,7 @@
 /* SEO / Core Web Vitals — capa no invasiva.
    Mantiene el diseño de Home y mejora entrega, estabilidad y accesibilidad. */
 
-/* El hero original usa un PNG de ~3 MB como background. Servirlo a través del
-   optimizador de imágenes de Next reduce peso y permite cache/resizing. */
-.home-v2-page .hero {
-  background:
-    linear-gradient(90deg, rgba(7,32,52,.96) 0%, rgba(7,32,52,.88) 30%, rgba(7,32,52,.48) 52%, rgba(7,32,52,.08) 76%, rgba(7,32,52,.03) 100%),
-    url('/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=1920&q=72') center 46% / cover no-repeat !important;
-}
+/* La imagen del hero se define únicamente en home-v2.css. */
 
 /* Reservar geometría para imágenes y evitar pequeños saltos al cargar. */
 .home-v2-page .hero-card img,
@@ -46,15 +40,6 @@
   color: inherit;
   text-align: inherit;
   cursor: pointer;
-}
-
-@media (max-width: 620px) {
-  .home-v2-page .hero {
-    background:
-      linear-gradient(180deg,rgba(5,24,40,.12) 0%,rgba(5,24,40,.14) 31%,rgba(5,24,40,.64) 60%,rgba(5,24,40,.96) 100%),
-      url('/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=828&q=68') 56% top / auto 70% no-repeat,
-      #071f34 !important;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
