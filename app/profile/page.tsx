@@ -748,9 +748,32 @@ export default function ProfilePage() {
 
         <div className="profile-header">
           <div className="profile-avatar-wrap">
-            <img src={currentAvatar} alt={user.name} className="profile-avatar"/>
-            <button className="profile-avatar-btn" onClick={()=>avatarInputRef.current?.click()} disabled={avatarLoading}><Camera size={13}/></button>
-            <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleAvatarChange}/>
+            <button
+              type="button"
+              className="profile-avatar-main"
+              onClick={()=>avatarInputRef.current?.click()}
+              disabled={avatarLoading}
+              aria-label="Cambiar foto de perfil"
+              title="Cambiar foto de perfil"
+            >
+              <img src={currentAvatar} alt={user.name} className="profile-avatar"/>
+            </button>
+            <button
+              type="button"
+              className="profile-avatar-btn"
+              onClick={()=>avatarInputRef.current?.click()}
+              disabled={avatarLoading}
+              aria-label="Elegir nueva foto"
+              title="Elegir nueva foto"
+            ><Camera size={15}/></button>
+            <input
+              ref={avatarInputRef}
+              className="profile-avatar-input"
+              type="file"
+              accept="image/*"
+              onClick={e=>{ e.currentTarget.value = ""; }}
+              onChange={handleAvatarChange}
+            />
             {avatarLoading && <div className="profile-avatar-loading"/>}
           </div>
           <div className="profile-info">
@@ -759,6 +782,23 @@ export default function ProfilePage() {
             <span className="profile-role">
               {user.role==="seller"?<><Store size={12} strokeWidth={1.75}/> Vendedor</>:user.role==="admin"?<><LayoutGrid size={12} strokeWidth={1.75}/> Administrador</>:<><ShoppingBag size={12} strokeWidth={1.75}/> Comprador</>}
             </span>
+            <div style={{ marginTop:8 }}>
+              <button
+                type="button"
+                onClick={()=>avatarInputRef.current?.click()}
+                disabled={avatarLoading}
+                style={{
+                  display:"inline-flex", alignItems:"center", gap:6,
+                  border:"1.5px solid #f97316", background:"#fff7ed",
+                  color:"#ea580c", borderRadius:10, padding:"7px 12px",
+                  fontSize:"0.78rem", fontWeight:700,
+                  cursor:avatarLoading?"wait":"pointer"
+                }}
+              >
+                <Camera size={14}/>
+                {avatarLoading ? "Subiendo foto..." : "Cambiar foto"}
+              </button>
+            </div>
             <div style={{ marginTop:10 }}>
               <ProfileBannerTrigger hasUnseen={hasUnseenAnn} glowActive={glowActive} onClick={openBanner}/>
             <Link
