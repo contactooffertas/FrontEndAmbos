@@ -4,6 +4,7 @@ import Footer from './footer';
 import SellerOnboardingBanner from './SellerOnboardingBanner';
 import SellerSessionSync from './SellerSessionSync';
 
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
