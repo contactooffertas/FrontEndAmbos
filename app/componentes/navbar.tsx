@@ -23,7 +23,7 @@ const NAV_CATEGORIES = [
 ];
 
 const API="https://new-backend-lovat.vercel.app/api";
-type Notice={id:string;title:string;body:string;url?:string};
+type Notice={id:string;title:string;body:string;url?:string;kind?:"announcement"|"chat"};
 
 export default function Navbar(){
   const {user,logout}=useAuth();
@@ -33,7 +33,7 @@ export default function Navbar(){
   const [dropdownOpen,setDropdownOpen]=useState(false);
   const [searchQuery,setSearchQuery]=useState("");
   const [notices,setNotices]=useState<Notice[]>([]);
-  const [notifOpen,setNotifOpen]=useState(false);
+  const [notifOpen,setNotifOpen]=useState(false);\n  const [chatUnread,setChatUnread]=useState(0);
   const dropdownRef=useRef<HTMLDivElement>(null);
   const notifRef=useRef<HTMLDivElement>(null);
 
@@ -53,15 +53,49 @@ export default function Navbar(){
     const token=localStorage.getItem("marketplace_token");
     if(!token)return;
     let cancelled=false;
-    fetch(`${API}/announcements/active`,{headers:{Authorization:`Bearer ${token}`}})
-      .then(r=>r.ok?r.json():{announcements:[]})
-      .then(data=>{
+
+    const loadCenter=async()=>{
+      try{
+        const [annRes,chatRes]=await Promise.all([
+          fetch(`${API}/announcements/active`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"}),
+          fetch(`${API}/chat/conversations`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"})
+        ]);
+
         if(cancelled)return;
-        const list=Array.isArray(data?.announcements)?data.announcements:[];
-        setNotices(list.slice(0,20).map((x:any)=>({id:String(x._id||Math.random()),title:String(x.title||"Notificación"),body:String(x.message||""),url:x.link})));
-      })
-      .catch(()=>{});
-    return()=>{cancelled=true};
+        const annData=annRes.ok?await annRes.json():{announcements:[]};
+        const chats=chatRes.ok?await chatRes.json():[];
+        if(cancelled)return;
+
+        const announcements=Array.isArray(annData?.announcements)?annData.announcements:[];
+        const unseenAnnouncements=announcements.filter((x:any)=>!localStorage.getItem(`rm_nav_ann_seen_${x._id}`));
+        const chatItems=Array.isArray(chats)?chats.filter((c:any)=>Number(c.unreadCount||0)>0):[];
+        const unreadTotal=chatItems.reduce((sum:number,c:any)=>sum+Number(c.unreadCount||0),0);
+        setChatUnread(unreadTotal);
+
+        const annNotices:Notice[]=unseenAnnouncements.slice(0,20).map((x:any)=>({
+          id:String(x._id),
+          title:String(x.title||"Aviso de Rosario Market"),
+          body:String(x.message||""),
+          url:x.link,
+          kind:"announcement"
+        }));
+        const chatNotices:Notice[]=chatItems.slice(0,10).map((c:any)=>({
+          id:`chat-${c._id}`,
+          title:`Mensaje de ${c.other?.name||"un usuario"}`,
+          body:c.lastMessage?.text?String(c.lastMessage.text):"Te enviaron una imagen",
+          url:`/chatpage?conversationId=${c._id}`,
+          kind:"chat"
+        }));
+        setNotices([...chatNotices,...annNotices]);
+      }catch{}
+    };
+
+    void loadCenter();
+    const interval=setInterval(loadCenter,10000);
+    const onFocus=()=>void loadCenter();
+    window.addEventListener("focus",onFocus);
+    document.addEventListener("visibilitychange",onFocus);
+    return()=>{cancelled=true;clearInterval(interval);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onFocus)};
   },[user?.id]);
 
   const handleSearch=(e:React.FormEvent)=>{e.preventDefault();const q=searchQuery.trim();if(q)router.push(`/buscar?q=${encodeURIComponent(q)}`)};
