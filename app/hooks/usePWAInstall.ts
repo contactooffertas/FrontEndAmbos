@@ -1,77 +1,65 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-// Detecta iOS
-function isIOS() {
-  if (typeof window === "undefined") return false;
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-
-// Detecta si ya corre como PWA standalone
-function isStandalone() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true
-  );
-}
-
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable,  setIsInstallable]  = useState(false);
-  const [isInstalled,    setIsInstalled]    = useState(false);
-  const [isIOSDevice,    setIsIOSDevice]    = useState(false);
+  const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
+  const busyRef = useRef(false);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
 
   useEffect(() => {
-    // Ya instalada como PWA
-    if (isStandalone()) {
-      setIsInstalled(true);
-      return;
-    }
-
-    // iOS — no tiene beforeinstallprompt, mostrar instrucciones manuales
-    if (isIOS()) {
-      setIsIOSDevice(true);
-      setIsInstallable(true); // mostramos el botón igual para dar instrucciones
-      return;
-    }
-
-    // Android / Chrome / Edge — flujo normal
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    const displayMode = window.matchMedia("(display-mode: standalone)");
+    const iosNavigator = navigator as Navigator & { standalone?: boolean };
+    let installedThisSession = false;
+    const sync = () => {
+      setIsInstalled(installedThisSession || displayMode.matches || iosNavigator.standalone === true);
+    };
+    setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+    sync();
+    setIsReady(true);
+    const onPrompt = (event: Event) => {
+      event.preventDefault();
+      promptRef.current = event as BeforeInstallPromptEvent;
       setIsInstallable(true);
     };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    window.addEventListener("appinstalled", () => {
-      setIsInstalled(true);
+    const onInstalled = () => {
+      installedThisSession = true;
+      promptRef.current = null;
       setIsInstallable(false);
-      setDeferredPrompt(null);
-    });
-
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+      sync();
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    displayMode.addEventListener("change", sync);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+      displayMode.removeEventListener("change", sync);
+    };
   }, []);
 
   const install = async (): Promise<boolean> => {
-    // iOS — no podemos instalar programáticamente, el botón muestra instrucciones
-    if (isIOSDevice) return false;
-
-    if (!deferredPrompt) return false;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setIsInstallable(false);
-      setDeferredPrompt(null);
+    const event = promptRef.current;
+    if (!event || busyRef.current) return false;
+    busyRef.current = true;
+    // Each browser event may be used only once, including after dismissal.
+    promptRef.current = null;
+    setIsInstallable(false);
+    try {
+      await event.prompt();
+      const { outcome } = await event.userChoice;
+      return outcome === "accepted";
+    } finally {
+      busyRef.current = false;
     }
-    return outcome === "accepted";
   };
-
-  return { isInstallable, isInstalled, install, isIOSDevice };
+  return { isInstallable, isInstalled, isReady, install, isIOSDevice };
 }

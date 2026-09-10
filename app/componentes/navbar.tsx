@@ -76,7 +76,7 @@ export default function Navbar() {
   const { cartCount }    = useCart();
   const pathname         = usePathname();
   const router           = useRouter();
-  const { isInstallable, isInstalled, install } = usePWAInstall();
+  const { isInstallable, isInstalled, isReady, isIOSDevice, install } = usePWAInstall();
 
   const [dropdownOpen,   setDropdownOpen]   = useState(false);
   const [searchQuery,    setSearchQuery]    = useState("");
@@ -88,7 +88,6 @@ export default function Navbar() {
   //    nunca para lo que ya traemos del historial al montar ─────────────────
   const [toastNotif,     setToastNotif]     = useState<PushNotif | null>(null);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
-  const [isIOSDevice,    setIsIOSDevice]    = useState(false);
 
   const dropdownRef           = useRef<HTMLDivElement>(null);
   const notifRef               = useRef<HTMLDivElement>(null);
@@ -102,9 +101,6 @@ export default function Navbar() {
   const pathnameRef = useRef(pathname);
   useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
 
-  useEffect(() => {
-    setIsIOSDevice(/iphone|ipad|ipod/i.test(navigator.userAgent));
-  }, []);
 
   // ── Auto-ocultar el toast a los 6s ────────────────────────────────────────
   useEffect(() => {
@@ -403,13 +399,25 @@ export default function Navbar() {
   const handleLogout = () => { logout(); setDropdownOpen(false); router.push("/"); };
 
   const handleInstall = async () => {
+    if (installing || isInstalled) return;
     if (isIOSDevice) {
-      alert('Para instalar: tocá el botón Compartir (□↑) y luego "Agregar a pantalla de inicio"');
+      alert('En Safari, tocá Compartir y luego "Agregar a pantalla de inicio". Si abriste la web desde Instagram o WhatsApp, abrila primero en Safari.');
+      return;
+    }
+    if (!isInstallable) {
+      alert(/android/i.test(navigator.userAgent)
+        ? 'Abrí Rosario Market en Chrome. En el menú ⋮ buscá "Instalar aplicación" o "Agregar a pantalla de inicio". Si no aparece, la instalación todavía no está disponible en este navegador.'
+        : 'Buscá el ícono de instalación en la barra de direcciones o la opción de instalar en el menú del navegador. Si no aparece, probá con Chrome o Edge. En Safari para Mac, buscá Archivo → Agregar al Dock.');
       return;
     }
     setInstalling(true);
-    await install();
-    setInstalling(false);
+    try {
+      await install();
+    } catch {
+      alert('No se pudo abrir la instalación. Probá desde el menú de tu navegador.');
+    } finally {
+      setInstalling(false);
+    }
   };
 
   // ── Descartar una notificación puntual (❌) — si es anuncio, se marca leído ─
@@ -480,7 +488,7 @@ export default function Navbar() {
     ? (pathname.split("/categoria/")[1]?.split("?")[0] ?? "")
     : "";
 
-  const showInstallBtn = !!user && isInstallable && !isInstalled;
+  const showInstallBtn = isReady && !isInstalled;
   const showBell       = !!user;
 
   useEffect(() => {
@@ -599,6 +607,8 @@ export default function Navbar() {
             {/* Botón instalar PWA */}
             {showInstallBtn && (
               <button
+                type="button"
+                aria-label="Instalar Rosario Market"
                 onClick={handleInstall}
                 disabled={installing}
                 title={isIOSDevice ? "Cómo instalar en iPhone" : "Instalar app"}
