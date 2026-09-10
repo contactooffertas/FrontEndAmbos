@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import HomeContent from "./componentes/HomeContent";
 import "./styles/home-v2.css";
@@ -39,25 +40,26 @@ interface SeoProduct {
 }
 
 async function getSeoProducts(): Promise<SeoProduct[]> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3000);
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
 
     const res = await fetch(`${API}/products/random?limit=20`, {
       next: { revalidate: 300 },
       signal: controller.signal,
     });
-    clearTimeout(timeout);
 
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data.products) ? data.products : [];
   } catch {
     return [];
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
-export default async function Page() {
+async function ProductStructuredData() {
   const products = await getSeoProducts();
 
   const itemListJsonLd = {
@@ -90,6 +92,10 @@ export default async function Page() {
     })),
   };
 
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd).replace(/</g, "\\u003c") }} />;
+}
+
+export default function Page() {
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -123,10 +129,22 @@ export default async function Page() {
 
   return (
     <div className="home-v2-page">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-      />
+        <link
+          rel="preload"
+          as="image"
+          fetchPriority="high"
+          href="/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=1920&q=72"
+          media="(min-width: 621px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          fetchPriority="high"
+          href="/_next/image?url=%2Fassets%2Fmonumento-hero.png&w=828&q=68"
+          media="(max-width: 620px)"
+        />
+
+      <Suspense fallback={null}><ProductStructuredData /></Suspense>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
