@@ -32,6 +32,12 @@ class MainActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.databaseEnabled = true
         webView.settings.setGeolocationEnabled(true)
+
+        // Identificador estable para que la web sepa que corre dentro de la APK.
+        // Incluye la versión instalada para poder ofrecer "Actualizar" sólo cuando corresponda.
+        val appVersion = packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
+        webView.settings.userAgentString = webView.settings.userAgentString + " RosarioMarketAndroid/$appVersion"
+
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback?) { callback?.invoke(origin, true, false) }
