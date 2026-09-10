@@ -6,9 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.webkit.GeolocationPermissions
+import android.net.Uri\nimport android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
-import android.webkit.WebChromeClient
+import android.webkit.ValueCallback\nimport android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +24,13 @@ class MainActivity : AppCompatActivity() {
     }
     private val backgroundPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { if (it) GeofenceManager.refresh(this) }
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    private val fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val callback = filePathCallback ?: return@registerForActivityResult
+        val uris = WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+        callback.onReceiveValue(uris)
+        filePathCallback = null
+    }
 
     private inner class AndroidShareBridge {
         @JavascriptInterface
