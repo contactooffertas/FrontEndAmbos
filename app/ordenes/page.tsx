@@ -20,13 +20,21 @@ interface RatingData {
 }
 
 interface SellerOrder {
-  _id: string; date: string; total: number; status: string;
-  businessName: string; businessPhone: string;
-  buyer: {
-    _id?: string; name: string; email: string; avatar?: string;
-    buyerRating?: number; buyerTotalRatings?: number;
-  };
-  items: OrderItem[];
+  _id: string;
+  date?: string | null;
+  total?: number | null;
+  status?: string | null;
+  businessName?: string;
+  businessPhone?: string;
+  buyer?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    avatar?: string;
+    buyerRating?: number | null;
+    buyerTotalRatings?: number | null;
+  } | null;
+  items?: OrderItem[] | null;
   buyerRating?:  RatingData | null;
   sellerRating?: RatingData | null;
 }
@@ -186,7 +194,18 @@ export default function OrdenesPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
-      const data: SellerOrder[] = await res.json();
+      const raw = await res.json();
+      const data: SellerOrder[] = Array.isArray(raw)
+        ? raw.filter((o:any) => o && o._id).map((o:any) => ({
+            ...o,
+            _id: String(o._id),
+            status: typeof o.status === "string" ? o.status : "pending",
+            total: Number.isFinite(Number(o.total)) ? Number(o.total) : 0,
+            date: o.date || o.createdAt || null,
+            buyer: o.buyer && typeof o.buyer === "object" ? o.buyer : null,
+            items: Array.isArray(o.items) ? o.items : [],
+          }))
+        : [];
       setOrders(data);
 
       const incoming = new Set(data.map(o => o._id));
@@ -259,14 +278,14 @@ export default function OrdenesPage() {
 
   if (loading || !user) return null;
 
-  const pendingCount = orders.filter(o => o.status === "pending").length;
+  const pendingCount = orders.filter(o => (o.status || "pending") === "pending").length;
 
   const FILTER_TABS: { id: FilterTab; label: string }[] = [
     { id: "all",       label: `Todos (${orders.length})` },
-    { id: "pending",   label: `Pendientes (${orders.filter(o => o.status === "pending").length})` },
-    { id: "shipped",   label: `Enviados (${orders.filter(o => o.status === "shipped").length})` },
-    { id: "delivered", label: `Entregados (${orders.filter(o => o.status === "delivered").length})` },
-    { id: "returned",  label: `Devueltos (${orders.filter(o => o.status === "returned").length})` },
+    { id: "pending",   label: `Pendientes (${orders.filter(o => (o.status || "pending") === "pending").length})` },
+    { id: "shipped",   label: `Enviados (${orders.filter(o => (o.status || "pending") === "shipped").length})` },
+    { id: "delivered", label: `Entregados (${orders.filter(o => (o.status || "pending") === "delivered").length})` },
+    { id: "returned",  label: `Devueltos (${orders.filter(o => (o.status || "pending") === "returned").length})` },
   ];
 
   const filtered = filterTab === "all" ? orders : orders.filter(o => o.status === filterTab);
@@ -341,7 +360,8 @@ export default function OrdenesPage() {
         ) : (
           <div className="ordenes-list">
             {filtered.map(order => {
-              const si    = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
+              const status = order.status || "pending";
+              const si    = STATUS_LABELS[status] || STATUS_LABELS.pending;
               const isNew = newOrderIds.has(order._id);
               return (
                 <div key={order._id} className={`orden-card${isNew ? " is-new" : ""}`}>
@@ -354,7 +374,7 @@ export default function OrdenesPage() {
                       <p className="orden-buyer">{order.buyer?.name || "Comprador"}</p>
                       <p className="orden-meta">
                         {order.buyer?.email}{order.buyer?.email ? " · " : ""}
-                        {new Date(order.date).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })}
+                        {order.date ? new Date(order.date).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "Sin fecha"}
                       </p>
                       {/* Reputación comprador en cabecera */}
                       {(order.buyer?.buyerTotalRatings ?? 0) > 0 && (
@@ -368,7 +388,7 @@ export default function OrdenesPage() {
                       <div className="orden-status-badge" style={{ background: `${si.color}18`, color: si.color }}>
                         {si.icon} {si.label}
                       </div>
-                      {(order.status === "delivered" || order.status === "returned") && (
+                      {(status === "delivered" || status === "returned") && (
                         <button className="btn-borrar-orden" onClick={() => handleDelete(order._id)} title="Borrar orden">
                           <Trash2 size={14} />
                         </button>
@@ -378,19 +398,19 @@ export default function OrdenesPage() {
 
                   {/* Items */}
                   <div className="orden-items">
-                    {order.items.map((item, i) => (
+                    {(order.items || []).map((item, i) => (
                       <div key={i} className="orden-item-row">
                         <span className="orden-item-name">
                           <span className="orden-item-qty">{item.quantity}x</span>{item.name}
                         </span>
                         <span className="orden-item-price">
-                          ${(item.price * item.quantity).toLocaleString("es-AR")}
+                          ${(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString("es-AR")}
                         </span>
                       </div>
                     ))}
                     <div className="orden-total-row">
                       <span className="orden-total-label">Total</span>
-                      <span className="orden-total-val">${order.total.toLocaleString("es-AR")}</span>
+                      <span className="orden-total-val">${Number(order.total || 0).toLocaleString("es-AR")}</span>
                     </div>
               <h3 style={{ color: "#ffffff" }}>
             Esperá la confirmación del comprador. 
@@ -399,7 +419,7 @@ export default function OrdenesPage() {
                   </div>
                   {/* Acciones según estado */}
                   <div className="orden-actions">
-                        {order.status === "pending" && (
+                        {status === "pending" && (
                       <>
                         <button
                           style={{
@@ -441,12 +461,12 @@ export default function OrdenesPage() {
                         </p>
                       </>
                     )}
-                    {order.status === "delivered" && (
+                    {status === "delivered" && (
                       <p className="orden-delivered-msg">
                         ✅ Vendido — el comprador confirmó la recepción
                       </p>
                     )}
-                    {order.status === "returned" && (
+                    {status === "returned" && (
                       <p className="orden-returned-msg">
                         ↩️ Devuelto — el stock fue restituido automáticamente
                       </p>
@@ -454,7 +474,7 @@ export default function OrdenesPage() {
                   </div>
 
                   {/* ── Calificar comprador — solo en delivered ── */}
-                  {order.status === "delivered" && (
+                  {status === "delivered" && (
                     <RateBuyerBlock
                       order={order}
                       token={token}
