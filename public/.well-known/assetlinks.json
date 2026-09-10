@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ar.com.rosariomarket.app",
+      "sha256_cert_fingerprints": [
+        "CF:A8:06:07:A1:1F:4B:E3:1F:1B:48:51:10:35:6D:EE:60:E8:88:C0:74:2B:DE:D8:E3:20:66:C8:1D:80:61:5C"
+      ]
+    }
+  }
+]

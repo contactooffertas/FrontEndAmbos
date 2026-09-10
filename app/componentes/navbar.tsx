@@ -530,6 +530,7 @@ export default function Navbar() {
         <p id="install-app-description" aria-live="polite" style={{ lineHeight: 1.6, marginBottom: 20 }}>
           {installHelp || "Tené Rosario Market a mano desde el ícono de tu pantalla de inicio. Es gratis y no necesitás iniciar sesión."}
         </p>
+        {!isIOSDevice && <p style={{ marginBottom: 16 }}><a href="/descargar-android.html" style={{ color: "#c2410c", fontWeight: 700 }}>Descargar APK para Android</a></p>}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {!installHelp && <button type="button" className="btn btn-primary" onClick={confirmInstall} disabled={installing}>Sí, continuar</button>}
           <button type="button" className="btn btn-ghost" onClick={() => installDialogRef.current?.close()}>
