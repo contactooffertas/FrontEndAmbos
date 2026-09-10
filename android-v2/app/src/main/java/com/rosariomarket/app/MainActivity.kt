@@ -56,15 +56,35 @@ class MainActivity : AppCompatActivity() {
         webView.settings.databaseEnabled = true
         webView.settings.setGeolocationEnabled(true)
 
-        // Identificador estable para que la web sepa que corre dentro de la APK.
-        // Incluye la versión instalada para poder ofrecer "Actualizar" sólo cuando corresponda.
         val appVersion = packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0"
         webView.settings.userAgentString = webView.settings.userAgentString + " RosarioMarketAndroid/$appVersion"
 
-        // Puente mínimo para abrir el selector nativo de Android desde las cards.
         webView.addJavascriptInterface(AndroidShareBridge(), "RosarioMarketAndroid")
 
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // La web ya usa navigator.share(). Dentro del WebView lo conectamos
+                // al selector nativo de Android para evitar el fallback "Enlace copiado".
+                view?.evaluateJavascript(
+                    """
+                    (function(){
+                      if (!window.RosarioMarketAndroid) return;
+                      navigator.share = function(data) {
+                        data = data || {};
+                        window.RosarioMarketAndroid.share(
+                          String(data.title || ''),
+                          String(data.text || ''),
+                          String(data.url || '')
+                        );
+                        return Promise.resolve();
+                      };
+                    })();
+                    """.trimIndent(),
+                    null
+                )
+            }
+        }
         webView.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback?) { callback?.invoke(origin, true, false) }
         }
