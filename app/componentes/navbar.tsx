@@ -82,7 +82,7 @@ export default function Navbar(){
         {user&&<Link href="/panel?tab=cart" className="cart-button" aria-label="Carrito"><ShoppingCart size={20}/>{cartCount>0&&<span className="cart-badge">{cartCount}</span>}</Link>}
         {user?<div className="user-menu" ref={dropdownRef}>
           <button className="user-button" onClick={()=>setDropdownOpen(v=>!v)}>{user.avatar?<img src={user.avatar} alt=""/>:<User size={18}/>}<span>{user.name||"Mi cuenta"}</span><ChevronDown size={15}/></button>
-          {dropdownOpen&&<div className="user-dropdown"><Link href="/perfil"><User size={15}/>Mi perfil</Link>{user.role==="seller"&&<><Link href="/vendedor"><Store size={15}/>Mi negocio</Link><Link href="/pedidos"><Package size={15}/>Pedidos</Link></>}<Link href="/panel?tab=purchases"><Package size={15}/>Mis compras</Link><button onClick={()=>void logout()}><LogOut size={15}/>Cerrar sesión</button></div>}
+          {dropdownOpen&&<div className="user-dropdown"><Link href="/panel"><User size={15}/>Mi perfil</Link>{user.role==="seller"&&<><Link href="/negocio"><Store size={15}/>Mi negocio</Link><Link href="/panel?tab=purchases"><Package size={15}/>Pedidos</Link></>}<Link href="/panel?tab=purchases"><Package size={15}/>Mis compras</Link><button onClick={()=>void logout()}><LogOut size={15}/>Cerrar sesión</button></div>}
         </div>:<div className="auth-buttons"><Link href="/login" className="login-link">Iniciar sesión</Link><Link href="/register" className="register-button">Registrarse</Link></div>}
       </div>
     </div></header>
