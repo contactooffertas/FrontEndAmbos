@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Download, RefreshCw } from "lucide-react";
 
 type AppVersion = { version: string; versionCode: number; apkUrl: string; label?: string };
-const FALLBACK_APK = "/downloads/Rosario-Market-2.0.apk";
+const FALLBACK_APK = "https://github.com/contactooffertas/FrontEndAmbos/releases/download/android-v3.0.0/Rosario-Market-3.0.apk";
 
 function compareVersions(a: string, b: string) {
   const aa = a.split(".").map(n => Number(n) || 0);
@@ -29,8 +29,6 @@ function removeLegacyInstallButtons() {
     if ((el as HTMLElement).id !== "rosario-market-apk-action") el.remove();
   });
 
-  // Si una versión vieja dejó más de un control APK, conservamos solamente
-  // el control oficial actual, ubicado al final de navbar-actions.
   const official = document.getElementById("rosario-market-apk-action");
   document.querySelectorAll("#rosario-market-apk-action").forEach((el, i) => {
     if (i > 0 && el !== official) el.remove();
@@ -54,7 +52,7 @@ export default function AndroidDownloadButton() {
     fetch("/app-version.json", { cache: "no-store" })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setLatest)
-      .catch(() => setLatest({ version: "2.0.0", versionCode: 2, apkUrl: FALLBACK_APK }));
+      .catch(() => setLatest({ version: "3.0.0", versionCode: 3, apkUrl: FALLBACK_APK }));
 
     return () => observer.disconnect();
   }, []);
@@ -75,7 +73,7 @@ export default function AndroidDownloadButton() {
     <a
       id="rosario-market-apk-action"
       href={href}
-      download={isUpdate ? undefined : "Rosario-Market-2.0.apk"}
+      download={isUpdate ? undefined : "Rosario-Market-3.0.apk"}
       aria-label={isUpdate ? "Actualizar Rosario Market" : "Descargar Rosario Market para Android"}
       title={isUpdate ? `Actualizar a Rosario Market ${latest?.version}` : "Descargar Rosario Market"}
       style={{ order:9999,width:38,height:38,minWidth:38,flex:"0 0 38px",display:"inline-flex",alignItems:"center",justifyContent:"center",background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.28)",borderRadius:10,color:"#f97316",textDecoration:"none",padding:0,boxSizing:"border-box" }}
