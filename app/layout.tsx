@@ -7,6 +7,7 @@ import './styles/product-card-polish.css';
 import './styles/affiliate-rosario-brand.css';
 import './styles/seo-performance.css';
 
+
 const SITE = 'https://www.rosariomarket.com.ar';
 
 export const metadata: Metadata = {
