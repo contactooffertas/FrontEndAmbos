@@ -9,7 +9,7 @@ import com.google.android.gms.location.GeofencingEvent
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val event = GeofencingEvent.fromIntent(intent) ?: return
-        if (event.hasError || event.geofenceTransition != Geofence.GEOFENCE_TRANSITION_ENTER) return
+        if (event.hasError() || event.geofenceTransition != Geofence.GEOFENCE_TRANSITION_ENTER) return
         val prefs = context.getSharedPreferences("geofences", Context.MODE_PRIVATE)
         event.triggeringGeofences?.forEach { fence ->
             val id = fence.requestId
