@@ -1,0 +1,47 @@
+name: Publish Android APK to website
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_ARTIFACT_ID: '10158030189'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download successful Android 2.0 artifact
+        run: |
+          mkdir -p /tmp/rm-apk public/downloads
+          curl -L --fail \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${SOURCE_ARTIFACT_ID}/zip" \
+            -o /tmp/rm-apk/artifact.zip
+          unzip -o /tmp/rm-apk/artifact.zip -d /tmp/rm-apk/out
+          cp /tmp/rm-apk/out/Rosario-Market-2.0.apk public/downloads/Rosario-Market-2.0.apk
+          test -s public/downloads/Rosario-Market-2.0.apk
+
+      - name: Commit APK to website
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/downloads/Rosario-Market-2.0.apk
+          if git diff --cached --quiet; then
+            echo "APK already published"
+            exit 0
+          fi
+          git commit -m "release(android): publish Rosario Market 2.0 APK"
+          git push origin main
