@@ -1,0 +1,40 @@
+/* Rosario Market — identidad visual para ofertas flash */
+.flash-section{position:relative;margin-top:1rem;margin-bottom:1rem;border:1px solid rgba(249,115,22,.14);border-radius:24px;background:linear-gradient(145deg,#fff 0%,#fff 62%,rgba(249,115,22,.045) 100%);box-shadow:0 18px 55px rgba(15,23,42,.06);overflow:hidden}
+.flash-section::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#f97316}
+.flash-section-header{position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem}
+.flash-section-title{color:#111827!important}
+.flash-section-icon{width:34px!important;height:34px!important;border-radius:11px!important;background:#111827!important;color:#f97316!important;box-shadow:none!important}
+.flash-section-icon svg{color:#f97316!important;fill:#f97316!important}
+.flash-grid{scrollbar-color:#f97316 transparent!important}
+.flash-grid::-webkit-scrollbar-thumb{background:#f97316!important}
+.flash-card{border:1px solid #e5e7eb!important;border-radius:18px!important;box-shadow:0 8px 24px rgba(15,23,42,.07)!important;background:#fff!important}
+.flash-card::before{display:none!important}
+.flash-card:hover{border-color:rgba(249,115,22,.38)!important;box-shadow:0 14px 34px rgba(15,23,42,.12)!important}
+.flash-card-badge{background:#f97316!important;box-shadow:0 4px 12px rgba(249,115,22,.25)!important;animation:none!important}
+.flash-card-price-final{color:#111827!important}
+.flash-card-cart-btn{background:#f97316!important;box-shadow:none!important}
+.flash-card-cart-btn:hover{background:#ea580c!important;box-shadow:0 6px 16px rgba(249,115,22,.22)!important}
+
+/* Ventana flotante: oscuro de marca con naranja solo como acento */
+.flash-overlay{background:linear-gradient(150deg,#111827 0%,#0b1220 100%)!important;border:1px solid rgba(249,115,22,.35)!important;border-radius:20px!important;box-shadow:0 20px 55px rgba(0,0,0,.42)!important;padding:.7rem!important}
+.flash-overlay::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:#f97316}
+.flash-overlay-header{padding:.05rem .2rem .25rem!important}
+.flash-overlay-title{color:#fff!important;letter-spacing:.01em}
+.flash-overlay-title svg{color:#f97316!important;fill:#f97316!important}
+.flash-overlay-close{background:rgba(255,255,255,.08)!important;color:#cbd5e1!important;border:1px solid rgba(255,255,255,.08)!important}
+.flash-overlay-close:hover{background:rgba(249,115,22,.16)!important;color:#fff!important}
+.flash-overlay-nav-btn{background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.08)!important;color:#f97316!important}
+.flash-overlay-card{background:#fff!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+.flash-overlay-card-media{border-radius:10px;overflow:hidden;background:#f1f5f9}
+.flash-overlay-card-badge{position:absolute!important;background:#f97316!important;color:#fff!important;font-weight:800!important}
+.flash-overlay-card-biz{color:#64748b!important}
+.flash-overlay-card-name{color:#111827!important;font-weight:800!important}
+.flash-overlay-card-timer{color:#475569!important}
+.flash-overlay-card-final{color:#111827!important;font-weight:900!important}
+.flash-overlay-card-orig{color:#94a3b8!important;text-decoration:line-through!important}
+.flash-overlay-card-btn{border:0!important;background:#f97316!important;color:#fff!important;font-weight:800!important;box-shadow:none!important}
+.flash-overlay-card-btn:hover{background:#ea580c!important}
+.flash-overlay-dot{background:rgba(255,255,255,.25)!important}
+.flash-overlay-dot.active{background:#f97316!important}
+
+@media(max-width:600px){.flash-section{margin-left:.75rem;margin-right:.75rem;padding-left:1rem!important;padding-right:1rem!important;border-radius:20px}.flash-overlay{max-width:330px!important}.flash-overlay-card{gap:.45rem!important}.flash-overlay-card-btn{padding:.4rem .48rem!important}}
