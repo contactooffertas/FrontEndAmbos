@@ -6,6 +6,7 @@ import './globals.css';
 import './styles/product-card-polish.css';
 import './styles/affiliate-rosario-brand.css';
 import './styles/seo-performance.css';
+import './styles/flash-brand.css';
 
 
 const SITE = 'https://www.rosariomarket.com.ar';
