@@ -1,7 +1,7 @@
 // app/context/TrackingContext.tsx
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "./authContext";
 
 type TrackFn = (event: string, props?: Record<string, any>) => void;
@@ -26,7 +26,6 @@ const TrackingContext = createContext<{ track: TrackFn, anonymousId: string }>({
 export function TrackingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [anonymousId, setAnonymousId] = useState("");
 
   useEffect(() => {
@@ -89,8 +88,7 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!anonymousId || typeof window === "undefined") return;
-    const qs = searchParams?.toString() || "";
-    const params = new URLSearchParams(qs);
+    const params = new URLSearchParams(window.location.search);
     const startedAt = Date.now();
     const referrer = document.referrer || "direct";
     const source = params.get("utm_source") || (referrer === "direct" ? "direct" : referrer);
@@ -112,7 +110,7 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
       const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
       track("page_leave", { seconds, landing_path: pathname || "/", platform: isAndroidApp ? "android_app" : "web" });
     };
-  }, [anonymousId, pathname, searchParams, track]);
+  }, [anonymousId, pathname, track]);
 
   return (
     <TrackingContext.Provider value={{ track, anonymousId }}>
