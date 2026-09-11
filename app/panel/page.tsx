@@ -63,6 +63,11 @@ interface Purchase {
   businessId?: string;
   buyerRating?: RatingData | null;
   sellerRating?: RatingData | null;
+  payment?: {
+    method?: "direct" | "bna" | "santafe";
+    status?: "unpaid" | "pending" | "verifying" | "paid" | "rejected" | "refunded";
+    refundStatus?: "none" | "requested" | "refunded";
+  } | null;
 }
 
 const STATUS_MAP = {
@@ -298,6 +303,147 @@ function RateSellerBlock({
   );
 }
 
+function OrderPaymentBox({ order, onChanged }: { order: Purchase; onChanged: () => void }) {
+  const [methods, setMethods] = useState<any>(null);
+  const [starting, setStarting] = useState<string | null>(null);
+  const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
+
+  useEffect(() => {
+    if (!order.businessId) return;
+    fetch(`${API}/business/${order.businessId}/payment-methods`, { cache: "no-store" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setMethods(data?.methods || null))
+      .catch(() => setMethods(null));
+  }, [order.businessId]);
+
+  const payment = order.payment;
+  const isExternal = payment?.method === "bna" || payment?.method === "santafe";
+
+  const startPayment = async (provider: "bna" | "santafe") => {
+    if (!token) return;
+    setStarting(provider);
+    try {
+      const res = await fetch(`${API}/orders/${order._id}/payment/start`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      const data = await res.json();
+      const Swal = (await import("sweetalert2")).default;
+      if (!res.ok) {
+        await Swal.fire({ icon: "error", title: data.message || "No se pudo iniciar el pago" });
+        return;
+      }
+      window.open(data.redirectUrl, "_blank", "noopener,noreferrer");
+      await Swal.fire({
+        icon: "info",
+        title: "Pago abierto en el proveedor",
+        html: "Completá el pago en la página oficial. <b>No cierres Rosario Market</b>. Cuando termines, volvé acá y tocá “Ya pagué”.",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#f97316",
+      });
+      onChanged();
+    } finally {
+      setStarting(null);
+    }
+  };
+
+  const markReturned = async () => {
+    if (!token) return;
+    const res = await fetch(`${API}/orders/${order._id}/payment/returned`, {
+      method: "PATCH", headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    const Swal = (await import("sweetalert2")).default;
+    if (!res.ok) {
+      await Swal.fire({ icon: "error", title: data.message || "No se pudo registrar el pago" });
+      return;
+    }
+    await Swal.fire({
+      icon: "success",
+      title: "Pago informado",
+      text: "Ahora está en verificación. El vendedor no puede despachar hasta confirmar que el dinero se acreditó.",
+      confirmButtonColor: "#f97316",
+    });
+    onChanged();
+  };
+
+  const requestRefund = async () => {
+    if (!token) return;
+    const Swal = (await import("sweetalert2")).default;
+    const ask = await Swal.fire({
+      icon: "question", title: "¿Solicitar devolución?",
+      text: "La devolución del dinero se realiza en el proveedor de pago. Rosario Market registra y sigue el estado.",
+      showCancelButton: true, confirmButtonText: "Solicitar", cancelButtonText: "Cancelar", confirmButtonColor: "#f97316",
+    });
+    if (!ask.isConfirmed) return;
+    const res = await fetch(`${API}/orders/${order._id}/payment/refund-request`, {
+      method: "PATCH", headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      await Swal.fire({ icon: "error", title: data.message || "No se pudo solicitar" });
+      return;
+    }
+    await Swal.fire({ icon: "success", title: "Solicitud registrada", text: data.message });
+    onChanged();
+  };
+
+  if (!methods && !isExternal) return null;
+
+  const statusText: Record<string, string> = {
+    pending: "Pago iniciado",
+    verifying: "Pago informado · verificando acreditación",
+    paid: "Pago confirmado",
+    rejected: "Pago no acreditado",
+    refunded: "Pago devuelto",
+    unpaid: "Sin pago online",
+  };
+
+  return (
+    <div style={{ marginTop: "0.8rem", padding: "0.85rem", borderRadius: 12, border: "1px solid rgba(249,115,22,.18)", background: "rgba(249,115,22,.045)" }}>
+      <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "#f97316", marginBottom: 5 }}>PAGO DEL COMERCIO</div>
+      {isExternal ? (
+        <>
+          <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1f2937" }}>
+            {payment?.method === "bna" ? "BNA · +Pagos Nación" : "Banco Santa Fe · PlusPagos"}
+          </div>
+          <div style={{ fontSize: "0.76rem", color: "#64748b", marginTop: 3 }}>{statusText[payment?.status || "unpaid"]}</div>
+          {payment?.status === "pending" && (
+            <button onClick={markReturned} style={{ marginTop: 9, border: 0, borderRadius: 9, padding: "8px 12px", background: "#f97316", color: "#fff", fontWeight: 800, cursor: "pointer" }}>
+              Ya pagué · verificar
+            </button>
+          )}
+          {payment?.status === "verifying" && (
+            <p style={{ margin: "8px 0 0", fontSize: "0.75rem", color: "#1d4ed8", lineHeight: 1.45 }}>
+              Esperando confirmación de acreditación. El envío permanece bloqueado hasta entonces.
+            </p>
+          )}
+          {payment?.status === "paid" && (
+            <div style={{ marginTop: 8 }}>
+              <p style={{ margin: 0, fontSize: "0.76rem", color: "#047857", fontWeight: 800 }}>✓ Acreditación confirmada. El vendedor ya puede preparar el envío.</p>
+              {payment.refundStatus !== "requested" && (
+                <button onClick={requestRefund} style={{ marginTop: 8, border: "1px solid #fed7aa", background: "#fff", color: "#c2410c", borderRadius: 8, padding: "6px 9px", fontWeight: 700, cursor: "pointer", fontSize: "0.72rem" }}>
+                  Solicitar devolución
+                </button>
+              )}
+              {payment.refundStatus === "requested" && <p style={{ margin: "7px 0 0", fontSize: "0.72rem", color: "#c2410c" }}>Devolución solicitada. El comercio debe procesar el reintegro en el proveedor.</p>}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <p style={{ margin: "0 0 8px", fontSize: "0.76rem", color: "#64748b" }}>Los datos de tarjeta se cargan únicamente en el proveedor de pago.</p>
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+            {methods?.bna?.enabled && <button onClick={() => startPayment("bna")} disabled={starting !== null} style={{ border: 0, borderRadius: 9, padding: "8px 11px", background: "#142337", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: "0.75rem" }}>{starting === "bna" ? "Abriendo..." : "Pagar con BNA"}</button>}
+            {methods?.santafe?.enabled && <button onClick={() => startPayment("santafe")} disabled={starting !== null} style={{ border: 0, borderRadius: 9, padding: "8px 11px", background: "#f97316", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: "0.75rem" }}>{starting === "santafe" ? "Abriendo..." : "Pagar con Banco Santa Fe"}</button>}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Vista del panel del comprador ─────────────────────────────────────────────
 function BusinessGroupCard({ group }: { group: BusinessGroup }) {
   const hasPhone = group.phone.trim()!== "";
@@ -483,7 +629,7 @@ function PanelContent() {
       Swal.fire({
         icon: "success",
         title: "Pedido realizado!",
-        text: "Ahora podes contactar a cada negocio por WhatsApp.",
+        text: "Pedido creado. Podés pagar online si el comercio lo habilitó o continuar con trato directo.",
         timer: 2500,
         showConfirmButton: false,
       });
@@ -736,7 +882,7 @@ function PanelContent() {
                     <CreditCard size={16} /> Confirmar pedido
                   </button>
                   <p className="cart-summary-note">
-                    El pago se coordina con cada vendedor por WhatsApp
+                    Podés pagar online si el comercio lo habilitó o coordinar directamente
                   </p>
                 </div>
               </div>
@@ -856,6 +1002,8 @@ function PanelContent() {
                           </a>
                         </>
                       )}
+
+<OrderPaymentBox order={p} onChanged={loadPurchases} />
 
 {p.businessId && p.status!== "returned" && (
   <ReportModal
