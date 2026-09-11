@@ -62,7 +62,7 @@ function ReturnContent() {
 
           {state === "ok" && (
             <div style={{ background: "#eff6ff", borderRadius: 12, padding: 11, color: "#1d4ed8", fontSize: 12, lineHeight: 1.5, marginBottom: 14 }}>
-              El envío sigue bloqueado hasta que el vendedor confirme que el dinero se acreditó realmente.
+              El envío sigue bloqueado hasta que el vendedor confirme en su banco o Mercado Pago que el dinero se acreditó realmente.
             </div>
           )}
 
