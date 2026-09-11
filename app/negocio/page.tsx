@@ -25,6 +25,7 @@ import {
   deleteProduct, CATEGORIES, type Product,
 } from "../lib/productService";
 import ProductModal from "../componentes/ProductModal";
+import PaymentSettingsPanel from "../componentes/PaymentSettingsPanel";
 import LocationPicker from "../componentes/localtionPicker";
 import LocationPermissionModal from "../componentes/locationPermisoModal";
 import BusinessAppealModal from "../componentes/Businessappealmodal";
@@ -887,6 +888,12 @@ export default function NegocioPage() {
           </div>
         </div>
       </div>
+
+      {isOwner && token && business._id && (
+        <div style={{ maxWidth: 960, margin: "1rem auto 0", padding: "0 1.5rem" }}>
+          <PaymentSettingsPanel token={token} compact />
+        </div>
+      )}
 
       {/* PRODUCTOS */}
       <div className="negocio-products-section">
