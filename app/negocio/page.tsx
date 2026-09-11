@@ -477,6 +477,10 @@ export default function NegocioPage() {
     if (!token) return;
     setLocationError("");
     if (!business.phone.trim()) { showToast("error", "El numero de celular es obligatorio."); return; }
+    if (containsForbiddenContent(business.name, business.description, business.city, bizLocation?.address)) {
+      showToast("error", "El contenido contiene palabras o expresiones no permitidas.");
+      return;
+    }
     if (!bizLocation?.lat || !bizLocation?.lng) { setLocationError("La ubicacion del negocio es obligatoria."); return; }
     try {
       setSaving(true);
