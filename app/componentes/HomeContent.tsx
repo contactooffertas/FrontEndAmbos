@@ -12,6 +12,7 @@ import { useAuth } from "../context/authContext";
 import { useCart } from "../context/cartContext";
 import CategoryIcon from "./cateroryicon";
 import { useMarketCategories } from "../hooks/useMarketCategories";
+import { containsForbiddenContent } from "../lib/contentPolicy";
 import ReportModal from "./reportModal";
 import {
   Tag,
@@ -531,6 +532,12 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
   const submit = (term?: string) => {
     const q = String(term ?? value).trim();
     if (!q) return;
+    if (containsForbiddenContent(q)) {
+      setValue("");
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
     setOpen(false);
     router.push(`/?search=${encodeURIComponent(q)}#offers`);
   };
