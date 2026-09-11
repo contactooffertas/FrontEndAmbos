@@ -342,6 +342,7 @@ function ReviewSubmitModal({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function NegocioPage() {
   const { user } = useAuth();
+  const { categories: marketCategories } = useMarketCategories();
   const router = useRouter();
   const params = useParams();
   const bizIdParam = params?.id as string | undefined;
