@@ -1658,3 +1658,129 @@
     max-width: 230px;
   }
 }
+
+
+/* ── Negocios cerca: paginación de 3 en 3 ── */
+.nearby-home-list--paged {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  overflow: hidden;
+  width: 100%;
+  padding: 0.15rem 0 0.25rem;
+  animation: nearbyPageIn .24s ease;
+}
+
+.nearby-home-list--paged .nearby-home-card,
+.nearby-home-list--paged .nearby-home-skeleton {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.nearby-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.nearby-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.nearby-page-btn,
+.nearby-page-arrow {
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 9px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+.nearby-page-btn:hover,
+.nearby-page-arrow:hover:not(:disabled) {
+  border-color: rgba(249, 115, 22, 0.55);
+  color: #f97316;
+  transform: translateY(-1px);
+}
+
+.nearby-page-btn.active {
+  background: #f97316;
+  border-color: #f97316;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.22);
+}
+
+.nearby-page-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.nearby-page-ellipsis {
+  min-width: 18px;
+  text-align: center;
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+.nearby-page-summary {
+  width: 100%;
+  text-align: center;
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+@keyframes nearbyPageIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 700px) {
+  .nearby-home-list--paged {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+    overflow: hidden !important;
+  }
+
+  .nearby-home-list--paged .nearby-home-card {
+    width: 100%;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .nearby-home-list--paged .nearby-home-skeleton {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .nearby-pagination {
+    gap: 0.35rem;
+    margin-top: 0.85rem;
+  }
+
+  .nearby-page-btn,
+  .nearby-page-arrow {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .nearby-page-summary {
+    font-size: 0.7rem;
+  }
+}
