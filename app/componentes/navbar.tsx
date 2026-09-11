@@ -6,21 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../context/authContext";
 import { useCart } from "../context/cartContext";
 import CategoryIcon from "./cateroryicon";
+import { categories as NAV_CATEGORIES } from "../lib/db";
 import "../styles/navbar.css";
 import { Home, Search, User, Package, Store, LogOut, ChevronDown, ShoppingCart, Bell, MessageCircle, Handshake, Shield, MapPin } from "lucide-react";
-
-const NAV_CATEGORIES = [
-  { id:"1",name:"Electrónica",iconName:"Monitor",slug:"electronica" },
-  { id:"2",name:"Ropa y Moda",iconName:"Shirt",slug:"ropa-moda" },
-  { id:"3",name:"Hogar",iconName:"Home",slug:"hogar" },
-  { id:"4",name:"Deportes",iconName:"Dumbbell",slug:"deportes" },
-  { id:"5",name:"Alimentos",iconName:"ShoppingBag",slug:"alimentos" },
-  { id:"6",name:"Salud y Belleza",iconName:"Heart",slug:"salud-belleza" },
-  { id:"7",name:"Automotriz",iconName:"Car",slug:"automotriz" },
-  { id:"8",name:"Juguetes",iconName:"Gift",slug:"juguetes" },
-  { id:"9",name:"Libros",iconName:"BookOpen",slug:"libros" },
-  { id:"10",name:"Mascotas",iconName:"PawPrint",slug:"mascotas" },
-];
 
 // Navbar validado para Turbopack.
 const API="https://new-backend-lovat.vercel.app/api";
