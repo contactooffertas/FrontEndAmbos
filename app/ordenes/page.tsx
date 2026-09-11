@@ -648,7 +648,7 @@ export default function OrdenesPage() {
 
                   {/* Acciones según estado */}
                   <div className="orden-actions">
-                        {status === "pending" && (
+                        {(status === "pending" || status === "confirmed") && (
                       <>
                         <button
                           style={{
