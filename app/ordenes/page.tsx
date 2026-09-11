@@ -327,16 +327,16 @@ function PaymentStatusBox({
   const action = async (kind: "confirm" | "reject" | "refunded") => {
     const Swal = (await import("sweetalert2")).default;
     const texts = {
-      confirm: "Confirmá solo si verificaste la acreditación en tu cuenta o portal bancario.",
+      confirm: "Antes de confirmar, abrí tu cuenta bancaria o billetera oficial y comprobá que el dinero realmente esté acreditado. No te guíes por capturas, comprobantes de WhatsApp ni mensajes del comprador.",
       reject: "Marcá como no acreditado solo si comprobaste que el pago no ingresó.",
       refunded: "Rosario Market no devuelve el dinero. Marcá esto solo después de hacer el reintegro en el proveedor.",
     };
     const ask = await Swal.fire({
       icon: kind === "confirm" ? "question" : "warning",
-      title: kind === "confirm" ? "¿Confirmar pago?" : kind === "reject" ? "¿Pago no acreditado?" : "¿Devolución realizada?",
+      title: kind === "confirm" ? "¿El dinero ya está en tu cuenta?" : kind === "reject" ? "¿Pago no acreditado?" : "¿Devolución realizada?",
       text: texts[kind],
       showCancelButton: true,
-      confirmButtonText: "Confirmar",
+      confirmButtonText: kind === "confirm" ? "Sí, lo verifiqué en mi cuenta" : "Confirmar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: kind === "confirm" ? "#16a34a" : "#ef4444",
     });
@@ -369,14 +369,14 @@ function PaymentStatusBox({
 
       {payment.status !== "paid" && payment.status !== "refunded" && (
         <p style={{ margin: "8px 0 0", fontSize: 11, color: "#64748b", lineHeight: 1.45 }}>
-          No despaches el pedido hasta confirmar la acreditación. El regreso del comprador desde el banco no prueba por sí solo que el dinero haya ingresado.
+          Antes de enviar, mirá tu cuenta bancaria o billetera oficial y comprobá que el dinero esté acreditado. No aceptes como confirmación una captura, un comprobante por WhatsApp ni un mensaje del comprador.
         </p>
       )}
 
       {payment.status === "verifying" && (
         <div style={{ display: "flex", gap: 7, marginTop: 9, flexWrap: "wrap" }}>
           <button onClick={() => action("confirm")} style={{ border: 0, borderRadius: 8, padding: "7px 10px", background: "#16a34a", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: 11 }}>
-            Confirmar acreditación
+            Ya vi el dinero en mi cuenta
           </button>
           <button onClick={() => action("reject")} style={{ border: "1px solid #fecaca", borderRadius: 8, padding: "7px 10px", background: "#fff", color: "#b91c1c", fontWeight: 800, cursor: "pointer", fontSize: 11 }}>
             No acreditado
