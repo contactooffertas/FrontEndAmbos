@@ -26,7 +26,8 @@ export default function AdminFunnel(){
   const [days,setDays]=useState(30);
   const [data,setData]=useState<FunnelData|null>(null);
   const [loading,setLoading]=useState(true);
-  const [error,setError]=useState("");\n  const [cleaning,setCleaning]=useState(false);
+  const [error,setError]=useState("");
+  const [cleaning,setCleaning]=useState(false);
 
   const load=async()=>{
     setLoading(true); setError("");
