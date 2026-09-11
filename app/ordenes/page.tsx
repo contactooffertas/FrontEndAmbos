@@ -7,6 +7,7 @@ import { useAuth } from "../context/authContext";
 import "../styles/ordenes.css";
 import {
   Package, Clock, Truck, CheckCircle, RotateCcw, Bell, RefreshCw, Trash2, Star,
+  Landmark, ShieldCheck, XCircle, Save,
 } from "lucide-react";
 
 const API = "https://new-backend-lovat.vercel.app/api";
@@ -37,6 +38,14 @@ interface SellerOrder {
   items?: OrderItem[] | null;
   buyerRating?:  RatingData | null;
   sellerRating?: RatingData | null;
+  payment?: {
+    method?: "direct" | "bna" | "santafe";
+    status?: "unpaid" | "pending" | "verifying" | "paid" | "rejected" | "refunded";
+    refundStatus?: "none" | "requested" | "refunded";
+    initiatedAt?: string | null;
+    returnedAt?: string | null;
+    confirmedAt?: string | null;
+  } | null;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -165,6 +174,222 @@ function RateBuyerBlock({
       >
         {loading ? "Enviando..." : "Calificar comprador"}
       </button>
+    </div>
+  );
+}
+
+function PaymentSettingsPanel({ token }: { token: string | null }) {
+  const [settings, setSettings] = useState({
+    bna: { enabled: false, paymentLink: "" },
+    santafe: { enabled: false, paymentLink: "" },
+  });
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API}/business/payment-settings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.paymentMethods) setSettings(data.paymentMethods);
+      })
+      .finally(() => setLoadingSettings(false));
+  }, [token]);
+
+  const save = async () => {
+    if (!token) return;
+    setSavingSettings(true);
+    try {
+      const res = await fetch(`${API}/business/payment-settings`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ paymentMethods: settings }),
+      });
+      const data = await res.json();
+      const Swal = (await import("sweetalert2")).default;
+      if (!res.ok) {
+        await Swal.fire({ icon: "error", title: data.message || "No se pudo guardar" });
+        return;
+      }
+      setSettings(data.paymentMethods);
+      await Swal.fire({
+        icon: "success",
+        title: "Métodos de cobro guardados",
+        text: "Rosario Market nunca guarda tu usuario, contraseña ni datos de tarjeta.",
+        timer: 2200,
+        showConfirmButton: false,
+      });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  if (loadingSettings) return null;
+
+  return (
+    <div style={{
+      marginBottom: "1rem", padding: "1rem", borderRadius: 16,
+      background: "#fff", border: "1px solid #e5e7eb",
+      boxShadow: "0 6px 20px rgba(15,23,42,.05)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 4 }}>
+        <Landmark size={18} color="#f97316" />
+        <strong style={{ color: "#111827" }}>Métodos de cobro</strong>
+      </div>
+      <p style={{ margin: "0 0 12px", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+        Pegá únicamente el link oficial de cobro de tu comercio. Nunca cargues usuario, contraseña, token bancario ni datos de tarjeta.
+      </p>
+
+      {([
+        ["bna", "BNA · +Pagos Nación"],
+        ["santafe", "Banco Santa Fe · PlusPagos"],
+      ] as const).map(([key, label]) => (
+        <div key={key} style={{
+          display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", gap: 10,
+          alignItems: "center", padding: "10px 0", borderTop: "1px solid #f1f5f9",
+        }}>
+          <input
+            type="checkbox"
+            checked={settings[key].enabled}
+            onChange={(e) => setSettings((prev) => ({
+              ...prev,
+              [key]: { ...prev[key], enabled: e.target.checked },
+            }))}
+            aria-label={`Habilitar ${label}`}
+          />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#1f2937", marginBottom: 5 }}>{label}</div>
+            <input
+              type="url"
+              placeholder="https://link-oficial-de-pago..."
+              value={settings[key].paymentLink}
+              onChange={(e) => setSettings((prev) => ({
+                ...prev,
+                [key]: { ...prev[key], paymentLink: e.target.value },
+              }))}
+              style={{
+                width: "100%", boxSizing: "border-box", border: "1px solid #d1d5db",
+                borderRadius: 9, padding: "9px 10px", fontSize: 12,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+
+      <button
+        onClick={save}
+        disabled={savingSettings}
+        style={{
+          marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6,
+          border: 0, borderRadius: 9, background: "#f97316", color: "#fff",
+          padding: "9px 13px", fontWeight: 800, cursor: "pointer",
+        }}
+      >
+        <Save size={14} /> {savingSettings ? "Guardando..." : "Guardar cobros"}
+      </button>
+    </div>
+  );
+}
+
+function PaymentStatusBox({
+  order,
+  onRefresh,
+}: {
+  order: SellerOrder;
+  onRefresh: () => void;
+}) {
+  const payment = order.payment;
+  if (!payment || payment.method === "direct") {
+    return (
+      <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 10, background: "#f8fafc", color: "#64748b", fontSize: 12 }}>
+        Trato directo: el pago se coordina con el comprador.
+      </div>
+    );
+  }
+
+  const providerLabel = payment.method === "bna" ? "BNA +Pagos Nación" : "Banco Santa Fe / PlusPagos";
+  const states: Record<string, { label: string; bg: string; color: string }> = {
+    pending: { label: "Pago iniciado", bg: "#fff7ed", color: "#c2410c" },
+    verifying: { label: "Esperando verificación", bg: "#eff6ff", color: "#1d4ed8" },
+    paid: { label: "Pago confirmado", bg: "#ecfdf5", color: "#047857" },
+    rejected: { label: "Pago no acreditado", bg: "#fef2f2", color: "#b91c1c" },
+    refunded: { label: "Pago devuelto", bg: "#f8fafc", color: "#475569" },
+    unpaid: { label: "Sin pago", bg: "#f8fafc", color: "#64748b" },
+  };
+  const state = states[payment.status || "unpaid"] || states.unpaid;
+  const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
+
+  const action = async (kind: "confirm" | "reject" | "refunded") => {
+    const Swal = (await import("sweetalert2")).default;
+    const texts = {
+      confirm: "Confirmá solo si verificaste la acreditación en tu cuenta o portal bancario.",
+      reject: "Marcá como no acreditado solo si comprobaste que el pago no ingresó.",
+      refunded: "Rosario Market no devuelve el dinero. Marcá esto solo después de hacer el reintegro en el proveedor.",
+    };
+    const ask = await Swal.fire({
+      icon: kind === "confirm" ? "question" : "warning",
+      title: kind === "confirm" ? "¿Confirmar pago?" : kind === "reject" ? "¿Pago no acreditado?" : "¿Devolución realizada?",
+      text: texts[kind],
+      showCancelButton: true,
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: kind === "confirm" ? "#16a34a" : "#ef4444",
+    });
+    if (!ask.isConfirmed) return;
+
+    const res = await fetch(`${API}/orders/${order._id}/payment/${kind}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      await Swal.fire({ icon: "error", title: data.message || "No se pudo actualizar el pago" });
+      return;
+    }
+    onRefresh();
+  };
+
+  return (
+    <div style={{ marginTop: 10, border: "1px solid #e5e7eb", borderRadius: 12, padding: 11, background: "#fff" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: 11, color: "#64748b" }}>{providerLabel}</div>
+          <div style={{ fontSize: 12, fontWeight: 900, color: state.color }}>{state.label}</div>
+        </div>
+        <div style={{ background: state.bg, color: state.color, borderRadius: 99, padding: "5px 9px", fontSize: 10, fontWeight: 900 }}>
+          {payment.status === "paid" ? <ShieldCheck size={12} style={{ verticalAlign: "middle", marginRight: 4 }} /> : null}
+          {state.label}
+        </div>
+      </div>
+
+      {payment.status !== "paid" && payment.status !== "refunded" && (
+        <p style={{ margin: "8px 0 0", fontSize: 11, color: "#64748b", lineHeight: 1.45 }}>
+          No despaches el pedido hasta confirmar la acreditación. El regreso del comprador desde el banco no prueba por sí solo que el dinero haya ingresado.
+        </p>
+      )}
+
+      {payment.status === "verifying" && (
+        <div style={{ display: "flex", gap: 7, marginTop: 9, flexWrap: "wrap" }}>
+          <button onClick={() => action("confirm")} style={{ border: 0, borderRadius: 8, padding: "7px 10px", background: "#16a34a", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: 11 }}>
+            Confirmar acreditación
+          </button>
+          <button onClick={() => action("reject")} style={{ border: "1px solid #fecaca", borderRadius: 8, padding: "7px 10px", background: "#fff", color: "#b91c1c", fontWeight: 800, cursor: "pointer", fontSize: 11 }}>
+            No acreditado
+          </button>
+        </div>
+      )}
+
+      {payment.refundStatus === "requested" && payment.status === "paid" && (
+        <div style={{ marginTop: 9, background: "#fff7ed", borderRadius: 9, padding: 9, fontSize: 11, color: "#9a3412" }}>
+          El comprador solicitó devolución. Procesá el reintegro en {providerLabel} y después registralo acá.
+          <div><button onClick={() => action("refunded")} style={{ marginTop: 7, border: 0, borderRadius: 7, padding: "6px 9px", background: "#f97316", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: 10 }}>Marcar reintegro realizado</button></div>
+        </div>
+      )}
     </div>
   );
 }
@@ -312,6 +537,8 @@ export default function OrdenesPage() {
           </button>
         </div>
 
+        <PaymentSettingsPanel token={token} />
+
         {/* Filtros */}
         <div className="ordenes-tabs">
           {FILTER_TABS.map(t => (
@@ -417,6 +644,8 @@ export default function OrdenesPage() {
             Una vez que reciba el pedido y confirme la entrega, vas a poder calificar la operación y dejar tu valoración.
              </h3>
                   </div>
+                  <PaymentStatusBox order={order} onRefresh={() => fetchOrders(true)} />
+
                   {/* Acciones según estado */}
                   <div className="orden-actions">
                         {status === "pending" && (
@@ -437,11 +666,13 @@ export default function OrdenesPage() {
                             opacity: dispatching === order._id ? 0.7 : 1,
                           }}
                           onClick={() => handleShip(order._id)}
-                          disabled={dispatching === order._id}>
+                          disabled={dispatching === order._id || (!!order.payment?.method && order.payment.method !== "direct" && order.payment.status !== "paid")}>
                           <Truck size={15} />
                           {dispatching === order._id
                             ? "Despachando..."
-                            : "Despachar pedido"}
+                            : (!!order.payment?.method && order.payment.method !== "direct" && order.payment.status !== "paid")
+                              ? "Esperando pago"
+                              : "Despachar pedido"}
                         </button>
                         <p
                           style={{
