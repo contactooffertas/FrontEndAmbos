@@ -8,11 +8,13 @@ const API = "https://new-backend-lovat.vercel.app/api";
 type PaymentSettings = {
   bna: { enabled: boolean; paymentLink: string };
   santafe: { enabled: boolean; paymentLink: string };
+  mercadopago: { enabled: boolean; paymentLink: string };
 };
 
 const EMPTY_SETTINGS: PaymentSettings = {
   bna: { enabled: false, paymentLink: "" },
   santafe: { enabled: false, paymentLink: "" },
+  mercadopago: { enabled: false, paymentLink: "" },
 };
 
 export default function PaymentSettingsPanel({
@@ -47,6 +49,10 @@ export default function PaymentSettingsPanel({
             santafe: {
               enabled: Boolean(data.paymentMethods.santafe?.enabled),
               paymentLink: data.paymentMethods.santafe?.paymentLink || "",
+            },
+            mercadopago: {
+              enabled: Boolean(data.paymentMethods.mercadopago?.enabled),
+              paymentLink: data.paymentMethods.mercadopago?.paymentLink || "",
             },
           });
         }
@@ -87,6 +93,10 @@ export default function PaymentSettingsPanel({
         santafe: {
           enabled: Boolean(data.paymentMethods?.santafe?.enabled),
           paymentLink: data.paymentMethods?.santafe?.paymentLink || "",
+        },
+        mercadopago: {
+          enabled: Boolean(data.paymentMethods?.mercadopago?.enabled),
+          paymentLink: data.paymentMethods?.mercadopago?.paymentLink || "",
         },
       });
 
@@ -142,6 +152,7 @@ export default function PaymentSettingsPanel({
       {([
         ["bna", "BNA · +Pagos Nación"],
         ["santafe", "Banco Santa Fe · PlusPagos"],
+        ["mercadopago", "Mercado Pago"],
       ] as const).map(([key, label]) => (
         <div
           key={key}
