@@ -278,22 +278,39 @@ export default function ProductModal({
             </div>
           </div>
 
-          {/* Categoría */}
+          {/* Categoría — misma forma de selección que el negocio */}
           <div className="mp-field">
             <label className="mp-label">Categoría</label>
-            <select
-              value={form.category}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, category: e.target.value }))
-              }
-              className="mp-input mp-select"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
+              {CATEGORIES.map((category) => {
+                const Icon = category.icon;
+                const active = form.category === category.value;
+                return (
+                  <button
+                    key={category.value}
+                    type="button"
+                    onClick={() => setForm((previous) => ({ ...previous, category: category.value }))}
+                    aria-pressed={active}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      padding: "0.42rem 0.75rem",
+                      borderRadius: 20,
+                      border: `1.5px solid ${active ? "#f97316" : "rgba(100,116,139,0.35)"}`,
+                      background: active ? "rgba(249,115,22,0.12)" : "transparent",
+                      color: active ? "#ea580c" : "inherit",
+                      fontSize: "0.78rem",
+                      fontWeight: active ? 700 : 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Icon size={13} />
+                    {category.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Descripción */}
