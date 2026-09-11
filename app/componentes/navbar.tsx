@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../context/authContext";
 import { useCart } from "../context/cartContext";
 import CategoryIcon from "./cateroryicon";
-import { categories as NAV_CATEGORIES } from "../lib/db";
+import { useMarketCategories } from "../hooks/useMarketCategories";
 import { containsForbiddenContent } from "../lib/contentPolicy";
 import "../styles/navbar.css";
 import { Home, Search, User, Package, Store, LogOut, ChevronDown, ShoppingCart, Bell, MessageCircle, Handshake, Shield, MapPin } from "lucide-react";
@@ -17,6 +17,7 @@ type Notice={id:string;title:string;body:string;url?:string;kind?:"announcement"
 
 export default function Navbar(){
   const {user,logout}=useAuth();
+  const {categories:NAV_CATEGORIES}=useMarketCategories();
   const {cartCount}=useCart();
   const pathname=usePathname() || "/";
   const router=useRouter();
@@ -104,7 +105,7 @@ export default function Navbar(){
     return()=>{cancelled=true;clearInterval(interval);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onFocus)};
   },[user?.id]);
 
-  const handleSearch=(e:React.FormEvent)=>{e.preventDefault();const q=searchQuery.trim();if(containsForbiddenContent(q)){setSearchQuery("");return;}if(q)router.push(`/buscar?q=${encodeURIComponent(q)}`)};
+  const handleSearch=(e:React.FormEvent)=>{e.preventDefault();const q=searchQuery.trim();if(containsForbiddenContent(q)){setSearchQuery("");return;}if(q)router.push(`/?search=${encodeURIComponent(q)}#offers`)};
   const currentSlug=pathname.startsWith("/categoria/")?(pathname.split("/categoria/")[1]?.split("?")[0]??""):"";
 
   return <>
