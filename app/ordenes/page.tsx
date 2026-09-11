@@ -437,8 +437,7 @@ export default function OrdenesPage() {
                             opacity: dispatching === order._id ? 0.7 : 1,
                           }}
                           onClick={() => handleShip(order._id)}
-                          disabled={dispatching === order._id}
-                        >
+                          disabled={dispatching === order._id}>
                           <Truck size={15} />
                           {dispatching === order._id
                             ? "Despachando..."
@@ -453,8 +452,7 @@ export default function OrdenesPage() {
                             borderRadius: "6px",
                             fontSize: "13px",
                             fontWeight: "500",
-                          }}
-                        >
+                          }}>
                           ⚠️ Antes de despachar el pedido, asegurate de arreglar
                           el gasto de envío y todos los detalles logísticos con
                           el comprador, ya tiene tu numero de whatsapp si lo cargaste correctamente o contactalo por mail que esta debajo de su nombre.
