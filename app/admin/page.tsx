@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import '../styles/admin.css';
 import AdminFunnel from '../componentes/AdminFunnel';
+import AdminSearchDictionary from '../componentes/AdminSearchDictionary';
 
 const API = 'https://new-backend-lovat.vercel.app/api';
 function getToken() { return typeof window !== 'undefined' ? localStorage.getItem('marketplace_token') : null; }
@@ -44,7 +45,7 @@ async function apiDirectFetch(path: string, opts: RequestInit = {}) {
   return data;
 }
 
-type Tab = 'dashboard' | 'funnel' | 'users' | 'businesses' | 'featured-biz' | 'featured-products' | 'reports' | 'product-reviews' | 'subscribers' | 'announcements' | 'business-appeals';
+type Tab = 'dashboard' | 'funnel' | 'search-dictionary' | 'users' | 'businesses' | 'featured-biz' | 'featured-products' | 'reports' | 'product-reviews' | 'subscribers' | 'announcements' | 'business-appeals';
 
 interface Stats { totalUsers: number; totalBusinesses: number; totalProducts: number; activeFeaturedBiz: number; activeFeaturedProducts: number; blockedUsers: number; blockedBusinesses: number; recentUsers: any[]; }
 interface UserRow { _id: string; name: string; email: string; role: string; blocked?: boolean; createdAt: string; }
@@ -621,6 +622,7 @@ export default function AdminPage() {
   const navItems: { id: Tab; icon: any; label: string; badge?: number }[] = [
     { id: 'dashboard',        icon: LayoutDashboard,   label: 'Dashboard' },
     { id: 'funnel',           icon: BarChart3,          label: 'Embudo / Leads' },
+    { id: 'search-dictionary',icon: Search,             label: 'Buscador / Categorías' },
     { id: 'users',            icon: Users,             label: 'Usuarios' },
     { id: 'businesses',       icon: Store,             label: 'Negocios' },
     { id: 'subscribers',      icon: BadgeDollarSign,   label: 'Suscriptores',      badge: expiringSubscribers },
@@ -679,6 +681,7 @@ export default function AdminPage() {
             <h1 className="adm-page-title">
               {tab === 'dashboard' && 'Dashboard'}
               {tab === 'funnel' && 'Embudo de Leads'}
+              {tab === 'search-dictionary' && 'Buscador y Categorías'}
               {tab === 'users' && 'Usuarios'}
               {tab === 'businesses' && 'Negocios'}
               {tab === 'subscribers' && 'Suscriptores'}
@@ -735,6 +738,7 @@ export default function AdminPage() {
         </div>
 
         {tab === 'funnel' && <AdminFunnel />}
+        {tab === 'search-dictionary' && <AdminSearchDictionary />}
 
         {/* ════ DASHBOARD ════ */}
         {tab === 'dashboard' && stats && (
