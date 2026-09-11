@@ -3,7 +3,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, ImageIcon, Tag, MapPin } from "lucide-react";
-import { CATEGORIES, type Product } from "../lib/productService";
+import { type Product } from "../lib/productService";
+import { useMarketCategories } from "../hooks/useMarketCategories";
+import CategoryIcon from "./cateroryicon";
 import { containsForbiddenContent } from "../lib/contentPolicy";
 import "../styles/productoModal.css";
 
@@ -32,6 +34,7 @@ export default function ProductModal({
   initial,
   loading,
 }: Props) {
+  const { categories } = useMarketCategories();
   const [form, setForm] = useState<ProductForm>({
     name: "",
     price: "",
@@ -282,14 +285,13 @@ export default function ProductModal({
           <div className="mp-field">
             <label className="mp-label">Categoría</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
-              {CATEGORIES.map((category) => {
-                const Icon = category.icon;
-                const active = form.category === category.value;
+              {categories.map((category) => {
+                const active = form.category === category.slug;
                 return (
                   <button
-                    key={category.value}
+                    key={category.slug}
                     type="button"
-                    onClick={() => setForm((previous) => ({ ...previous, category: category.value }))}
+                    onClick={() => setForm((previous) => ({ ...previous, category: category.slug }))}
                     aria-pressed={active}
                     style={{
                       display: "inline-flex",
@@ -305,8 +307,8 @@ export default function ProductModal({
                       cursor: "pointer",
                     }}
                   >
-                    <Icon size={13} />
-                    {category.label}
+                    <CategoryIcon name={category.iconName} size={13} />
+                    {category.name}
                   </button>
                 );
               })}
