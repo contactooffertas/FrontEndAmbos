@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
 import "../styles/ordenes.css";
+import PaymentSettingsPanel from "../componentes/PaymentSettingsPanel";
 import {
   Package, Clock, Truck, CheckCircle, RotateCcw, Bell, RefreshCw, Trash2, Star,
-  Landmark, ShieldCheck, XCircle, Save,
+  ShieldCheck, XCircle,
 } from "lucide-react";
 
 const API = "https://new-backend-lovat.vercel.app/api";
@@ -174,124 +175,6 @@ function RateBuyerBlock({
         disabled={!rating || loading}
       >
         {loading ? "Enviando..." : "Calificar comprador"}
-      </button>
-    </div>
-  );
-}
-
-function PaymentSettingsPanel({ token }: { token: string | null }) {
-  const [settings, setSettings] = useState({
-    bna: { enabled: false, paymentLink: "" },
-    santafe: { enabled: false, paymentLink: "" },
-  });
-  const [loadingSettings, setLoadingSettings] = useState(true);
-  const [savingSettings, setSavingSettings] = useState(false);
-
-  useEffect(() => {
-    if (!token) return;
-    fetch(`${API}/business/payment-settings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.paymentMethods) setSettings(data.paymentMethods);
-      })
-      .finally(() => setLoadingSettings(false));
-  }, [token]);
-
-  const save = async () => {
-    if (!token) return;
-    setSavingSettings(true);
-    try {
-      const res = await fetch(`${API}/business/payment-settings`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ paymentMethods: settings }),
-      });
-      const data = await res.json();
-      const Swal = (await import("sweetalert2")).default;
-      if (!res.ok) {
-        await Swal.fire({ icon: "error", title: data.message || "No se pudo guardar" });
-        return;
-      }
-      setSettings(data.paymentMethods);
-      await Swal.fire({
-        icon: "success",
-        title: "Métodos de cobro guardados",
-        text: "Rosario Market nunca guarda tu usuario, contraseña ni datos de tarjeta.",
-        timer: 2200,
-        showConfirmButton: false,
-      });
-    } finally {
-      setSavingSettings(false);
-    }
-  };
-
-  if (loadingSettings) return null;
-
-  return (
-    <div style={{
-      marginBottom: "1rem", padding: "1rem", borderRadius: 16,
-      background: "#fff", border: "1px solid #e5e7eb",
-      boxShadow: "0 6px 20px rgba(15,23,42,.05)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 4 }}>
-        <Landmark size={18} color="#f97316" />
-        <strong style={{ color: "#111827" }}>Métodos de cobro</strong>
-      </div>
-      <p style={{ margin: "0 0 12px", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
-        Pegá únicamente el link oficial de cobro de tu comercio. Nunca cargues usuario, contraseña, token bancario ni datos de tarjeta.
-      </p>
-
-      {([
-        ["bna", "BNA · +Pagos Nación"],
-        ["santafe", "Banco Santa Fe · PlusPagos"],
-      ] as const).map(([key, label]) => (
-        <div key={key} style={{
-          display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", gap: 10,
-          alignItems: "center", padding: "10px 0", borderTop: "1px solid #f1f5f9",
-        }}>
-          <input
-            type="checkbox"
-            checked={settings[key].enabled}
-            onChange={(e) => setSettings((prev) => ({
-              ...prev,
-              [key]: { ...prev[key], enabled: e.target.checked },
-            }))}
-            aria-label={`Habilitar ${label}`}
-          />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#1f2937", marginBottom: 5 }}>{label}</div>
-            <input
-              type="url"
-              placeholder="https://link-oficial-de-pago..."
-              value={settings[key].paymentLink}
-              onChange={(e) => setSettings((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], paymentLink: e.target.value },
-              }))}
-              style={{
-                width: "100%", boxSizing: "border-box", border: "1px solid #d1d5db",
-                borderRadius: 9, padding: "9px 10px", fontSize: 12,
-              }}
-            />
-          </div>
-        </div>
-      ))}
-
-      <button
-        onClick={save}
-        disabled={savingSettings}
-        style={{
-          marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6,
-          border: 0, borderRadius: 9, background: "#f97316", color: "#fff",
-          padding: "9px 13px", fontWeight: 800, cursor: "pointer",
-        }}
-      >
-        <Save size={14} /> {savingSettings ? "Guardando..." : "Guardar cobros"}
       </button>
     </div>
   );
