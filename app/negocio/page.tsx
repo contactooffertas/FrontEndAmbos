@@ -28,20 +28,29 @@ import ProductModal from "../componentes/ProductModal";
 import LocationPicker from "../componentes/localtionPicker";
 import LocationPermissionModal from "../componentes/locationPermisoModal";
 import BusinessAppealModal from "../componentes/Businessappealmodal";
+import CategoryIcon from "../componentes/cateroryicon";
+import { categories as MARKET_CATEGORIES } from "../lib/db";
+import { containsForbiddenContent } from "../lib/contentPolicy";
 import { useUserLocation } from "../hooks/Useuserlocation";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
-const BUSINESS_CATEGORIES = [
-  { slug: "tecnologia", name: "Tecnologia", Icon: Cpu },
-  { slug: "ropa",       name: "Ropa",       Icon: Shirt },
-  { slug: "alimentos",  name: "Alimentos",  Icon: UtensilsCrossed },
-  { slug: "hogar",      name: "Hogar",      Icon: Home },
-  { slug: "deportes",   name: "Deportes",   Icon: Dumbbell },
-  { slug: "belleza",    name: "Belleza",    Icon: Sparkles },
-  { slug: "mascotas",   name: "Mascotas",   Icon: PawPrint },
-  { slug: "juguetes",   name: "Juguetes",   Icon: Gamepad2 },
-];
+const BUSINESS_CATEGORIES = MARKET_CATEGORIES;
+
+const LEGACY_BUSINESS_CATEGORY_ALIASES: Record<string, string> = {
+  tecnologia: "electronica",
+  ropa: "ropa-moda",
+  belleza: "salud-belleza",
+  automotor: "automotriz",
+};
+
+function normalizeBusinessCategories(values?: string[]): string[] {
+  const valid = new Set(MARKET_CATEGORIES.map((category) => category.slug));
+  return (values || [])
+    .map((value) => LEGACY_BUSINESS_CATEGORY_ALIASES[value] || value)
+    .filter((value, index, list) => valid.has(value) && list.indexOf(value) === index)
+    .slice(0, 2);
+}
 
 interface Business {
   _id?: string; name: string; description: string; city: string; phone: string;
@@ -107,7 +116,7 @@ function CategorySelector({ selected, onChange }: { selected: string[]; onChange
         Categorias del negocio <span style={{ fontWeight: 400, marginLeft: 4 }}>({selected.length}/2)</span>
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
-        {BUSINESS_CATEGORIES.map(({ slug, name, Icon }) => {
+        {BUSINESS_CATEGORIES.map(({ slug, name, iconName }) => {
           const active   = selected.includes(slug);
           const disabled = !active && selected.length >= 2;
           return (
@@ -120,7 +129,7 @@ function CategorySelector({ selected, onChange }: { selected: string[]; onChange
                 color: active ? "#fdba74" : disabled ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.8)",
                 fontSize: "0.8rem", fontWeight: active ? 700 : 500,
                 cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1,
-              }}><Icon size={13} />{name}</button>
+              }}><CategoryIcon name={iconName} size={13} />{name}</button>
           );
         })}
       </div>
@@ -141,7 +150,7 @@ function CategoryBadges({ categories }: { categories?: string[] }) {
             background: "rgba(249,115,22,0.2)", color: "#fdba74",
             border: "1px solid rgba(249,115,22,0.35)", borderRadius: 20,
             padding: "0.25rem 0.7rem", fontSize: "0.75rem", fontWeight: 600,
-          }}><cat.Icon size={11} />{cat.name}</span>
+          }}><CategoryIcon name={cat.iconName} size={11} />{cat.name}</span>
         );
       })}
     </div>
@@ -383,7 +392,7 @@ export default function NegocioPage() {
           if (res.ok) {
             const data = await res.json();
             setBusiness(data);
-            setSelectedCategories(data.categories || []);
+            setSelectedCategories(normalizeBusinessCategories(data.categories));
             const userId = (user as any)?._id || (user as any)?.id;
             setIsOwner(data.owner === userId || data.owner?._id === userId);
             if (data.location?.coordinates?.length)
@@ -395,7 +404,7 @@ export default function NegocioPage() {
           if (res.ok) {
             const data = await res.json();
             setBusiness(data);
-            setSelectedCategories(data.categories || []);
+            setSelectedCategories(normalizeBusinessCategories(data.categories));
             if (data.location?.coordinates?.length)
               setBizLocation({ lat: data.location.coordinates[1], lng: data.location.coordinates[0], address: data.address || "" });
           } else if (res.status === 404) {
@@ -485,7 +494,7 @@ export default function NegocioPage() {
       const res = await fetch(`${API}/business`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error guardando");
-      setBusiness(data); setSelectedCategories(data.categories || []);
+      setBusiness(data); setSelectedCategories(normalizeBusinessCategories(data.categories));
       setEditing(false); setSelectedFile(null); setLogoPreview(null);
       showToast("success", esNuevo ? "Negocio creado!" : "Negocio actualizado!");
     } catch (error: any) { showToast("error", error.message || "Error al guardar"); }
@@ -494,7 +503,7 @@ export default function NegocioPage() {
 
   const handleCancelEdit = () => {
     setEditing(false); setSelectedFile(null); setLogoPreview(null); setLocationError("");
-    setSelectedCategories(business.categories || []);
+    setSelectedCategories(normalizeBusinessCategories(business.categories));
     if (business.location?.coordinates?.length)
       setBizLocation({ lat: business.location.coordinates[1], lng: business.location.coordinates[0], address: business.address || "" });
   };
