@@ -8,7 +8,7 @@ import Link from "next/link";
 import MainLayout from "./MainLayout";
 import { useAuth } from "../context/authContext";
 import { useCart } from "../context/cartContext";
-import { categories } from "../lib/db";
+import { useMarketCategories } from "../hooks/useMarketCategories";
 import CategoryIcon from "./cateroryicon";
 import {
   ShoppingCart, UserPlus, Users, Store,
@@ -262,6 +262,7 @@ function SellBanner() {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function CategoriaContent() {
+  const { categories } = useMarketCategories();
   const params   = useParams<{ slug: string }>();
   const slug     = params?.slug ?? "";
   const router   = useRouter();
@@ -271,7 +272,6 @@ export default function CategoriaContent() {
   const [loading,  setLoading]  = useState(true);
   const [sortBy,   setSortBy]   = useState<"price_asc" | "price_desc" | "rating">("rating");
 
-  // ✅ catInfo viene del array ESTÁTICO — disponible de inmediato, sin esperar fetch
   const catInfo = categories.find((c) => c.slug === slug);
   const currentUserId = (user as any)?._id || (user as any)?.id;
 
