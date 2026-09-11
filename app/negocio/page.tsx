@@ -33,6 +33,7 @@ import CategoryIcon from "../componentes/cateroryicon";
 import { categories as MARKET_CATEGORIES } from "../lib/db";
 import { containsForbiddenContent } from "../lib/contentPolicy";
 import { useUserLocation } from "../hooks/Useuserlocation";
+import { useMarketCategories } from "../hooks/useMarketCategories";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
@@ -45,8 +46,8 @@ const LEGACY_BUSINESS_CATEGORY_ALIASES: Record<string, string> = {
   automotor: "automotriz",
 };
 
-function normalizeBusinessCategories(values?: string[]): string[] {
-  const valid = new Set(MARKET_CATEGORIES.map((category) => category.slug));
+function normalizeBusinessCategories(values?: string[], definitions = MARKET_CATEGORIES): string[] {
+  const valid = new Set(definitions.map((category) => category.slug));
   return (values || [])
     .map((value) => LEGACY_BUSINESS_CATEGORY_ALIASES[value] || value)
     .filter((value, index, list) => valid.has(value) && list.indexOf(value) === index)
@@ -106,7 +107,7 @@ function getRankInfo(rating: number, total: number) {
   return { label: "En desarrollo", color: "#6b7280", bg: "#f3f4f6" };
 }
 
-function CategorySelector({ selected, onChange }: { selected: string[]; onChange: (cats: string[]) => void }) {
+function CategorySelector({ selected, onChange, categoryDefs }: { selected: string[]; onChange: (cats: string[]) => void; categoryDefs: typeof MARKET_CATEGORIES }) {
   const toggle = (slug: string) => {
     if (selected.includes(slug)) onChange(selected.filter(s => s !== slug));
     else if (selected.length < 2) onChange([...selected, slug]);
@@ -117,7 +118,7 @@ function CategorySelector({ selected, onChange }: { selected: string[]; onChange
         Categorias del negocio <span style={{ fontWeight: 400, marginLeft: 4 }}>({selected.length}/2)</span>
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
-        {BUSINESS_CATEGORIES.map(({ slug, name, iconName }) => {
+        {categoryDefs.map(({ slug, name, iconName }) => {
           const active   = selected.includes(slug);
           const disabled = !active && selected.length >= 2;
           return (
@@ -138,12 +139,12 @@ function CategorySelector({ selected, onChange }: { selected: string[]; onChange
   );
 }
 
-function CategoryBadges({ categories }: { categories?: string[] }) {
+function CategoryBadges({ categories, categoryDefs }: { categories?: string[]; categoryDefs: typeof MARKET_CATEGORIES }) {
   if (!categories?.length) return null;
   return (
     <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
       {categories.map(slug => {
-        const cat = BUSINESS_CATEGORIES.find(c => c.slug === slug);
+        const cat = categoryDefs.find(c => c.slug === slug);
         if (!cat) return null;
         return (
           <span key={slug} style={{
@@ -393,7 +394,7 @@ export default function NegocioPage() {
           if (res.ok) {
             const data = await res.json();
             setBusiness(data);
-            setSelectedCategories(normalizeBusinessCategories(data.categories));
+            setSelectedCategories(normalizeBusinessCategories(data.categories, marketCategories));
             const userId = (user as any)?._id || (user as any)?.id;
             setIsOwner(data.owner === userId || data.owner?._id === userId);
             if (data.location?.coordinates?.length)
@@ -405,7 +406,7 @@ export default function NegocioPage() {
           if (res.ok) {
             const data = await res.json();
             setBusiness(data);
-            setSelectedCategories(normalizeBusinessCategories(data.categories));
+            setSelectedCategories(normalizeBusinessCategories(data.categories, marketCategories));
             if (data.location?.coordinates?.length)
               setBizLocation({ lat: data.location.coordinates[1], lng: data.location.coordinates[0], address: data.address || "" });
           } else if (res.status === 404) {
@@ -499,7 +500,7 @@ export default function NegocioPage() {
       const res = await fetch(`${API}/business`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error guardando");
-      setBusiness(data); setSelectedCategories(normalizeBusinessCategories(data.categories));
+      setBusiness(data); setSelectedCategories(normalizeBusinessCategories(data.categories, marketCategories));
       setEditing(false); setSelectedFile(null); setLogoPreview(null);
       showToast("success", esNuevo ? "Negocio creado!" : "Negocio actualizado!");
     } catch (error: any) { showToast("error", error.message || "Error al guardar"); }
@@ -508,7 +509,7 @@ export default function NegocioPage() {
 
   const handleCancelEdit = () => {
     setEditing(false); setSelectedFile(null); setLogoPreview(null); setLocationError("");
-    setSelectedCategories(normalizeBusinessCategories(business.categories));
+    setSelectedCategories(normalizeBusinessCategories(business.categories, marketCategories));
     if (business.location?.coordinates?.length)
       setBizLocation({ lat: business.location.coordinates[1], lng: business.location.coordinates[0], address: business.address || "" });
   };
@@ -837,7 +838,7 @@ export default function NegocioPage() {
                 <input className="negocio-input" placeholder="Ciudad" value={business.city} onChange={e => setBusiness({ ...business, city: e.target.value })} />
                 <input className="negocio-input" placeholder="Numero de celular" value={business.phone} onChange={e => setBusiness({ ...business, phone: e.target.value })} />
                 <LocationPicker value={bizLocation} onChange={(loc: any) => { setBizLocation(loc); setLocationError(""); }} userLat={userCoords?.lat} userLng={userCoords?.lng} userCity={userCity} error={locationError} />
-                <CategorySelector selected={selectedCategories} onChange={setSelectedCategories} />
+                <CategorySelector selected={selectedCategories} onChange={setSelectedCategories} categoryDefs={marketCategories} />
               </div>
             ) : (
               <>
@@ -854,7 +855,7 @@ export default function NegocioPage() {
                   )}
                 </div>
                 {business.verified ? <span className="negocio-badge"><CheckCircle size={13} /> Verificado</span> : <span className="negocio-badge unverified">Comercio no verificado</span>}
-                <CategoryBadges categories={business.categories} />
+                <CategoryBadges categories={business.categories} categoryDefs={marketCategories} />
                 <p className="negocio-description">{business.description || "Agrega una descripcion de tu negocio."}</p>
                 <div className="negocio-meta">
                   <span><MapPin size={13} />{business.address || business.city || "Direccion no definida"}</span>
