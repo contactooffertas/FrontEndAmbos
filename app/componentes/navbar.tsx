@@ -7,6 +7,7 @@ import { useAuth } from "../context/authContext";
 import { useCart } from "../context/cartContext";
 import CategoryIcon from "./cateroryicon";
 import { categories as NAV_CATEGORIES } from "../lib/db";
+import { containsForbiddenContent } from "../lib/contentPolicy";
 import "../styles/navbar.css";
 import { Home, Search, User, Package, Store, LogOut, ChevronDown, ShoppingCart, Bell, MessageCircle, Handshake, Shield, MapPin } from "lucide-react";
 
@@ -103,7 +104,7 @@ export default function Navbar(){
     return()=>{cancelled=true;clearInterval(interval);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onFocus)};
   },[user?.id]);
 
-  const handleSearch=(e:React.FormEvent)=>{e.preventDefault();const q=searchQuery.trim();if(q)router.push(`/buscar?q=${encodeURIComponent(q)}`)};
+  const handleSearch=(e:React.FormEvent)=>{e.preventDefault();const q=searchQuery.trim();if(containsForbiddenContent(q)){setSearchQuery("");return;}if(q)router.push(`/buscar?q=${encodeURIComponent(q)}`)};
   const currentSlug=pathname.startsWith("/categoria/")?(pathname.split("/categoria/")[1]?.split("?")[0]??""):"";
 
   return <>
