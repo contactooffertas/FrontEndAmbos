@@ -5,6 +5,7 @@ import { CartProvider } from "./cartContext";
 import { TrackingProvider } from "./TrackingContext";
 import GeoPushSync from "../componentes/GeoPushSync";
 import AffiliateFetchProxy from "../componentes/AffiliateFetchProxy";
+import ApiHealthGuard from "../componentes/ApiHealthGuard";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +14,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <GeoPushSync />
       <TrackingProvider>
         <CartProvider>
-          {children}
+          <ApiHealthGuard>
+            {children}
+          </ApiHealthGuard>
         </CartProvider>
       </TrackingProvider>
     </AuthProvider>
