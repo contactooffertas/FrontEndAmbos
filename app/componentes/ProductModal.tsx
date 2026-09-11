@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, ImageIcon, Tag, MapPin } from "lucide-react";
 import { CATEGORIES, type Product } from "../lib/productService";
+import { containsForbiddenContent } from "../lib/contentPolicy";
 import "../styles/productoModal.css";
 
 type ProductForm = {
