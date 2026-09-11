@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../context/authContext";
+import { containsForbiddenContent } from "../lib/contentPolicy";
 import "../styles/login.css";
 import {
   Store,
@@ -40,6 +41,7 @@ export default function RegisterPage() {
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!form.name.trim())                       errs.name     = "El nombre es requerido.";
+    else if (containsForbiddenContent(form.name)) errs.name    = "El nombre contiene texto no permitido.";
     if (!form.email)                             errs.email    = "El email es requerido.";
     else if (!/\S+@\S+\.\S+/.test(form.email))  errs.email    = "Email inválido.";
     if (!form.password)                          errs.password = "La contraseña es requerida.";
