@@ -410,9 +410,84 @@ function NearbyBusinessCard({ biz }: { biz: NearbyHomeBusiness }) {
 }
 
 function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius, onRadiusChange, onRequestLocation, live }: { geoStatus: NearbyGeoStatus; businesses: NearbyHomeBusiness[]; loading: boolean; error: string; radius: number; onRadiusChange: (v: number) => void; onRequestLocation: () => void; live?: boolean }) {
+  const PAGE_SIZE = 3;
+  const [page, setPage] = useState(1);
   const radiusLabel = HOME_RADIUS_OPTIONS.find((o) => o.value === radius)?.label || "3 km";
   const showPrompt = geoStatus === "idle" || geoStatus === "denied" || geoStatus === "error";
-  return <section className="section" id="negocios-cerca"><div className="nearby-section-header"><div className="nearby-section-header-text"><h2 className="section-title"><span className="section-title-icon"><Navigation size={20} strokeWidth={2} /></span>Negocios cerca tuyo</h2><p className="section-subtitle">{geoStatus === "ok" ? <>{businesses.length} negocio{businesses.length !== 1 ? "s" : ""} - {radiusLabel} a la redonda{live && <span style={{ marginLeft: 8, color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>● en vivo</span>}</> : "Descubrí negocios cerca de tu ubicación, sin entrar a tu perfil"}</p></div>{geoStatus === "ok" && <div className="nearby-radius-group">{HOME_RADIUS_OPTIONS.map((opt) => <button key={opt.value} onClick={() => onRadiusChange(opt.value)} className={`nearby-radius-btn ${opt.value === radius ? "active" : ""}`}>{opt.label}</button>)}<button onClick={onRequestLocation} title="Actualizar ubicación" style={{ background: "none", border: "1px solid rgba(249,115,22,0.3)", borderRadius: 8, padding: "0.35rem 0.55rem", color: "#f97316", cursor: "pointer", display: "flex", alignItems: "center" }}><RefreshCw size={13} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /></button></div>}</div>{showPrompt ? <div className="nearby-prompt"><div className="nearby-prompt-icon"><MapPin size={24} /></div><div><p className="nearby-prompt-title">{geoStatus === "denied" ? "Ubicación bloqueada" : "Descubrí lo que tenés cerca"}</p><p className="nearby-prompt-desc">{geoStatus === "denied" ? "Habilitá el permiso de ubicación desde tu navegador para ver negocios cercanos." : "Activá tu ubicación y te mostramos, con distancia incluida, los negocios más cercanos a vos."}</p></div>{geoStatus !== "denied" && <button className="btn btn-primary nearby-prompt-btn" onClick={onRequestLocation}><Navigation size={15} /> Ver negocios cerca tuyo</button>}</div> : geoStatus === "loading" || loading ? <div className="nearby-home-list">{[...Array(3)].map((_, i) => <div key={i} className="nearby-home-skeleton" />)}</div> : error ? <p className="nearby-error-text">{error}</p> : businesses.length === 0 ? <div className="nearby-empty"><Store size={32} strokeWidth={1} className="nearby-empty-icon" /><p>No encontramos negocios en {radiusLabel}. Probá con un radio más amplio.</p></div> : <div className="nearby-home-list">{businesses.map((biz) => <NearbyBusinessCard key={biz._id} biz={biz} />)}</div>}</section>;
+  const totalPages = Math.max(1, Math.ceil(businesses.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const visibleBusinesses = businesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [radius, businesses.length]);
+
+  const goToPage = (nextPage: number) => {
+    setPage(Math.max(1, Math.min(totalPages, nextPage)));
+  };
+
+  const paginationItems = (() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const items: Array<number | "ellipsis-left" | "ellipsis-right"> = [1];
+    if (safePage > 3) items.push("ellipsis-left");
+    for (let p = Math.max(2, safePage - 1); p <= Math.min(totalPages - 1, safePage + 1); p++) items.push(p);
+    if (safePage < totalPages - 2) items.push("ellipsis-right");
+    items.push(totalPages);
+    return items;
+  })();
+
+  const results = showPrompt ? (
+    <div className="nearby-prompt">
+      <div className="nearby-prompt-icon"><MapPin size={24} /></div>
+      <div>
+        <p className="nearby-prompt-title">{geoStatus === "denied" ? "Ubicación bloqueada" : "Descubrí lo que tenés cerca"}</p>
+        <p className="nearby-prompt-desc">{geoStatus === "denied" ? "Habilitá el permiso de ubicación desde tu navegador para ver negocios cercanos." : "Activá tu ubicación y te mostramos, con distancia incluida, los negocios más cercanos a vos."}</p>
+      </div>
+      {geoStatus !== "denied" && <button className="btn btn-primary nearby-prompt-btn" onClick={onRequestLocation}><Navigation size={15} /> Ver negocios cerca tuyo</button>}
+    </div>
+  ) : geoStatus === "loading" || loading ? (
+    <div className="nearby-home-list nearby-home-list--paged">{[...Array(3)].map((_, i) => <div key={i} className="nearby-home-skeleton" />)}</div>
+  ) : error ? (
+    <p className="nearby-error-text">{error}</p>
+  ) : businesses.length === 0 ? (
+    <div className="nearby-empty"><Store size={32} strokeWidth={1} className="nearby-empty-icon" /><p>No encontramos negocios en {radiusLabel}. Probá con un radio más amplio.</p></div>
+  ) : (
+    <>
+      <div className="nearby-home-list nearby-home-list--paged" key={`${radius}-${safePage}`}>
+        {visibleBusinesses.map((biz) => <NearbyBusinessCard key={biz._id} biz={biz} />)}
+      </div>
+      {totalPages > 1 && (
+        <div className="nearby-pagination" aria-label="Paginación de negocios cercanos">
+          <button className="nearby-page-arrow" onClick={() => goToPage(safePage - 1)} disabled={safePage === 1} aria-label="Página anterior"><ChevronLeft size={17} /></button>
+          <div className="nearby-page-numbers">
+            {paginationItems.map((item, index) => typeof item === "number" ? (
+              <button key={item} className={`nearby-page-btn ${item === safePage ? "active" : ""}`} onClick={() => goToPage(item)} aria-current={item === safePage ? "page" : undefined}>{item}</button>
+            ) : <span key={`${item}-${index}`} className="nearby-page-ellipsis">…</span>)}
+          </div>
+          <button className="nearby-page-arrow" onClick={() => goToPage(safePage + 1)} disabled={safePage === totalPages} aria-label="Página siguiente"><ChevronRight size={17} /></button>
+          <span className="nearby-page-summary">Página {safePage} de {totalPages}</span>
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <section className="section" id="negocios-cerca">
+      <div className="nearby-section-header">
+        <div className="nearby-section-header-text">
+          <h2 className="section-title"><span className="section-title-icon"><Navigation size={20} strokeWidth={2} /></span>Negocios cerca tuyo</h2>
+          <p className="section-subtitle">{geoStatus === "ok" ? <>{businesses.length} negocio{businesses.length !== 1 ? "s" : ""} - {radiusLabel} a la redonda{live && <span style={{ marginLeft: 8, color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>● en vivo</span>}</> : "Descubrí negocios cerca de tu ubicación, sin entrar a tu perfil"}</p>
+        </div>
+        {geoStatus === "ok" && (
+          <div className="nearby-radius-group">
+            {HOME_RADIUS_OPTIONS.map((opt) => <button key={opt.value} onClick={() => onRadiusChange(opt.value)} className={`nearby-radius-btn ${opt.value === radius ? "active" : ""}`}>{opt.label}</button>)}
+            <button onClick={onRequestLocation} title="Actualizar ubicación" style={{ background: "none", border: "1px solid rgba(249,115,22,0.3)", borderRadius: 8, padding: "0.35rem 0.55rem", color: "#f97316", cursor: "pointer", display: "flex", alignItems: "center" }}><RefreshCw size={13} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} /></button>
+          </div>
+        )}
+      </div>
+      {results}
+    </section>
+  );
 }
 
 function HomeHero({ showRegister = true, children }: { showRegister?: boolean; children?: React.ReactNode }) {
