@@ -41,7 +41,7 @@ interface SellerOrder {
   buyerRating?:  RatingData | null;
   sellerRating?: RatingData | null;
   payment?: {
-    method?: "direct" | "bna" | "santafe";
+    method?: "direct" | "bna" | "santafe" | "mercadopago";
     status?: "unpaid" | "pending" | "verifying" | "paid" | "rejected" | "refunded";
     refundStatus?: "none" | "requested" | "refunded";
     initiatedAt?: string | null;
@@ -196,7 +196,7 @@ function PaymentStatusBox({
     );
   }
 
-  const providerLabel = payment.method === "bna" ? "BNA +Pagos Nación" : "Banco Santa Fe / PlusPagos";
+  const providerLabel = payment.method === "bna" ? "BNA +Pagos Nación" : payment.method === "santafe" ? "Banco Santa Fe / PlusPagos" : "Mercado Pago";
   const states: Record<string, { label: string; bg: string; color: string }> = {
     pending: { label: "Pago iniciado", bg: "#fff7ed", color: "#c2410c" },
     verifying: { label: "Esperando verificación", bg: "#eff6ff", color: "#1d4ed8" },
@@ -211,7 +211,7 @@ function PaymentStatusBox({
   const action = async (kind: "confirm" | "reject" | "refunded") => {
     const Swal = (await import("sweetalert2")).default;
     const texts = {
-      confirm: "Antes de confirmar, abrí tu cuenta bancaria o billetera oficial y comprobá que el dinero realmente esté acreditado. No te guíes por capturas, comprobantes de WhatsApp ni mensajes del comprador.",
+      confirm: "Antes de confirmar, abrí tu banco o Mercado Pago y comprobá que el dinero realmente figure acreditado. No te guíes por capturas, comprobantes de WhatsApp ni mensajes del comprador.",
       reject: "Marcá como no acreditado solo si comprobaste que el pago no ingresó.",
       refunded: "Rosario Market no devuelve el dinero. Marcá esto solo después de hacer el reintegro en el proveedor.",
     };
@@ -253,7 +253,7 @@ function PaymentStatusBox({
 
       {payment.status !== "paid" && payment.status !== "refunded" && (
         <p style={{ margin: "8px 0 0", fontSize: 11, color: "#64748b", lineHeight: 1.45 }}>
-          Antes de enviar, mirá tu cuenta bancaria o billetera oficial y comprobá que el dinero esté acreditado. No aceptes como confirmación una captura, un comprobante por WhatsApp ni un mensaje del comprador.
+          Antes de enviar, abrí tu banco o Mercado Pago y comprobá que el dinero figure realmente acreditado en tu cuenta. No aceptes como confirmación capturas, comprobantes por WhatsApp ni mensajes del comprador.
         </p>
       )}
 
