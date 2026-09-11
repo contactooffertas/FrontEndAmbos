@@ -1,16 +1,18 @@
 // app/lib/productService.ts
 import {
-  Laptop,
+  Monitor,
   Shirt,
   Home,
-  Trophy,
-  Baby,
-  Apple,
+  Dumbbell,
+  ShoppingBag,
   Heart,
   Car,
+  Gift,
+  BookOpen,
   PawPrint,
-  Package
+  Package,
 } from "lucide-react";
+import { categories as MARKET_CATEGORIES } from "./db";
 
 const API_URL = "https://new-backend-lovat.vercel.app/api";
 
