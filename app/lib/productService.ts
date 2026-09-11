@@ -65,18 +65,24 @@ export interface Product {
   flashOfferSecondsLeft?: number;
 }
 
-export const CATEGORIES = [
-  { value: "electronica",    label: "Electrónica",    icon: Laptop   },
-  { value: "ropa-moda",      label: "Ropa y Moda",    icon: Shirt    },
-  { value: "hogar",          label: "Hogar",          icon: Home     },
-  { value: "deportes",       label: "Deportes",       icon: Trophy   },
-  { value: "juguetes",       label: "Juguetes",       icon: Baby     },
-  { value: "alimentos",      label: "Alimentos",      icon: Apple    },
-  { value: "salud-belleza",  label: "Belleza",        icon: Heart    },
-  { value: "automotor",      label: "Automotor",      icon: Car      },
-  { value: "mascotas",       label: "Mascotas",       icon: PawPrint },
-  { value: "otros",          label: "Otros",          icon: Package  },
-];
+const CATEGORY_ICONS = {
+  Monitor,
+  Shirt,
+  Home,
+  Dumbbell,
+  ShoppingBag,
+  Heart,
+  Car,
+  Gift,
+  BookOpen,
+  PawPrint,
+} as const;
+
+export const CATEGORIES = MARKET_CATEGORIES.map((category) => ({
+  value: category.slug,
+  label: category.name,
+  icon: CATEGORY_ICONS[category.iconName as keyof typeof CATEGORY_ICONS] ?? Package,
+}));
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
