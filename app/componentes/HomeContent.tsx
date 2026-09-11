@@ -6,12 +6,12 @@
 // la lógica ni la UI de este archivo.
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "./MainLayout";
 import { useAuth } from "../context/authContext";
 import { useCart } from "../context/cartContext";
 import CategoryIcon from "./cateroryicon";
-import { categories } from "../lib/db";
+import { useMarketCategories } from "../hooks/useMarketCategories";
 import ReportModal from "./reportModal";
 import {
   Tag,
@@ -247,7 +247,7 @@ function HeroSlider({ products }: { products: Product[] }) {
   }, [suscriptorProducts.length]);
 
   if (!usePool.length) return null;
-  const slice = [0, 1, 2].map((offset) => usePool[(idx + offset) % usePool.length]);
+  const slice = Array.from({ length: Math.min(3, usePool.length) }, (_, offset) => usePool[(idx + offset) % usePool.length]);
 
   return (
     <div className="hero-visual" style={{ opacity: fade ? 1 : 0, transition: "opacity 0.35s ease" }}>
@@ -490,12 +490,166 @@ function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius
   );
 }
 
-function HomeHero({ showRegister = true, children }: { showRegister?: boolean; children?: React.ReactNode }) {
-  return (<section className="hero"><div className="hero-inner"><div><div className="hero-tag">Ofertas exclusivas hoy</div><h1>Las mejores<br /><em>ofertas</em> cerca tuyo</h1><p className="hero-desc">Descubrí productos increíbles de negocios verificados. Filtrá por categoría y ubicación.</p><div className="hero-actions"><button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("offers")?.scrollIntoView({ behavior: "smooth" })}>Ver ofertas</button>{showRegister && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}</div>{/* Estadísticas futuras: productos, negocios y 98% satisfacción. Mantener comentado hasta tener volumen real. */}</div>{children}</div></section>);
+function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
+  const router = useRouter();
+  const [value, setValue] = useState(initialValue);
+  const [suggestions, setSuggestions] = useState<{ text: string; category?: string }[]>([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    const q = value.trim();
+    if (q.length < 1) {
+      setSuggestions([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      fetch(`${API}/search/suggest?q=${encodeURIComponent(q)}&limit=8`, {
+        cache: "no-store",
+        signal: controller.signal,
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          const next = Array.isArray(data?.suggestions) ? data.suggestions : [];
+          setSuggestions(next);
+          setOpen(next.length > 0);
+        })
+        .catch(() => {});
+    }, 160);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [value]);
+
+  const submit = (term?: string) => {
+    const q = String(term ?? value).trim();
+    if (!q) return;
+    setOpen(false);
+    router.push(`/?search=${encodeURIComponent(q)}#offers`);
+  };
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        marginTop: 16,
+        width: "min(100%, 620px)",
+        zIndex: 20,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          background: "rgba(255,255,255,.97)",
+          border: "2px solid rgba(249,115,22,.9)",
+          borderRadius: 16,
+          boxShadow: "0 12px 34px rgba(0,0,0,.24)",
+          overflow: "hidden",
+        }}
+      >
+        <Search size={20} color="#f97316" style={{ marginLeft: 15, flexShrink: 0 }} />
+        <input
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => suggestions.length && setOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") submit();
+            if (event.key === "Escape") setOpen(false);
+          }}
+          placeholder="¿Qué estás buscando? Ej: dónde comprar zapatillas"
+          aria-label="Buscar productos y negocios"
+          style={{
+            minWidth: 0,
+            flex: 1,
+            border: 0,
+            outline: 0,
+            padding: "14px 10px",
+            fontSize: 15,
+            fontWeight: 650,
+            color: "#142033",
+            background: "transparent",
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => submit()}
+          style={{
+            border: 0,
+            alignSelf: "stretch",
+            padding: "0 18px",
+            background: "#f97316",
+            color: "#fff",
+            fontWeight: 900,
+            cursor: "pointer",
+          }}
+        >
+          Buscar
+        </button>
+      </div>
+
+      {open && suggestions.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: "calc(100% + 6px)",
+            background: "#fff",
+            color: "#142033",
+            borderRadius: 14,
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 18px 50px rgba(15,23,42,.22)",
+            overflow: "hidden",
+          }}
+        >
+          {suggestions.map((item, index) => (
+            <button
+              type="button"
+              key={`${item.text}-${index}`}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => submit(item.text)}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                border: 0,
+                borderBottom: index < suggestions.length - 1 ? "1px solid #f1f5f9" : 0,
+                background: "#fff",
+                padding: "11px 13px",
+                textAlign: "left",
+                color: "#1f2937",
+                cursor: "pointer",
+              }}
+            >
+              <Search size={14} color="#f97316" />
+              <span style={{ fontSize: 13, fontWeight: 700 }}>{item.text}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HomeHero({ showRegister = true, children, searchValue = "" }: { showRegister?: boolean; children?: React.ReactNode; searchValue?: string }) {
+  return (<section className="hero"><div className="hero-inner"><div><div className="hero-tag">Ofertas exclusivas hoy</div><h1>Las mejores<br /><em>ofertas</em> cerca tuyo</h1><p className="hero-desc">Descubrí productos increíbles de negocios verificados. Filtrá por categoría y ubicación.</p><div className="hero-actions"><button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("offers")?.scrollIntoView({ behavior: "smooth" })}>Ver ofertas</button>{showRegister && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}</div><HeroSmartSearch initialValue={searchValue} />{/* Estadísticas futuras: productos, negocios y 98% satisfacción. Mantener comentado hasta tener volumen real. */}</div>{children}</div></section>);
 }
 
 function HomePageBody() {
   const { user, enableLocation, enableNotifications } = useAuth();
+  const { categories } = useMarketCategories();
   const searchParams = useSearchParams();
   const searchParam = searchParams.get("search") || "";
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -537,6 +691,7 @@ function HomePageBody() {
   useEffect(() => () => { if (nearbyWatchIdRef.current !== null && typeof navigator !== "undefined" && navigator.geolocation) navigator.geolocation.clearWatch(nearbyWatchIdRef.current); }, []);
   const requestNearbyLocation = useCallback(() => { startNearbyWatch(); }, [startNearbyWatch]);
   const handleNearbyRadiusChange = (value: number) => { setNearbyBizRadius(value); localStorage.setItem("nearbyRadius", String(value)); lastFetchedNearbyCoordsRef.current = null; };
+  useEffect(() => { lastFetchedNearbyCoordsRef.current = null; }, [activeCategory, searchParam]);
 
   useEffect(() => {
     if (nearbyLat === null || nearbyLng === null) return;
@@ -545,8 +700,23 @@ function HomePageBody() {
     if (!moved) return;
     setNearbyBizLoading(true); setNearbyBizError("");
     const effectiveRadius = nearbyBizRadius === 0 ? 999999999 : nearbyBizRadius;
-    fetch(`${API}/business/nearby?lat=${nearbyLat}&lng=${nearbyLng}&radius=${effectiveRadius}`).then((r) => { if (!r.ok) throw new Error(); return r.json(); }).then((data: NearbyHomeBusiness[]) => { setNearbyBizList(Array.isArray(data) ? data : []); lastFetchedNearbyCoordsRef.current = { lat: nearbyLat, lng: nearbyLng }; }).catch(() => setNearbyBizError("No pudimos cargar los negocios cercanos.")).finally(() => setNearbyBizLoading(false));
-  }, [nearbyLat, nearbyLng, nearbyBizRadius]);
+    const nearbyParams = new URLSearchParams({
+      lat: String(nearbyLat),
+      lng: String(nearbyLng),
+      radius: String(effectiveRadius),
+    });
+    if (activeCategory) nearbyParams.set("category", activeCategory);
+    if (searchParam) nearbyParams.set("search", searchParam);
+
+    fetch(`${API}/business/nearby?${nearbyParams.toString()}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data: NearbyHomeBusiness[]) => {
+        setNearbyBizList(Array.isArray(data) ? data : []);
+        lastFetchedNearbyCoordsRef.current = { lat: nearbyLat, lng: nearbyLng };
+      })
+      .catch(() => setNearbyBizError("No pudimos cargar los negocios cercanos."))
+      .finally(() => setNearbyBizLoading(false));
+  }, [nearbyLat, nearbyLng, nearbyBizRadius, activeCategory, searchParam]);
 
   const liveNearbyBizList = nearbyBizList.map((biz) => { if (nearbyGeoStatus !== "ok" || nearbyLat === null || nearbyLng === null || !biz.location?.coordinates) return biz; const [bizLng, bizLat] = biz.location.coordinates; const distanceMeters = haversineMeters(nearbyLat, nearbyLng, bizLat, bizLng); const distanceLabel = distanceMeters < 1000 ? `${Math.round(distanceMeters)} m` : `${(distanceMeters / 1000).toFixed(1)} km`; return { ...biz, distanceMeters, distanceLabel }; });
 
@@ -555,6 +725,44 @@ function HomePageBody() {
     const timeout = setTimeout(() => controller.abort(), 15000);
     let active = true;
     setLoading(true);
+
+    if (searchParam) {
+      const params = new URLSearchParams({ q: searchParam, limit: "60" });
+      const searchLat = nearbyLat ?? (userHasLoc ? Number(userLat) : null);
+      const searchLng = nearbyLng ?? (userHasLoc ? Number(userLng) : null);
+      if (searchLat !== null && searchLng !== null && Number.isFinite(searchLat) && Number.isFinite(searchLng)) {
+        params.set("lat", String(searchLat));
+        params.set("lng", String(searchLng));
+        params.set("radius", String(nearbyBizRadius === 0 ? 999999999 : nearbyBizRadius));
+      }
+
+      fetch(`${API}/search?${params.toString()}`, { signal: controller.signal, cache: "no-store" })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Search: ${response.status}`);
+          return response.json();
+        })
+        .then((data) => {
+          if (!active) return;
+          setAllProducts(Array.isArray(data?.products) ? dedupeById(data.products) : []);
+          if (Array.isArray(data?.businesses) && data.businesses.length > 0) {
+            setNearbyBizList(data.businesses);
+          }
+        })
+        .catch(() => {
+          if (active) setAllProducts([]);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+          clearTimeout(timeout);
+        });
+
+      return () => {
+        active = false;
+        clearTimeout(timeout);
+        controller.abort();
+      };
+    }
+
     const filters: Record<string, string> = {};
     if (activeCategory) filters.category = activeCategory;
     if (searchParam) filters.search = searchParam;
@@ -580,7 +788,7 @@ function HomePageBody() {
       setLoading(false);
     }).finally(() => clearTimeout(timeout));
     return () => { active = false; clearTimeout(timeout); controller.abort(); };
-  }, [currentUserId, userHasLoc, userLat, userLng, userRadius, activeCategory, searchParam]);
+  }, [currentUserId, userHasLoc, userLat, userLng, userRadius, activeCategory, searchParam, nearbyLat, nearbyLng, nearbyBizRadius]);
   useEffect(() => { if (!allProducts.length) return; const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null; if (!token) { setReportedProductIds(new Set()); return; } const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id); if (!productIds.length) return; fetch(`${API}/reports/batch-check`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ productIds }) }).then((r) => (r.ok ? r.json() : null)).then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); }).catch(() => {}); }, [allProducts]);
   useEffect(() => { fetch(`${API}/products/featured-businesses`).then((r) => r.json()).then((data) => setFeaturedBusinesses(Array.isArray(data) ? data : [])).catch(() => setFeaturedBusinesses([])); }, []);
 
@@ -595,7 +803,7 @@ function HomePageBody() {
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
   const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
 
-  return <MainLayout><style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style><HomeHero showRegister={!user}>{heroProducts.length > 0 && <HeroSlider products={heroProducts} />}</HomeHero><NearbyBusinessesSection geoStatus={nearbyGeoStatus} businesses={liveNearbyBizList} loading={nearbyBizLoading} error={nearbyBizError} radius={nearbyBizRadius} onRadiusChange={handleNearbyRadiusChange} onRequestLocation={requestNearbyLocation} live={nearbyGeoStatus === "ok"} />{!user?.locationEnabled && !geoBannerDismissed && <div style={{ padding: "1.5rem 1.5rem 0" }}><div className="geo-banner"><span className="geo-banner-icon"><MapPin size={26} /></span><div className="geo-banner-text"><h3>¿Querés ver ofertas cerca tuyo?</h3><p>Activá tu ubicación y te mostramos los mejores productos de tu zona.</p></div><div className="geo-banner-actions"><button className="btn btn-primary" onClick={handleRequestGeo}>Activar ubicación</button><button className="btn btn-ghost" style={{ color: "rgba(255,255,255,0.5)" }} onClick={dismissGeoBanner}>✕</button></div></div></div>}{showNotifBanner && <div style={{ padding: "1rem 1.5rem 0" }}><div className="geo-banner"><span className="geo-banner-icon"><Bell size={26} /></span><div className="geo-banner-text"><h3>Activá las notificaciones</h3><p>Hola {user.name.split(" ")[0]}, no te pierdas ofertas exclusivas de tus favoritos.</p></div><div className="geo-banner-actions"><button className="btn btn-primary" onClick={handleRequestNotifications}>Activar</button><button className="btn btn-ghost" onClick={dismissNotifBanner}>✕</button></div></div></div>}<FlashOffersSection products={allProducts} />{featuredBusinesses.length > 0 && <section className="section"><FeaturedBusinessesSlider businesses={featuredBusinesses} /></section>}<section className="section"><div className="section-header"><div><h2 className="section-title">Categorías</h2><p className="section-subtitle">Explorá por rubro</p></div></div><div className="categories-grid"><div className={`category-card ${!activeCategory ? "active" : ""}`} onClick={() => setActiveCategory("")}><Tag size={30} /><span className="category-name">Todas</span></div>{categories.map((cat) => <div key={cat.slug} className={`category-card ${activeCategory === cat.slug ? "active" : ""}`} onClick={() => setActiveCategory(cat.slug)}><CategoryIcon name={cat.iconName} size={24} /><span className="category-name">{cat.name}</span></div>)}</div></section><section className="section" id="offers"><div className="section-header"><div><h2 className="section-title"><span className="section-title-icon">{hasFeatured ? <Crown size={20} style={{ color: "#f97316" }} /> : userHasLoc ? <MapPin size={20} /> : <TrendingUp size={20} />}</span>{sectionTitle}</h2><p className="section-subtitle">{gridProducts.length} productos</p></div></div>{loading ? <div style={{ textAlign: "center", padding: "3rem" }}><Clock size={32} /><p>Cargando ofertas...</p></div> : gridProducts.length === 0 ? <div style={{ textAlign: "center", padding: "3rem" }}><Search size={48} /><h3>No encontramos resultados</h3></div> : <div className="products-grid">{gridProducts.map((p, i) => <ProductCard key={`${p._id}-${i}`} product={p} currentUserId={currentUserId} />)}</div>}</section><div className="banner" style={{ margin: "0 1.5rem" }}><div><h2>¿Tenés un negocio?</h2><p>Publicá tus productos y hacé que más personas de Rosario te encuentren.</p></div><a href="/register" className="btn btn-white">Empezar gratis</a></div><FlashOfferOverlay products={allProducts} /></MainLayout>;
+  return <MainLayout><style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style><HomeHero showRegister={!user} searchValue={searchParam}>{heroProducts.length > 0 && <HeroSlider products={heroProducts} />}</HomeHero><NearbyBusinessesSection geoStatus={nearbyGeoStatus} businesses={liveNearbyBizList} loading={nearbyBizLoading} error={nearbyBizError} radius={nearbyBizRadius} onRadiusChange={handleNearbyRadiusChange} onRequestLocation={requestNearbyLocation} live={nearbyGeoStatus === "ok"} />{!user?.locationEnabled && !geoBannerDismissed && <div style={{ padding: "1.5rem 1.5rem 0" }}><div className="geo-banner"><span className="geo-banner-icon"><MapPin size={26} /></span><div className="geo-banner-text"><h3>¿Querés ver ofertas cerca tuyo?</h3><p>Activá tu ubicación y te mostramos los mejores productos de tu zona.</p></div><div className="geo-banner-actions"><button className="btn btn-primary" onClick={handleRequestGeo}>Activar ubicación</button><button className="btn btn-ghost" style={{ color: "rgba(255,255,255,0.5)" }} onClick={dismissGeoBanner}>✕</button></div></div></div>}{showNotifBanner && <div style={{ padding: "1rem 1.5rem 0" }}><div className="geo-banner"><span className="geo-banner-icon"><Bell size={26} /></span><div className="geo-banner-text"><h3>Activá las notificaciones</h3><p>Hola {user.name.split(" ")[0]}, no te pierdas ofertas exclusivas de tus favoritos.</p></div><div className="geo-banner-actions"><button className="btn btn-primary" onClick={handleRequestNotifications}>Activar</button><button className="btn btn-ghost" onClick={dismissNotifBanner}>✕</button></div></div></div>}<FlashOffersSection products={allProducts} />{featuredBusinesses.length > 0 && <section className="section"><FeaturedBusinessesSlider businesses={featuredBusinesses} /></section>}<section className="section"><div className="section-header"><div><h2 className="section-title">Categorías</h2><p className="section-subtitle">Explorá por rubro</p></div></div><div className="categories-grid"><div className={`category-card ${!activeCategory ? "active" : ""}`} onClick={() => setActiveCategory("")}><Tag size={30} /><span className="category-name">Todas</span></div>{categories.map((cat) => <div key={cat.slug} className={`category-card ${activeCategory === cat.slug ? "active" : ""}`} onClick={() => setActiveCategory(cat.slug)}><CategoryIcon name={cat.iconName} size={24} /><span className="category-name">{cat.name}</span></div>)}</div></section><section className="section" id="offers"><div className="section-header"><div><h2 className="section-title"><span className="section-title-icon">{hasFeatured ? <Crown size={20} style={{ color: "#f97316" }} /> : userHasLoc ? <MapPin size={20} /> : <TrendingUp size={20} />}</span>{sectionTitle}</h2><p className="section-subtitle">{gridProducts.length} productos</p></div></div>{loading ? <div style={{ textAlign: "center", padding: "3rem" }}><Clock size={32} /><p>Cargando ofertas...</p></div> : gridProducts.length === 0 ? <div style={{ textAlign: "center", padding: "3rem" }}><Search size={48} /><h3>No encontramos resultados</h3></div> : <div className="products-grid">{gridProducts.map((p, i) => <ProductCard key={`${p._id}-${i}`} product={p} currentUserId={currentUserId} />)}</div>}</section><div className="banner" style={{ margin: "0 1.5rem" }}><div><h2>¿Tenés un negocio?</h2><p>Publicá tus productos y hacé que más personas de Rosario te encuentren.</p></div><a href="/register" className="btn btn-white">Empezar gratis</a></div><FlashOfferOverlay products={allProducts} /></MainLayout>;
 }
 
 function ProductCard({ product, currentUserId }: { product: Product; currentUserId?: string }) {
