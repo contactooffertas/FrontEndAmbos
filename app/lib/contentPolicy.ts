@@ -14,6 +14,13 @@ const FORBIDDEN_PATTERNS = [
   /\bcogiendo\b/,
   /\banal\b/,
   /\bcagar\b/,
+  /\bdroga(?:s)?\b/,
+  /\bporro(?:s)?\b/,
+  /\bfaso(?:s)?\b/,
+  /\bcocaina\b/,
+  /\bprostitucion\b/,
+  /\bprostitut[oa]s?\b/,
+  /\bborracho(?:s)?\b/,
 ];
 
 export function normalizePublicText(value: string): string {
@@ -28,7 +35,7 @@ export function normalizePublicText(value: string): string {
 
 export function containsForbiddenContent(...values: Array<string | null | undefined>): boolean {
   return values.some((value) => {
-    const normalized = normalizePublicText(value || "");
+    const normalized = normalizePublicText(value || "").replace(/\bpalo\s+borracho\b/g, " ");
     return FORBIDDEN_PATTERNS.some((pattern) => pattern.test(normalized));
   });
 }
