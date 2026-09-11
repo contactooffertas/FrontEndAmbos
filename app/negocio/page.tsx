@@ -417,7 +417,7 @@ export default function NegocioPage() {
       finally { setLoading(false); }
     };
     fetchBusiness();
-  }, [token, bizIdParam, user]);
+  }, [token, bizIdParam, user, marketCategories]);
 
   useEffect(() => {
     if (!bizIdParam || !token) return;
