@@ -92,6 +92,18 @@ export default function ProductModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (containsForbiddenContent(form.name, form.description)) {
+      const Swal = (await import("sweetalert2")).default;
+      await Swal.fire({
+        icon: "error",
+        title: "Contenido no permitido",
+        text: "El nombre o la descripción contienen palabras o expresiones no permitidas.",
+        confirmButtonColor: "#f97316",
+      });
+      return;
+    }
+
     const fd = new FormData();
     fd.append("name", form.name);
     fd.append("price", form.price);
@@ -99,7 +111,7 @@ export default function ProductModal({
     fd.append("category", form.category);
     fd.append("description", form.description);
     fd.append("stock", form.stock);
-    fd.append("deliveryRadius", form.deliveryRadius); // ✅ siempre se envía
+    fd.append("deliveryRadius", form.deliveryRadius);
     if (imageFile) fd.append("image", imageFile);
     await onSubmit(fd);
   };
