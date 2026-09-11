@@ -64,7 +64,7 @@ interface Purchase {
   buyerRating?: RatingData | null;
   sellerRating?: RatingData | null;
   payment?: {
-    method?: "direct" | "bna" | "santafe";
+    method?: "direct" | "bna" | "santafe" | "mercadopago";
     status?: "unpaid" | "pending" | "verifying" | "paid" | "rejected" | "refunded";
     refundStatus?: "none" | "requested" | "refunded";
   } | null;
@@ -317,9 +317,9 @@ function OrderPaymentBox({ order, onChanged }: { order: Purchase; onChanged: () 
   }, [order.businessId]);
 
   const payment = order.payment;
-  const isExternal = payment?.method === "bna" || payment?.method === "santafe";
+  const isExternal = payment?.method === "bna" || payment?.method === "santafe" || payment?.method === "mercadopago";
 
-  const startPayment = async (provider: "bna" | "santafe") => {
+  const startPayment = async (provider: "bna" | "santafe" | "mercadopago") => {
     if (!token) return;
     setStarting(provider);
     try {
@@ -406,7 +406,7 @@ function OrderPaymentBox({ order, onChanged }: { order: Purchase; onChanged: () 
       {isExternal ? (
         <>
           <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1f2937" }}>
-            {payment?.method === "bna" ? "BNA · +Pagos Nación" : "Banco Santa Fe · PlusPagos"}
+            {payment?.method === "bna" ? "BNA · +Pagos Nación" : payment?.method === "santafe" ? "Banco Santa Fe · PlusPagos" : "Mercado Pago"}
           </div>
           <div style={{ fontSize: "0.76rem", color: "#64748b", marginTop: 3 }}>{statusText[payment?.status || "unpaid"]}</div>
           {payment?.status === "pending" && (
@@ -437,6 +437,7 @@ function OrderPaymentBox({ order, onChanged }: { order: Purchase; onChanged: () 
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
             {methods?.bna?.enabled && <button onClick={() => startPayment("bna")} disabled={starting !== null} style={{ border: 0, borderRadius: 9, padding: "8px 11px", background: "#142337", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: "0.75rem" }}>{starting === "bna" ? "Abriendo..." : "Pagar con BNA"}</button>}
             {methods?.santafe?.enabled && <button onClick={() => startPayment("santafe")} disabled={starting !== null} style={{ border: 0, borderRadius: 9, padding: "8px 11px", background: "#f97316", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: "0.75rem" }}>{starting === "santafe" ? "Abriendo..." : "Pagar con Banco Santa Fe"}</button>}
+            {methods?.mercadopago?.enabled && <button onClick={() => startPayment("mercadopago")} disabled={starting !== null} style={{ border: 0, borderRadius: 9, padding: "8px 11px", background: "#009ee3", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: "0.75rem" }}>{starting === "mercadopago" ? "Abriendo..." : "Pagar con Mercado Pago"}</button>}
           </div>
         </>
       )}
