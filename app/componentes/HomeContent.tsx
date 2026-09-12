@@ -226,8 +226,10 @@ function StarRow({ rating = 0, size = 13 }: { rating?: number; size?: number }) 
 }
 
 function HeroSlider({ products }: { products: Product[] }) {
-  // El orden lo decide el Home: aleatorio en inicio y relevante durante búsquedas.
-  const usePool = products;
+  // El Hero debe mostrar fotos reales del producto. Si una imagen falta o falla,
+  // ese producto sale del pool y se usa el siguiente disponible.
+  const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
+  const usePool = products.filter((p) => Boolean(p.image) && !brokenImageIds.has(p._id));
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -267,7 +269,18 @@ function HeroSlider({ products }: { products: Product[] }) {
                 <Crown size={7} /> Dest.
               </div>
             )}
-            <img decoding="async" src={imgUrl(p.image)} alt={p.name} onError={(e) => { e.currentTarget.src = "/assets/offerton.png"; e.currentTarget.classList.add("is-fallback"); e.currentTarget.style.objectFit = "contain"; e.currentTarget.style.padding = "12px"; e.currentTarget.style.background = "#f8fafc"; }} />
+            <img
+              decoding="async"
+              src={p.image!}
+              alt={p.name}
+              onError={() => {
+                setBrokenImageIds((current) => {
+                  const next = new Set(current);
+                  next.add(p._id);
+                  return next;
+                });
+              }}
+            />
             <div className="hero-card-body">
               <p className="hero-card-name">{p.name}</p>
               <div className="hero-card-stars">
@@ -964,9 +977,11 @@ function HomePageBody() {
   // El hero nunca repite productos para completar lugares.
   // En inicio usa un pool público aleatorio; si hay 4 o más, el slider
   // va rotando de a 3 entre productos distintos.
-  const heroProducts = searchParam
-    ? dedupeById(allProducts).slice(0, 9)
-    : dedupeById([...publicHeroProducts, ...allProducts]).slice(0, 12);
+  const heroProducts = (searchParam
+    ? dedupeById(allProducts)
+    : dedupeById([...publicHeroProducts, ...allProducts]))
+    .filter((product) => Boolean(product.image))
+    .slice(0, 12);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
   const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
