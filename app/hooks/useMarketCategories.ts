@@ -5,8 +5,19 @@ import { categories as FALLBACK_CATEGORIES, type Category } from "../lib/db";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
+function iconForSlug(slug: string, backendIcon?: string) {
+  if (slug === "electronica") return "Electronica";
+  if (slug === "tecnologia") return "Monitor";
+  return backendIcon || "Tag";
+}
+
 export function useMarketCategories() {
-  const [categories, setCategories] = useState<Category[]>(FALLBACK_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>(
+    FALLBACK_CATEGORIES.map((item) => ({
+      ...item,
+      iconName: iconForSlug(item.slug, item.iconName),
+    }))
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +32,7 @@ export function useMarketCategories() {
             id: String(item._id || item.id || index + 1),
             name: String(item.name || ""),
             slug: String(item.slug || ""),
-            iconName: String(item.iconName || "Tag"),
+            iconName: iconForSlug(String(item.slug || ""), String(item.iconName || "")),
           }))
         );
       })
