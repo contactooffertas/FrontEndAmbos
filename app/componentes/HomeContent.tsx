@@ -787,7 +787,6 @@ function HomePageBody() {
   useEffect(() => { lastFetchedNearbyCoordsRef.current = null; }, [activeCategory]);
 
   useEffect(() => {
-    if (searchParam) return;
     if (nearbyLat === null || nearbyLng === null) return;
     const last = lastFetchedNearbyCoordsRef.current;
     const moved = !last || haversineMeters(last.lat, last.lng, nearbyLat, nearbyLng) >= NEARBY_FETCH_THRESHOLD_METERS;
@@ -800,7 +799,11 @@ function HomePageBody() {
       radius: String(effectiveRadius),
     });
     if (activeCategory) nearbyParams.set("category", activeCategory);
-    if (searchParam) nearbyParams.set("search", searchParam);
+    if (searchParam) {
+      nearbyParams.set("search", searchParam);
+      const inferredCategory = inferLocalCategory(searchParam);
+      if (inferredCategory) nearbyParams.set("category", inferredCategory);
+    }
 
     fetch(`${API}/business/nearby?${nearbyParams.toString()}`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
@@ -839,7 +842,17 @@ function HomePageBody() {
           if (!active) return;
           setAllProducts(Array.isArray(data?.products) ? dedupeById(data.products) : []);
           if (Array.isArray(data?.businesses) && data.businesses.length > 0) {
-            setNearbyBizList(data.businesses);
+            setNearbyBizList((current) => {
+              const merged = [...current, ...data.businesses];
+              const seen = new Set<string>();
+              return merged.filter((business: NearbyHomeBusiness) => {
+                const id = String((business as any)._id || (business as any).id || "");
+                if (!id) return true;
+                if (seen.has(id)) return false;
+                seen.add(id);
+                return true;
+              });
+            });
           }
         })
         .catch(async () => {
@@ -942,7 +955,7 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
   return (
     <article className={`product-card ${isFeatured ? "product-card--featured" : ""} ${isFlash ? "product-card--flash" : ""}`}>
       <div className="product-image-wrap">
-        <img decoding="async" src={imgUrl(product.image)} alt={product.name} loading="lazy" onError={(e) => { e.currentTarget.src = "/assets/offerton.png"; e.currentTarget.classList.add("is-fallback"); }} />
+        <img decoding="async" src={imgUrl(product.image)} alt={product.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={(e) => { e.currentTarget.src = "/assets/offerton.png"; e.currentTarget.classList.add("is-fallback"); e.currentTarget.style.objectFit = "contain"; e.currentTarget.style.padding = "12px"; e.currentTarget.style.background = "#f8fafc"; }} />
         {!isFlash && product.discount ? <span className="product-discount-badge">-{product.discount}%</span> : null}
         {isFlash && <span className="product-flash-badge"><Zap size={10} fill="#111" strokeWidth={0} /> FLASH -{flashDiscount}%</span>}
         {!isFlash && isFeatured && <span className="product-featured-badge"><Crown size={10} /> Destacado</span>}
