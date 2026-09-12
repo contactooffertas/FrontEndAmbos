@@ -28,7 +28,9 @@ interface Business {
 }
 interface Product {
   _id: string; name: string; description?: string; price: number;
-  discount?: number; stock?: number; image?: string; category: string;
+  discount?: number; stock?: number; image?: string;
+  imageUrl?: string; photo?: string; thumbnail?: string; images?: string[];
+  category: string;
 }
 interface SocialStatus {
   following: boolean; saved: boolean; myRating: number;
