@@ -923,15 +923,27 @@ function HomePageBody() {
   useEffect(() => { if (!allProducts.length) return; const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null; if (!token) { setReportedProductIds(new Set()); return; } const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id); if (!productIds.length) return; fetch(`${API}/reports/batch-check`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ productIds }) }).then((r) => (r.ok ? r.json() : null)).then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); }).catch(() => {}); }, [allProducts]);
   useEffect(() => {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 3500);
-    fetch(`${API}/products/random?limit=12`, { signal: controller.signal, cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        const items = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
-        if (items.length) setPublicHeroProducts(dedupeById(items));
-      })
-      .catch(() => {})
-      .finally(() => window.clearTimeout(timeout));
+    const timeout = window.setTimeout(() => controller.abort(), 4500);
+
+    const readList = async (url: string) => {
+      try {
+        const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    };
+
+    void Promise.all([
+      readList(`${API}/products/random?limit=12`),
+      readList(`${API}/products?limit=24`),
+    ]).then(([randomProducts, publicProducts]) => {
+      const merged = dedupeById([...randomProducts, ...publicProducts]);
+      if (merged.length) setPublicHeroProducts(merged);
+    }).finally(() => window.clearTimeout(timeout));
+
     return () => {
       window.clearTimeout(timeout);
       controller.abort();
