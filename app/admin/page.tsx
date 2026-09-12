@@ -123,7 +123,11 @@ export default function AdminPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [tab, setTab]               = useState<Tab>('dashboard');
+  const [tab, setTab] = useState<Tab>(() => {
+    if (typeof window === 'undefined') return 'dashboard';
+    const saved = sessionStorage.getItem('rm_admin_tab') as Tab | null;
+    return saved || 'dashboard';
+  });
   const [stats, setStats]           = useState<Stats | null>(null);
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
@@ -210,8 +214,27 @@ export default function AdminPage() {
   const [recentUserDetail, setRecentUserDetail] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) router.push('/');
-  }, [user, loading]);
+    if (loading) return;
+    if (user?.role === 'admin') return;
+
+    // Una rotación puede remontar el contexto de auth por un instante.
+    // Verificamos la sesión local antes de sacar al administrador del panel.
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = localStorage.getItem('marketplace_user');
+        const token = localStorage.getItem('marketplace_token');
+        const stored = raw ? JSON.parse(raw) : null;
+        if (token && stored?.role === 'admin') return;
+      } catch {}
+      router.replace('/');
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') sessionStorage.setItem('rm_admin_tab', tab);
+  }, [tab]);
 
   const toast = useCallback(async (icon: 'success'|'error'|'warning', title: string) => {
     const Swal = (await import('sweetalert2')).default;
