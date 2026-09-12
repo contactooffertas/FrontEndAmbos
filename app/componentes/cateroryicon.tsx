@@ -12,6 +12,7 @@ import {
 import HomeWebp from "./icons/Home.png";
 import ShirtWebp from "./icons/Shirt.png";
 import MonitorWebp from "./icons/Monitor.png";
+import ElectronicaWebp from "./icons/electronica.png";
 import ShoppingCartWebp from "./icons/ShoppingCart.png";
 import BellWebp from "./icons/Bell.png";
 import DumbbellWebp from "./icons/Dumbbell.png";
@@ -45,6 +46,7 @@ const CUSTOM_ICONS = {
   Home: HomeWebp,
   Shirt: ShirtWebp,
   Monitor: MonitorWebp,
+  Electronica: ElectronicaWebp,
   ShoppingCart: ShoppingCartWebp,
   Bell: BellWebp,
   Dumbbell: DumbbellWebp,
