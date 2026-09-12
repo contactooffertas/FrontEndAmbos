@@ -496,7 +496,8 @@ function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius
 
 const LOCAL_SEARCH_ROOTS: Record<string, string[]> = {
   "ropa-moda": ["calzado","zapatillas","zapatos","botas","sandalias","ropa","remera","camisa","pantalon","jean","pollera","vestido","campera","buzo","gorra","cartera","mochila"],
-  electronica: ["celular","telefono","smartphone","notebook","computadora","monitor","televisor","auriculares","parlante","cargador","tablet"],
+  electronica: ["electronica","televisor","tv","auriculares","parlante","cargador","camara","radio","microfono","proyector"],
+  tecnologia: ["tecnologia","celular","telefono","smartphone","notebook","laptop","computadora","pc","monitor","tablet","teclado","mouse","impresora","router","hardware","software","ssd","memoria ram","procesador","placa de video","consola","joystick"],
   hogar: ["mesa","silla","sillon","mueble","colchon","cama","almohada","cortina","lampara","decoracion","heladera","microondas","termo","mate"],
   deportes: ["pelota","futbol","botines","bicicleta","pesas","gimnasio","running","camiseta","raqueta"],
   alimentos: ["comida","pan","torta","cafe","yerba","frutas","verduras","carne","queso","bebidas"],
