@@ -31,6 +31,16 @@ import "../styles/misproductos.css";
 
 // ── Celda de precio (reutilizable) ──────────────────────────
 // Si hay oferta flash vigente, esa es la que manda sobre el descuento normal.
+function getProductImage(product: Product): string | undefined {
+  const p = product as Product & {
+    imageUrl?: string;
+    photo?: string;
+    thumbnail?: string;
+    images?: string[];
+  };
+  return p.image || p.imageUrl || p.photo || p.thumbnail || p.images?.find(Boolean);
+}
+
 function PriceDisplay({ product }: { product: Product }) {
   const { price, discount } = product;
   const flashActive = product.flashOffer?.active;
@@ -329,7 +339,7 @@ export default function MisProductosPage() {
                       <tr key={p._id}>
                         <td>
                           <img
-                            src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`}
+                            src={getProductImage(p) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`}
                             alt={p.name}
                             className="mp-table-img"
                           />
@@ -379,7 +389,7 @@ export default function MisProductosPage() {
                 {products.map((p) => (
                   <div key={p._id} className="mp-card-item">
                     <img
-                       src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`}
+                       src={getProductImage(p) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=200&background=f97316&color=fff`}
                        alt={p.name}
                        className="mp-card-img"
                     />
