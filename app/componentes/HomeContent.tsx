@@ -267,7 +267,7 @@ function HeroSlider({ products }: { products: Product[] }) {
                 <Crown size={7} /> Dest.
               </div>
             )}
-            <img decoding="async" src={imgUrl(p.image)} alt={p.name} onError={(e) => { e.currentTarget.src = "/assets/offerton.png"; e.currentTarget.classList.add("is-fallback"); }} />
+            <img decoding="async" src={imgUrl(p.image)} alt={p.name} onError={(e) => { e.currentTarget.src = "/assets/offerton.png"; e.currentTarget.classList.add("is-fallback"); e.currentTarget.style.objectFit = "contain"; e.currentTarget.style.padding = "12px"; e.currentTarget.style.background = "#f8fafc"; }} />
             <div className="hero-card-body">
               <p className="hero-card-name">{p.name}</p>
               <div className="hero-card-stars">
@@ -603,7 +603,7 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
         position: "relative",
         marginTop: 16,
         width: "min(100%, 620px)",
-        zIndex: 20,
+        zIndex: 9999,
       }}
     >
       <div
@@ -682,6 +682,8 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
             border: "1px solid #e5e7eb",
             boxShadow: "0 18px 50px rgba(15,23,42,.22)",
             overflow: "hidden",
+            zIndex: 10000,
+            pointerEvents: "auto",
           }}
         >
           {suggestions.map((item, index) => (
