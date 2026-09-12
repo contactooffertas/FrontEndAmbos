@@ -533,11 +533,40 @@ function inferLocalCategory(query: string): string {
 function localSearchSuggestions(query: string, limit = 8) {
   const q = normalizeSearchText(query);
   if (!q) return [];
-  const prefixes = ["quiero comprar", "donde comprar", "comprar", "busco", "necesito"];
+
+  // Las sugerencias distinguen intención de PRODUCTO y de LUGAR.
+  // Ej.: "pan" es un producto; "panadería" es un comercio del rubro Alimentos.
+  const placeSuggestions: Record<string, { category: string; phrases: string[] }> = {
+    panaderia: {
+      category: "alimentos",
+      phrases: [
+        "panadería",
+        "panadería cerca",
+        "panadería en la zona",
+        "panadería cerca de mí",
+        "panadería abierta",
+        "panadería con delivery",
+      ],
+    },
+  };
+
+  for (const [place, config] of Object.entries(placeSuggestions)) {
+    if (place.startsWith(q) || q.includes(place)) {
+      return config.phrases
+        .filter((text) => normalizeSearchText(text).startsWith(q) || normalizeSearchText(text).includes(q))
+        .slice(0, limit)
+        .map((text) => ({ text, category: config.category }));
+    }
+  }
+
+  const productPrefixes = ["quiero comprar", "donde comprar", "comprar", "busco", "necesito"];
   const out: { text: string; category?: string }[] = [];
   for (const [category, roots] of Object.entries(LOCAL_SEARCH_ROOTS)) {
     for (const root of roots) {
-      const candidates = [root, ...prefixes.map((prefix) => `${prefix} ${root}`)];
+      // No generamos frases absurdas como "dónde comprar panadería":
+      // panadería representa un tipo de negocio, no un producto.
+      if (normalizeSearchText(root) === "panaderia") continue;
+      const candidates = [root, ...productPrefixes.map((prefix) => `${prefix} ${root}`)];
       for (const text of candidates) {
         const normalized = normalizeSearchText(text);
         if (normalized.startsWith(q) || normalized.includes(q)) {
@@ -581,7 +610,14 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           const remote = Array.isArray(data?.suggestions) ? data.suggestions : [];
-          const merged = [...local, ...remote].filter(
+          const inferredCategory = inferLocalCategory(q);
+          const safeRemote = inferredCategory
+            ? remote.filter((item: { text?: string; category?: string }) => {
+                const remoteCategory = normalizeSearchText(String(item?.category || ""));
+                return !remoteCategory || remoteCategory === normalizeSearchText(inferredCategory);
+              })
+            : remote;
+          const merged = [...local, ...safeRemote].filter(
             (item, index, all) =>
               all.findIndex((other) => other.text.toLowerCase() === item.text.toLowerCase()) === index
           ).slice(0, 8);
