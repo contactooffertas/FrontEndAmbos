@@ -720,7 +720,7 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
 }
 
 function HomeHero({ showRegister = true, children, searchValue = "" }: { showRegister?: boolean; children?: React.ReactNode; searchValue?: string }) {
-  return (<section className="hero"><div className="hero-inner"><div><div className="hero-tag">Ofertas exclusivas hoy</div><h1>Las mejores<br /><em>ofertas</em> cerca tuyo</h1><p className="hero-desc">Descubrí productos increíbles de negocios verificados. Filtrá por categoría y ubicación.</p><div className="hero-actions"><button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("offers")?.scrollIntoView({ behavior: "smooth" })}>Ver ofertas</button>{showRegister && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}</div><HeroSmartSearch initialValue={searchValue} />{/* Estadísticas futuras: productos, negocios y 98% satisfacción. Mantener comentado hasta tener volumen real. */}</div>{children}</div></section>);
+  return (<section className="hero"><div className="hero-inner"><div className="hero-copy"><div className="hero-tag">Ofertas exclusivas hoy</div><h1>Las mejores<br /><em>ofertas</em> cerca tuyo</h1><p className="hero-desc">Descubrí productos increíbles de negocios verificados. Filtrá por categoría y ubicación.</p><div className="hero-actions"><button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("offers")?.scrollIntoView({ behavior: "smooth" })}>Ver ofertas</button>{showRegister && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}</div><HeroSmartSearch initialValue={searchValue} />{/* Estadísticas futuras: productos, negocios y 98% satisfacción. Mantener comentado hasta tener volumen real. */}</div>{children}</div></section>);
 }
 
 function HomePageBody() {
@@ -730,6 +730,7 @@ function HomePageBody() {
   const searchParams = useSearchParams();
   const searchParam = searchParams.get("search") || "";
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [publicHeroProducts, setPublicHeroProducts] = useState<Product[]>([]);
   const [featuredBusinesses, setFeaturedBusinesses] = useState<FeaturedBusiness[]>([]);
   const [publicStats, setPublicStats] = useState<PublicStats>({ totalProducts: 0, totalBusinesses: 0 });
   const [activeCategory, setActiveCategory] = useState("");
@@ -920,6 +921,23 @@ function HomePageBody() {
     return () => { active = false; clearTimeout(timeout); controller.abort(); };
   }, [currentUserId, userHasLoc, userLat, userLng, userRadius, activeCategory, searchParam]);
   useEffect(() => { if (!allProducts.length) return; const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null; if (!token) { setReportedProductIds(new Set()); return; } const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id); if (!productIds.length) return; fetch(`${API}/reports/batch-check`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ productIds }) }).then((r) => (r.ok ? r.json() : null)).then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); }).catch(() => {}); }, [allProducts]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3500);
+    fetch(`${API}/products/random?limit=12`, { signal: controller.signal, cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const items = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        if (items.length) setPublicHeroProducts(dedupeById(items));
+      })
+      .catch(() => {})
+      .finally(() => window.clearTimeout(timeout));
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+
   useEffect(() => { fetch(`${API}/products/featured-businesses`).then((r) => r.json()).then((data) => setFeaturedBusinesses(Array.isArray(data) ? data : [])).catch(() => setFeaturedBusinesses([])); }, []);
 
   const handleRequestGeo = async () => { const Swal = (await import("sweetalert2")).default; const r = await Swal.fire({ title: "Activar ubicación", icon: "info", showCancelButton: true, html: "Necesitamos tu ubicación para mostrarte productos <b>cercanos a vos</b>.", confirmButtonText: "Activar", cancelButtonText: "Ahora no", confirmButtonColor: "var(--primary)" }); if (r.isConfirmed) { const ok = await enableLocation(); Swal.fire(ok ? { icon: "success", title: "¡Ubicación activada!", timer: 2000, showConfirmButton: false } : { icon: "error", title: "No se pudo activar", text: "Verificá los permisos de tu navegador." }); } dismissGeoBanner(); };
@@ -928,7 +946,7 @@ function HomePageBody() {
   const radiusLabel = userRadius === 0 ? "todo el país" : userRadius >= 1000 ? `${userRadius / 1000} km` : `${userRadius} m`;
   const categoryName = categories.find((c) => c.slug === activeCategory)?.name || activeCategory;
   const sectionTitle = searchParam ? `Resultados para "${searchParam}"` : activeCategory ? `${categoryName} - Ofertas` : userHasLoc ? `Ofertas en ${radiusLabel}` : "Ofertas del día";
-  const heroProducts = allProducts.slice(0, 9);
+  const heroProducts = dedupeById([...allProducts, ...publicHeroProducts]).slice(0, 9);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
   const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
