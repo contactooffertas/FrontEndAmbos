@@ -1,4 +1,4 @@
-name: Build Rosario Market Android 2.0
+name: Build Rosario Market Android 3.5
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout Android 2.0 branch
+      - name: Checkout Android 3.5 source branch
         uses: actions/checkout@v4
         with:
           ref: rosario-market-android-v2
@@ -34,11 +34,11 @@ jobs:
         run: gradle assembleDebug --stacktrace
 
       - name: Rename APK
-        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-2.0.apk
+        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-3.5.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rosario-Market-2.0-APK
-          path: Rosario-Market-2.0.apk
+          name: Rosario-Market-3.5-APK
+          path: Rosario-Market-3.5.apk
           retention-days: 30
