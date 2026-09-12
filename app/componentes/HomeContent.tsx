@@ -226,8 +226,11 @@ function StarRow({ rating = 0, size = 13 }: { rating?: number; size?: number }) 
 }
 
 function HeroSlider({ products }: { products: Product[] }) {
-  const suscriptorProducts = products.filter((p) => p.business?.cuotaSuscriptor === true);
-  const usePool = suscriptorProducts.length > 0 ? suscriptorProducts : products;
+  // Mostramos hasta 3 productos reales siempre. Los comercios suscriptores
+  // tienen prioridad, pero nunca dejamos el carrusel incompleto si hay más productos.
+  const usePool = [...products].sort((a, b) =>
+    Number(b.business?.cuotaSuscriptor === true) - Number(a.business?.cuotaSuscriptor === true)
+  );
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -245,7 +248,7 @@ function HeroSlider({ products }: { products: Product[] }) {
 
   useEffect(() => {
     setIdx(0);
-  }, [suscriptorProducts.length]);
+  }, [products.length]);
 
   if (!usePool.length) return null;
   const slice = Array.from({ length: Math.min(3, usePool.length) }, (_, offset) => usePool[(idx + offset) % usePool.length]);
