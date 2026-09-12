@@ -56,6 +56,10 @@ interface Product {
   originalPrice?: number;
   discount?: number;
   image?: string;
+  imageUrl?: string;
+  photo?: string;
+  thumbnail?: string;
+  images?: string[];
   category?: string;
   stock?: number;
   _outOfRange?: boolean;
@@ -131,6 +135,13 @@ const NEARBY_FETCH_THRESHOLD_METERS = 100;
 
 const imgUrl = (url?: string) =>
   url || "/assets/offerton.png";
+
+const getProductImage = (product: Product): string | undefined =>
+  product.image ||
+  product.imageUrl ||
+  product.photo ||
+  product.thumbnail ||
+  product.images?.find(Boolean);
 const logoUrl = (name: string, url?: string) =>
   url ||
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=300&background=f97316&color=fff`;
@@ -229,7 +240,7 @@ function HeroSlider({ products }: { products: Product[] }) {
   // El Hero debe mostrar fotos reales del producto. Si una imagen falta o falla,
   // ese producto sale del pool y se usa el siguiente disponible.
   const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
-  const usePool = products.filter((p) => Boolean(p.image) && !brokenImageIds.has(p._id));
+  const usePool = products.filter((p) => Boolean(getProductImage(p)) && !brokenImageIds.has(p._id));
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -271,7 +282,7 @@ function HeroSlider({ products }: { products: Product[] }) {
             )}
             <img
               decoding="async"
-              src={p.image!}
+              src={getProductImage(p)!}
               alt={p.name}
               onError={() => {
                 setBrokenImageIds((current) => {
@@ -1061,7 +1072,7 @@ function HomePageBody() {
   const heroProducts = (searchParam
     ? dedupeById(allProducts)
     : dedupeById([...publicHeroProducts, ...allProducts]))
-    .filter((product) => Boolean(product.image))
+    .filter((product) => Boolean(getProductImage(product)))
     .slice(0, 12);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
