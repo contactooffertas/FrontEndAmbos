@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, WifiOff, ShoppingBag } from "lucide-react";
 
 const API = "https://new-backend-lovat.vercel.app/api";
-const CHECK_EVERY_MS = 15000;
-const FIRST_CHECK_DELAY_MS = 6000;
-const FAILURES_BEFORE_OUTAGE = 2;
+const CHECK_EVERY_MS = 20000;
+const FIRST_CHECK_DELAY_MS = 8000;
+const FAILURES_BEFORE_OUTAGE = 3;
 
 export default function ApiHealthGuard({ children }: { children: React.ReactNode }) {
   const [outage, setOutage] = useState(false);
@@ -18,15 +18,32 @@ export default function ApiHealthGuard({ children }: { children: React.ReactNode
 
     try {
       const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 7000);
+      const timeout = window.setTimeout(() => controller.abort(), 9000);
       const response = await fetch(`${API}/health?t=${Date.now()}`, {
         method: "GET",
         cache: "no-store",
         signal: controller.signal,
-      });
+      }).catch(() => null);
       window.clearTimeout(timeout);
 
-      if (!response.ok) throw new Error("API unavailable");
+      if (response?.ok) {
+        failures.current = 0;
+        setOutage(false);
+        return;
+      }
+
+      // Si el health con Mongo tarda o falla, hacemos una comprobación liviana
+      // del servidor antes de declarar caída total.
+      const rootController = new AbortController();
+      const rootTimeout = window.setTimeout(() => rootController.abort(), 5000);
+      const rootResponse = await fetch("https://new-backend-lovat.vercel.app/", {
+        method: "GET",
+        cache: "no-store",
+        signal: rootController.signal,
+      }).catch(() => null);
+      window.clearTimeout(rootTimeout);
+
+      if (!rootResponse?.ok) throw new Error("API unavailable");
 
       failures.current = 0;
       setOutage(false);
@@ -39,6 +56,9 @@ export default function ApiHealthGuard({ children }: { children: React.ReactNode
   }, []);
 
   useEffect(() => {
+    failures.current = 0;
+    setOutage(false);
+
     // No evaluamos el backend apenas entra el usuario. En móviles y en cold starts
     // Vercel puede tardar unos segundos en despertar y eso daba una falsa sensación
     // de caída antes de que la app tuviera tiempo de cargar normalmente.
