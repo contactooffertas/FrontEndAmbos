@@ -58,7 +58,8 @@ export interface User {
 
 
 export const categories: Category[] = [
-  { id: '1',  name: 'Electrónica',     iconName: 'Monitor',      slug: 'electronica'    },
+  { id: '1',  name: 'Electrónica',     iconName: 'Electronica',  slug: 'electronica'    },
+  { id: '12', name: 'Tecnología',       iconName: 'Monitor',      slug: 'tecnologia'      },
   { id: '2',  name: 'Ropa y Moda',     iconName: 'Shirt',        slug: 'ropa-moda'      },
   { id: '4',  name: 'Hogar',           iconName: 'Home',         slug: 'hogar'          },
   { id: '5',  name: 'Deportes',        iconName: 'Dumbbell',     slug: 'deportes'       },
