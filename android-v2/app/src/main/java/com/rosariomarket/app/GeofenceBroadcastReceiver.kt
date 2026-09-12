@@ -15,34 +15,26 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         val prefs = context.getSharedPreferences("geofences", Context.MODE_PRIVATE)
         val cooldown = context.getSharedPreferences("geofence_cooldown", Context.MODE_PRIVATE)
 
-        // Anti-spam global: como máximo 3 avisos de proximidad por día por dispositivo.
-        val day = now / (24 * 60 * 60 * 1000L)
-        val storedDay = cooldown.getLong("day", -1L)
-        var dailyCount = if (storedDay == day) cooldown.getInt("daily_count", 0) else 0
-        if (storedDay != day) cooldown.edit().putLong("day", day).putInt("daily_count", 0).apply()
-        if (dailyCount >= 3) return
+        // Anti-spam: varios negocios pueden avisar; el cooldown se controla por comercio.
+        // Cada comercio tiene su propio cooldown de 6 horas.
+        // Si el usuario entra en el radio de dos comercios distintos, ambos pueden avisar.
+        val sixHours = 6 * 60 * 60 * 1000L
+        for (fence in event.triggeringGeofences.orEmpty()) {
+            val id = fence.requestId
+            val last = cooldown.getLong("business_$id", 0L)
+            if (now - last < sixHours) continue
 
-        // Si entró simultáneamente en varios radios, mostramos sólo uno.
-        val fence = event.triggeringGeofences?.firstOrNull() ?: return
-        val id = fence.requestId
-        val last = cooldown.getLong("business_$id", 0L)
+            val parts = prefs.getString(id, "Negocio cercano|").orEmpty().split("|", limit = 2)
+            cooldown.edit().putLong("business_$id", now).apply()
 
-        // El mismo comercio no vuelve a avisar durante 24 horas.
-        if (now - last < 24 * 60 * 60 * 1000L) return
-
-        val parts = prefs.getString(id, "Negocio cercano|").orEmpty().split("|", limit = 2)
-        cooldown.edit()
-            .putLong("business_$id", now)
-            .putInt("daily_count", ++dailyCount)
-            .apply()
-
-        // No depende de login ni de seguir al negocio: alcanza con tener la APK,
-        // ubicación permitida y notificaciones habilitadas.
-        NotificationHelper.showNearby(
-            context,
-            id,
-            parts.getOrElse(0) { "Negocio cercano" },
-            parts.getOrElse(1) { "" }
-        )
+            // Funciona aunque Rosario Market esté en segundo plano y el usuario
+            // esté usando WhatsApp u otra aplicación.
+            NotificationHelper.showNearby(
+                context,
+                id,
+                parts.getOrElse(0) { "Negocio cercano" },
+                parts.getOrElse(1) { "" }
+            )
+        }
     }
 }
