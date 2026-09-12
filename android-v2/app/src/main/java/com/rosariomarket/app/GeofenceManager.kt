@@ -24,7 +24,7 @@ object GeofenceManager {
     private val client = OkHttpClient()
 
     fun scheduleRefresh(context: Context) {
-        val request = PeriodicWorkRequestBuilder<GeofenceRefreshWorker>(6, TimeUnit.HOURS)
+        val request = PeriodicWorkRequestBuilder<GeofenceRefreshWorker>(15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork("rosario-market-geofence-refresh", ExistingPeriodicWorkPolicy.UPDATE, request)
     }
