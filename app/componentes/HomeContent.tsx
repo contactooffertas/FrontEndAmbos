@@ -510,7 +510,7 @@ const LOCAL_SEARCH_ROOTS: Record<string, string[]> = {
   tecnologia: ["tecnologia","celular","telefono","smartphone","notebook","laptop","computadora","pc","monitor","tablet","teclado","mouse","impresora","router","hardware","software","ssd","memoria ram","procesador","placa de video","consola","joystick"],
   hogar: ["mesa","silla","sillon","mueble","colchon","cama","almohada","cortina","lampara","decoracion","heladera","microondas","termo","mate"],
   deportes: ["pelota","futbol","botines","bicicleta","pesas","gimnasio","running","camiseta","raqueta"],
-  alimentos: ["alimentos","comida","pan","panaderia","panadería","panadero","panificados","facturas","medialunas","bizcochos","torta","cafe","yerba","frutas","verduras","carne","queso","bebidas"],
+  alimentos: ["alimentos","comida","pan","panaderia","panadería","panadero","panificados","facturas","medialunas","bizcochos","torta","cafe","yerba","frutas","verduras","carne","asado","chorizo","chorizos","pollo","pollos","carniceria","carnicería","polleria","pollería","almacen","almacén","supermercado","queso","bebidas"],
   "salud-belleza": ["perfume","maquillaje","crema","shampoo","jabon","belleza","cosmetica","peluqueria"],
   automotriz: ["auto","moto","cubierta","neumatico","bateria","aceite","repuesto","taller"],
   juguetes: ["juguete","muñeca","peluche","rompecabezas","bloques","autito","juego"],
@@ -547,6 +547,30 @@ function localSearchSuggestions(query: string, limit = 8) {
         "panadería abierta",
         "panadería con delivery",
       ],
+    },
+    asado: {
+      category: "alimentos",
+      phrases: ["carnicería cerca", "carnicería en la zona", "dónde comprar asado", "carne para asado", "supermercado con carnicería"],
+    },
+    chorizo: {
+      category: "alimentos",
+      phrases: ["carnicería cerca", "dónde comprar chorizos", "chorizos para asado", "carnicería en la zona", "supermercado con carnicería"],
+    },
+    chorizos: {
+      category: "alimentos",
+      phrases: ["carnicería cerca", "dónde comprar chorizos", "chorizos para asado", "carnicería en la zona", "supermercado con carnicería"],
+    },
+    carne: {
+      category: "alimentos",
+      phrases: ["carnicería cerca", "carnicería en la zona", "dónde comprar carne", "carne para asado", "supermercado con carnicería"],
+    },
+    pollo: {
+      category: "alimentos",
+      phrases: ["pollería cerca", "carnicería cerca", "dónde comprar pollo", "pollería en la zona", "supermercado con pollería"],
+    },
+    pollos: {
+      category: "alimentos",
+      phrases: ["pollería cerca", "carnicería cerca", "dónde comprar pollo", "pollería en la zona", "supermercado con pollería"],
     },
   };
 
