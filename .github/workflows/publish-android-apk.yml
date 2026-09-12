@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  SOURCE_ARTIFACT_ID: '10158030189'
+  SOURCE_ARTIFACT_ID: '10297956856'
 
 jobs:
   publish:
@@ -21,7 +21,7 @@ jobs:
         with:
           ref: main
 
-      - name: Download successful Android 2.0 artifact
+      - name: Download successful Android 3.5 artifact
         run: |
           mkdir -p /tmp/rm-apk public/downloads
           curl -L --fail \
@@ -31,17 +31,17 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${SOURCE_ARTIFACT_ID}/zip" \
             -o /tmp/rm-apk/artifact.zip
           unzip -o /tmp/rm-apk/artifact.zip -d /tmp/rm-apk/out
-          cp /tmp/rm-apk/out/Rosario-Market-2.0.apk public/downloads/Rosario-Market-2.0.apk
-          test -s public/downloads/Rosario-Market-2.0.apk
+          cp /tmp/rm-apk/out/Rosario-Market-3.5.apk public/downloads/Rosario-Market-3.5.apk
+          test -s public/downloads/Rosario-Market-3.5.apk
 
       - name: Commit APK to website
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/downloads/Rosario-Market-2.0.apk
+          git add public/downloads/Rosario-Market-3.5.apk
           if git diff --cached --quiet; then
             echo "APK already published"
             exit 0
           fi
-          git commit -m "release(android): publish Rosario Market 2.0 APK"
+          git commit -m "release(android): publish Rosario Market 3.5 APK"
           git push origin main
