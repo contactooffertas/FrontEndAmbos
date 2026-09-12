@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  SOURCE_ARTIFACT_ID: '10297956856'
+  SOURCE_ARTIFACT_ID: '10297648273'
 
 jobs:
   publish:
