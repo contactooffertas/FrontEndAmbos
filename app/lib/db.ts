@@ -60,14 +60,14 @@ export interface User {
 export const categories: Category[] = [
   { id: '1',  name: 'Electrónica',     iconName: 'Monitor',      slug: 'electronica'    },
   { id: '2',  name: 'Ropa y Moda',     iconName: 'Shirt',        slug: 'ropa-moda'      },
-  { id: '3',  name: 'Hogar',           iconName: 'Home',         slug: 'hogar'          },
-  { id: '4',  name: 'Deportes',        iconName: 'Dumbbell',     slug: 'deportes'       },
-  { id: '5',  name: 'Alimentos',       iconName: 'ShoppingBag',  slug: 'alimentos'      },
-  { id: '6',  name: 'Salud y Belleza', iconName: 'Heart',        slug: 'salud-belleza'  },
-  { id: '7',  name: 'Automotriz',      iconName: 'Car',          slug: 'automotriz'     },
-  { id: '8',  name: 'Juguetes',        iconName: 'Gift',         slug: 'juguetes'       },
-  { id: '9',  name: 'Libros',          iconName: 'BookOpen',     slug: 'libros'         },
-  { id: '10', name: 'Mascotas',        iconName: 'PawPrint',     slug: 'mascotas'       },
+  { id: '4',  name: 'Hogar',           iconName: 'Home',         slug: 'hogar'          },
+  { id: '5',  name: 'Deportes',        iconName: 'Dumbbell',     slug: 'deportes'       },
+  { id: '6',  name: 'Alimentos',       iconName: 'ShoppingBag',  slug: 'alimentos'      },
+  { id: '7',  name: 'Salud y Belleza', iconName: 'Heart',        slug: 'salud-belleza'  },
+  { id: '8',  name: 'Automotriz',      iconName: 'Car',          slug: 'automotriz'     },
+  { id: '9',  name: 'Juguetes',        iconName: 'Gift',         slug: 'juguetes'       },
+  { id: '10', name: 'Libros',          iconName: 'BookOpen',     slug: 'libros'         },
+  { id: '11', name: 'Mascotas',        iconName: 'PawPrint',     slug: 'mascotas'       },
 ];
 
 // ── BUSINESSES ────────────────────────────────────────────────────────────────
