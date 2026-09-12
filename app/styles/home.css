@@ -1871,3 +1871,23 @@
     max-width: 185px !important;
   }
 }
+
+
+/* HERO SEARCH STACK FIX */
+.hero-copy {
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+.hero-copy > div[style*="z-index"] {
+  z-index: 10000 !important;
+}
+
+.hero-visual {
+  z-index: 0 !important;
+}
+
+.hero-card {
+  position: relative;
+  z-index: 0 !important;
+}
