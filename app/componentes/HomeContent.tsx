@@ -620,6 +620,17 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
       return;
     }
 
+    // Si el valor del input ya es la búsqueda enviada que está en la URL,
+    // el desplegable no debe volver a abrirse al renderizar la página de resultados.
+    if (
+      initialValue &&
+      normalizeSearchText(q) === normalizeSearchText(initialValue)
+    ) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
+
     const local = localSearchSuggestions(q, 8);
     setSuggestions(local);
     setOpen(local.length > 0);
@@ -667,6 +678,10 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
       setOpen(false);
       return;
     }
+
+    // Al confirmar una búsqueda retraemos por completo las sugerencias.
+    setValue(q);
+    setSuggestions([]);
     setOpen(false);
     router.push(`/?search=${encodeURIComponent(q)}#offers`);
   };
@@ -707,7 +722,13 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
 
             setOpen(true);
           }}
-          onFocus={() => suggestions.length && setOpen(true)}
+          onFocus={() => {
+            const q = value.trim();
+            const isSubmittedSearch =
+              !!initialValue &&
+              normalizeSearchText(q) === normalizeSearchText(initialValue);
+            if (!isSubmittedSearch && suggestions.length) setOpen(true);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Enter") submit();
             if (event.key === "Escape") setOpen(false);
