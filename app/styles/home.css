@@ -98,7 +98,7 @@
   position: relative;
 }
 .hero-card:hover { transform: translateY(-4px); }
-.hero-card:first-child { grid-column: 1 / -1; }
+.hero-card:first-child { grid-column: auto; }
 
 .hero-card img {
   width: 100%;
@@ -747,7 +747,7 @@
     max-height: 280px;
     overflow: hidden;
   }
-  .hero-card:first-child { display: none; }
+  .hero-card:first-child { display: flex; }
   .hero-card img { height: 110px; }
   .hero { padding: 2.5rem 1.5rem 3rem; }
 
