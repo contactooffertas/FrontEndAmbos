@@ -491,6 +491,50 @@ function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius
   );
 }
 
+const LOCAL_SEARCH_ROOTS: Record<string, string[]> = {
+  "ropa-moda": ["calzado","zapatillas","zapatos","botas","sandalias","ropa","remera","camisa","pantalon","jean","pollera","vestido","campera","buzo","gorra","cartera","mochila"],
+  electronica: ["celular","telefono","smartphone","notebook","computadora","monitor","televisor","auriculares","parlante","cargador","tablet"],
+  hogar: ["mesa","silla","sillon","mueble","colchon","cama","almohada","cortina","lampara","decoracion","heladera","microondas","termo","mate"],
+  deportes: ["pelota","futbol","botines","bicicleta","pesas","gimnasio","running","camiseta","raqueta"],
+  alimentos: ["comida","pan","torta","cafe","yerba","frutas","verduras","carne","queso","bebidas"],
+  "salud-belleza": ["perfume","maquillaje","crema","shampoo","jabon","belleza","cosmetica","peluqueria"],
+  automotriz: ["auto","moto","cubierta","neumatico","bateria","aceite","repuesto","taller"],
+  juguetes: ["juguete","muñeca","peluche","rompecabezas","bloques","autito","juego"],
+  libros: ["libro","novela","cuento","comic","manga","revista","libreria"],
+  mascotas: ["perro","gato","mascota","correa","collar","alimento perro","alimento gato","veterinaria"],
+};
+
+function normalizeSearchText(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function inferLocalCategory(query: string): string {
+  const q = normalizeSearchText(query);
+  for (const [category, roots] of Object.entries(LOCAL_SEARCH_ROOTS)) {
+    if (roots.some((root) => q.includes(normalizeSearchText(root)))) return category;
+  }
+  return "";
+}
+
+function localSearchSuggestions(query: string, limit = 8) {
+  const q = normalizeSearchText(query);
+  if (!q) return [];
+  const prefixes = ["quiero comprar", "donde comprar", "comprar", "busco", "necesito"];
+  const out: { text: string; category?: string }[] = [];
+  for (const [category, roots] of Object.entries(LOCAL_SEARCH_ROOTS)) {
+    for (const root of roots) {
+      const candidates = [root, ...prefixes.map((prefix) => `${prefix} ${root}`)];
+      for (const text of candidates) {
+        const normalized = normalizeSearchText(text);
+        if (normalized.startsWith(q) || normalized.includes(q)) {
+          out.push({ text, category });
+          if (out.length >= limit) return out;
+        }
+      }
+    }
+  }
+  return out;
+}
 function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
   const router = useRouter();
   const [value, setValue] = useState(initialValue);
@@ -505,10 +549,16 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
     const q = value.trim();
     if (q.length < 1) {
       setSuggestions([]);
+      setOpen(false);
       return;
     }
 
+    const local = localSearchSuggestions(q, 8);
+    setSuggestions(local);
+    setOpen(local.length > 0);
+
     const controller = new AbortController();
+    const abortTimer = window.setTimeout(() => controller.abort(), 1800);
     const timer = window.setTimeout(() => {
       fetch(`${API}/search/suggest?q=${encodeURIComponent(q)}&limit=8`, {
         cache: "no-store",
@@ -516,19 +566,24 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
       })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          const next = Array.isArray(data?.suggestions) ? data.suggestions : [];
-          setSuggestions(next);
-          setOpen(next.length > 0);
+          const remote = Array.isArray(data?.suggestions) ? data.suggestions : [];
+          const merged = [...local, ...remote].filter(
+            (item, index, all) =>
+              all.findIndex((other) => other.text.toLowerCase() === item.text.toLowerCase()) === index
+          ).slice(0, 8);
+          setSuggestions(merged);
+          setOpen(merged.length > 0);
         })
-        .catch(() => {});
-    }, 160);
+        .catch(() => {})
+        .finally(() => window.clearTimeout(abortTimer));
+    }, 90);
 
     return () => {
       window.clearTimeout(timer);
+      window.clearTimeout(abortTimer);
       controller.abort();
     };
   }, [value]);
-
   const submit = (term?: string) => {
     const q = String(term ?? value).trim();
     if (!q) return;
@@ -701,6 +756,7 @@ function HomePageBody() {
   useEffect(() => { lastFetchedNearbyCoordsRef.current = null; }, [activeCategory, searchParam]);
 
   useEffect(() => {
+    if (searchParam) return;
     if (nearbyLat === null || nearbyLng === null) return;
     const last = lastFetchedNearbyCoordsRef.current;
     const moved = !last || haversineMeters(last.lat, last.lng, nearbyLat, nearbyLng) >= NEARBY_FETCH_THRESHOLD_METERS;
@@ -729,14 +785,14 @@ function HomePageBody() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), searchParam ? 5500 : 7000);
     let active = true;
     setLoading(true);
 
     if (searchParam) {
       const params = new URLSearchParams({ q: searchParam, limit: "60" });
-      const searchLat = nearbyLat ?? (userHasLoc ? Number(userLat) : null);
-      const searchLng = nearbyLng ?? (userHasLoc ? Number(userLng) : null);
+      const searchLat = userHasLoc ? Number(userLat) : nearbyLat;
+      const searchLng = userHasLoc ? Number(userLng) : nearbyLng;
       if (searchLat !== null && searchLng !== null && Number.isFinite(searchLat) && Number.isFinite(searchLng)) {
         params.set("lat", String(searchLat));
         params.set("lng", String(searchLng));
@@ -755,8 +811,19 @@ function HomePageBody() {
             setNearbyBizList(data.businesses);
           }
         })
-        .catch(() => {
-          if (active) setAllProducts([]);
+        .catch(async () => {
+          if (!active) return;
+          const fallbackCategory = inferLocalCategory(searchParam);
+          try {
+            const fallbackParams = new URLSearchParams({ limit: "40" });
+            if (fallbackCategory) fallbackParams.set("category", fallbackCategory);
+            else fallbackParams.set("search", searchParam);
+            const fallbackResponse = await fetch(`${API}/products?${fallbackParams.toString()}`);
+            const fallbackData = fallbackResponse.ok ? await fallbackResponse.json() : null;
+            if (active) setAllProducts(Array.isArray(fallbackData?.products) ? dedupeById(fallbackData.products) : []);
+          } catch {
+            if (active) setAllProducts([]);
+          }
         })
         .finally(() => {
           if (active) setLoading(false);
@@ -785,17 +852,24 @@ function HomePageBody() {
     // Start both independent reads together. Featured entries win deduplication.
     const featuredRequest = readProducts("featured", "60");
     const randomRequest = readProducts("random", "40");
-    void Promise.allSettled([featuredRequest, randomRequest]).then(([featuredResult, randomResult]) => {
+    const genericRequest = fetch(
+      `${API}/products?${buildLocationParams({ ...filters, limit: "50" })}`,
+      { signal: controller.signal }
+    )
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => Array.isArray(data?.products) ? data.products as Product[] : []);
+
+    void Promise.allSettled([featuredRequest, randomRequest, genericRequest]).then(([featuredResult, randomResult, genericResult]) => {
       if (!active) return;
       const featured = featuredResult.status === "fulfilled"
         ? featuredResult.value.filter((p) => !activeCategory || p.category === activeCategory) : [];
       const random = randomResult.status === "fulfilled" ? randomResult.value : [];
-      const ids = new Set(featured.map((p) => p._id));
-      setAllProducts([...featured, ...random.filter((p) => !ids.has(p._id))]);
+      const generic = genericResult.status === "fulfilled" ? genericResult.value : [];
+      setAllProducts(dedupeById([...featured, ...random, ...generic]));
       setLoading(false);
     }).finally(() => clearTimeout(timeout));
     return () => { active = false; clearTimeout(timeout); controller.abort(); };
-  }, [currentUserId, userHasLoc, userLat, userLng, userRadius, activeCategory, searchParam, nearbyLat, nearbyLng, nearbyBizRadius]);
+  }, [currentUserId, userHasLoc, userLat, userLng, userRadius, activeCategory, searchParam]);
   useEffect(() => { if (!allProducts.length) return; const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null; if (!token) { setReportedProductIds(new Set()); return; } const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id); if (!productIds.length) return; fetch(`${API}/reports/batch-check`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ productIds }) }).then((r) => (r.ok ? r.json() : null)).then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); }).catch(() => {}); }, [allProducts]);
   useEffect(() => { fetch(`${API}/products/featured-businesses`).then((r) => r.json()).then((data) => setFeaturedBusinesses(Array.isArray(data) ? data : [])).catch(() => setFeaturedBusinesses([])); }, []);
 
