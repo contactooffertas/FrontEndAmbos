@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import androidx.appcompat.app.AlertDialog
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -196,14 +198,61 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestBackgroundLocation() {
+        if (Build.VERSION.SDK_INT < 29) return
         if (
-            Build.VERSION.SDK_INT >= 29 &&
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
+            GeofenceManager.refresh(this)
+            return
+        }
+
+        // Android 11+ ya no concede "Permitir todo el tiempo" desde el popup normal.
+        // Hay que llevar al usuario a la ficha de la app para activarlo.
+        if (Build.VERSION.SDK_INT >= 30) {
+            val prefs = getSharedPreferences("rm_permissions", MODE_PRIVATE)
+            val alreadyExplained = prefs.getBoolean("background_location_explained", false)
+
+            if (!alreadyExplained) {
+                AlertDialog.Builder(this)
+                    .setTitle("Avisos de negocios cercanos")
+                    .setMessage(
+                        "Para avisarte cuando pases a menos de 300 m de un negocio, incluso mientras usás WhatsApp u otra app, Rosario Market necesita que elijas Ubicación > Permitir todo el tiempo."
+                    )
+                    .setPositiveButton("Abrir configuración") { _, _ ->
+                        prefs.edit().putBoolean("background_location_explained", true).apply()
+                        openAppLocationSettings()
+                    }
+                    .setNegativeButton("Ahora no", null)
+                    .show()
+            }
+        } else {
+            // Android 10 sí permite solicitarlo directamente.
             backgroundPermission.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+
+    private fun openAppLocationSettings() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.parse("package:$packageName")
+        )
+        startActivity(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (
+            Build.VERSION.SDK_INT < 29 ||
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            GeofenceManager.scheduleRefresh(this)
+            GeofenceManager.refresh(this)
         }
     }
 
