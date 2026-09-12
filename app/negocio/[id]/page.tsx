@@ -46,6 +46,10 @@ interface GpsState {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+function getProductImage(product: Product): string | undefined {
+  return product.image || product.imageUrl || product.photo || product.thumbnail || product.images?.find(Boolean);
+}
+
 function getRankInfo(rating: number, total: number) {
   if (total < 3)     return { label: "Nueva tienda",        color: "#6b7280", bg: "#f3f4f6" };
   if (rating >= 4.5) return { label: "🏆 Top vendedor",     color: "#92400e", bg: "#fef3c7" };
@@ -622,7 +626,7 @@ export default function NegocioPublicoPage() {
             </button>
             <div className="nid-spotlight-img-wrap">
               <img
-                src={spotlightProduct.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(spotlightProduct.name)}&size=400&background=f97316&color=fff`}
+                src={getProductImage(spotlightProduct) || `https://ui-avatars.com/api/?name=${encodeURIComponent(spotlightProduct.name)}&size=400&background=f97316&color=fff`}
                 alt={spotlightProduct.name}
                 className="nid-spotlight-img"
               />
@@ -862,7 +866,7 @@ export default function NegocioPublicoPage() {
                 >
                   <div className="nid-product-img-wrap">
                     <img
-                      src={p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=400&background=f97316&color=fff`}
+                      src={getProductImage(p) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&size=400&background=f97316&color=fff`}
                       alt={p.name}
                       className="nid-product-img"
                     />
