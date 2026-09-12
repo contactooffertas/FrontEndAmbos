@@ -40,7 +40,6 @@ const API = "https://new-backend-lovat.vercel.app/api";
 const BUSINESS_CATEGORIES = MARKET_CATEGORIES;
 
 const LEGACY_BUSINESS_CATEGORY_ALIASES: Record<string, string> = {
-  tecnologia: "electronica",
   ropa: "ropa-moda",
   belleza: "salud-belleza",
   automotor: "automotriz",
