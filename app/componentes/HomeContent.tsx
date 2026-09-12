@@ -956,9 +956,14 @@ function HomePageBody() {
   const radiusLabel = userRadius === 0 ? "todo el país" : userRadius >= 1000 ? `${userRadius / 1000} km` : `${userRadius} m`;
   const categoryName = categories.find((c) => c.slug === activeCategory)?.name || activeCategory;
   const sectionTitle = searchParam ? `Resultados para "${searchParam}"` : activeCategory ? `${categoryName} - Ofertas` : userHasLoc ? `Ofertas en ${radiusLabel}` : "Ofertas del día";
-  const heroProducts = searchParam
-    ? dedupeById(allProducts).slice(0, 3)
-    : publicHeroProducts.slice(0, 3);
+  // El hero nunca depende del login: en inicio usa el pool público y completa
+  // siempre 3 posiciones si existe al menos un producto público.
+  const heroBase = searchParam
+    ? dedupeById(allProducts)
+    : publicHeroProducts;
+  const heroProducts = heroBase.length
+    ? Array.from({ length: 3 }, (_, i) => heroBase[i % heroBase.length])
+    : [];
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
   const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
