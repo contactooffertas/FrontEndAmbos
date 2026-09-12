@@ -217,7 +217,7 @@ export default function AdminSearchDictionary() {
   };
 
   return (
-    <div className="adm-content" style={{ display: "grid", gap: 16 }}>
+    <div className="adm-content adm-searchdict" style={{ display: "grid", gap: 16 }}>
       <div style={{ ...card, background: "linear-gradient(135deg,#111827,#172554)" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <Search size={21} color="#f97316" />
@@ -235,7 +235,7 @@ export default function AdminSearchDictionary() {
           <Tag size={17} color="#f97316" /> Categorías
         </h3>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 8, marginBottom: 14 }}>
+        <div className="adm-searchdict-category-create" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 8, marginBottom: 14 }}>
           <input
             style={input}
             placeholder="Nombre"
@@ -274,7 +274,7 @@ export default function AdminSearchDictionary() {
 
         <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
           {categories.map((category) => (
-            <div key={category._id} style={{ display: "grid", gridTemplateColumns: "32px minmax(120px,1fr) minmax(110px,1fr) 130px auto", gap: 8, alignItems: "center", padding: 9, borderRadius: 10, background: "rgba(255,255,255,.035)" }}>
+            <div key={category._id} className="adm-searchdict-category-row" style={{ display: "grid", gridTemplateColumns: "32px minmax(120px,1fr) minmax(110px,1fr) 130px auto", gap: 8, alignItems: "center", padding: 9, borderRadius: 10, background: "rgba(255,255,255,.035)" }}>
               <CategoryIcon name={category.iconName} size={20} />
               {editingCategory === category._id ? (
                 <>
@@ -312,7 +312,7 @@ export default function AdminSearchDictionary() {
           <Search size={17} color="#f97316" /> Palabras clave
         </h3>
 
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, marginBottom: 10 }}>
+        <div className="adm-searchdict-keyword-create" style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, marginBottom: 10 }}>
           <input style={input} placeholder="Nueva palabra o frase" value={newKeyword.keyword} onChange={(e) => setNewKeyword((prev) => ({ ...prev, keyword: e.target.value }))} />
           <select style={input} value={newKeyword.category} onChange={(e) => setNewKeyword((prev) => ({ ...prev, category: e.target.value }))}>
             {categories.filter((item) => item.active).map((item) => <option key={item._id} value={item.slug}>{item.name}</option>)}
@@ -320,7 +320,7 @@ export default function AdminSearchDictionary() {
           <button onClick={createKeyword} style={{ border: 0, borderRadius: 9, background: "#f97316", color: "#fff", padding: "8px 12px", fontWeight: 800, cursor: "pointer" }}><Plus size={15} /></button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+        <div className="adm-searchdict-filters" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
           <input style={input} placeholder="Filtrar palabras..." value={wordFilter} onChange={(e) => setWordFilter(e.target.value)} />
           <select style={input} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="">Todas las categorías</option>
@@ -330,7 +330,7 @@ export default function AdminSearchDictionary() {
 
         <div style={{ maxHeight: 380, overflowY: "auto", display: "grid", gap: 6 }}>
           {filteredKeywords.slice(0, 300).map((item) => (
-            <div key={item._id} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1fr) 130px 80px auto", gap: 8, alignItems: "center", padding: 8, borderRadius: 9, background: "rgba(255,255,255,.03)" }}>
+            <div key={item._id} className="adm-searchdict-keyword-row" style={{ display: "grid", gridTemplateColumns: "minmax(150px,1fr) 130px 80px auto", gap: 8, alignItems: "center", padding: 8, borderRadius: 9, background: "rgba(255,255,255,.03)" }}>
               {editingKeyword === item._id ? (
                 <input style={input} value={item.keyword} onChange={(e) => setKeywords((prev) => prev.map((word) => word._id === item._id ? { ...word, keyword: e.target.value } : word))} />
               ) : <span style={{ fontWeight: 700 }}>{item.keyword}</span>}
@@ -357,7 +357,7 @@ export default function AdminSearchDictionary() {
           Podés agregar excepciones separadas por coma. Ejemplo: “borracho” con excepción “palo borracho”.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 8, marginBottom: 12 }}>
+        <div className="adm-searchdict-forbidden-create" style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 8, marginBottom: 12 }}>
           <input style={input} placeholder="Palabra" value={newForbidden.term} onChange={(e) => setNewForbidden((prev) => ({ ...prev, term: e.target.value }))} />
           <input style={input} placeholder="Excepciones separadas por coma" value={newForbidden.exceptions} onChange={(e) => setNewForbidden((prev) => ({ ...prev, exceptions: e.target.value }))} />
           <button onClick={createForbidden} style={{ border: 0, borderRadius: 9, background: "#ef4444", color: "#fff", padding: "8px 12px", fontWeight: 800, cursor: "pointer" }}><Plus size={15} /></button>
@@ -365,7 +365,7 @@ export default function AdminSearchDictionary() {
 
         <div style={{ display: "grid", gap: 6 }}>
           {forbidden.map((item) => (
-            <div key={item._id} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 8, alignItems: "center", padding: 8, borderRadius: 9, background: "rgba(239,68,68,.06)" }}>
+            <div key={item._id} className="adm-searchdict-forbidden-row" style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 8, alignItems: "center", padding: 8, borderRadius: 9, background: "rgba(239,68,68,.06)" }}>
               {editingForbidden === item._id ? (
                 <>
                   <input style={input} value={item.term} onChange={(e) => setForbidden((prev) => prev.map((word) => word._id === item._id ? { ...word, term: e.target.value } : word))} />
