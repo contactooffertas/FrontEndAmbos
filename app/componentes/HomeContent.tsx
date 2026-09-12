@@ -935,10 +935,15 @@ function HomePageBody() {
     };
 
     void Promise.all([
-      readList(`${API}/products/random?limit=12`),
-      readList(`${API}/products?limit=24`),
-    ]).then(([randomProducts, publicProducts]) => {
-      const merged = dedupeById([...randomProducts, ...publicProducts]);
+      readList(`${API}/products/random?limit=18`),
+      readList(`${API}/products/featured?limit=18`),
+      readList(`${API}/products?limit=50`),
+    ]).then(([randomProducts, featuredProducts, publicProducts]) => {
+      const merged = dedupeById([
+        ...randomProducts,
+        ...featuredProducts,
+        ...publicProducts,
+      ]);
       if (merged.length) setPublicHeroProducts(shuffleArray(merged));
     }).finally(() => window.clearTimeout(timeout));
 
@@ -961,7 +966,7 @@ function HomePageBody() {
   // va rotando de a 3 entre productos distintos.
   const heroProducts = searchParam
     ? dedupeById(allProducts).slice(0, 9)
-    : dedupeById(publicHeroProducts).slice(0, 9);
+    : dedupeById([...publicHeroProducts, ...allProducts]).slice(0, 12);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
   const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
