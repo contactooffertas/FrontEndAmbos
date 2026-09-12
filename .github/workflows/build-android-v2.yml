@@ -42,3 +42,5 @@ jobs:
           name: Rosario-Market-3.5-APK
           path: Rosario-Market-3.5.apk
           retention-days: 30
+
+# Rebuild 3.5 launcher icon navbarbolsa
