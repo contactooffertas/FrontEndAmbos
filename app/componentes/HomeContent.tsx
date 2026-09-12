@@ -226,11 +226,8 @@ function StarRow({ rating = 0, size = 13 }: { rating?: number; size?: number }) 
 }
 
 function HeroSlider({ products }: { products: Product[] }) {
-  // Mostramos hasta 3 productos reales siempre. Los comercios suscriptores
-  // tienen prioridad, pero nunca dejamos el carrusel incompleto si hay más productos.
-  const usePool = [...products].sort((a, b) =>
-    Number(b.business?.cuotaSuscriptor === true) - Number(a.business?.cuotaSuscriptor === true)
-  );
+  // El orden lo decide el Home: aleatorio en inicio y relevante durante búsquedas.
+  const usePool = products;
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -500,7 +497,7 @@ const LOCAL_SEARCH_ROOTS: Record<string, string[]> = {
   tecnologia: ["tecnologia","celular","telefono","smartphone","notebook","laptop","computadora","pc","monitor","tablet","teclado","mouse","impresora","router","hardware","software","ssd","memoria ram","procesador","placa de video","consola","joystick"],
   hogar: ["mesa","silla","sillon","mueble","colchon","cama","almohada","cortina","lampara","decoracion","heladera","microondas","termo","mate"],
   deportes: ["pelota","futbol","botines","bicicleta","pesas","gimnasio","running","camiseta","raqueta"],
-  alimentos: ["comida","pan","torta","cafe","yerba","frutas","verduras","carne","queso","bebidas"],
+  alimentos: ["alimentos","comida","pan","panaderia","panadería","panadero","panificados","facturas","medialunas","bizcochos","torta","cafe","yerba","frutas","verduras","carne","queso","bebidas"],
   "salud-belleza": ["perfume","maquillaje","crema","shampoo","jabon","belleza","cosmetica","peluqueria"],
   automotriz: ["auto","moto","cubierta","neumatico","bateria","aceite","repuesto","taller"],
   juguetes: ["juguete","muñeca","peluche","rompecabezas","bloques","autito","juego"],
@@ -942,7 +939,7 @@ function HomePageBody() {
       readList(`${API}/products?limit=24`),
     ]).then(([randomProducts, publicProducts]) => {
       const merged = dedupeById([...randomProducts, ...publicProducts]);
-      if (merged.length) setPublicHeroProducts(merged);
+      if (merged.length) setPublicHeroProducts(shuffleArray(merged));
     }).finally(() => window.clearTimeout(timeout));
 
     return () => {
@@ -959,7 +956,9 @@ function HomePageBody() {
   const radiusLabel = userRadius === 0 ? "todo el país" : userRadius >= 1000 ? `${userRadius / 1000} km` : `${userRadius} m`;
   const categoryName = categories.find((c) => c.slug === activeCategory)?.name || activeCategory;
   const sectionTitle = searchParam ? `Resultados para "${searchParam}"` : activeCategory ? `${categoryName} - Ofertas` : userHasLoc ? `Ofertas en ${radiusLabel}` : "Ofertas del día";
-  const heroProducts = dedupeById([...allProducts, ...publicHeroProducts]).slice(0, 9);
+  const heroProducts = searchParam
+    ? dedupeById(allProducts).slice(0, 3)
+    : publicHeroProducts.slice(0, 3);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));
   const showNotifBanner = !!user && !notifBannerDismissed && !notifAlreadyGranted;
