@@ -549,7 +549,11 @@ const LOCAL_SEARCH_ROOTS: Record<string, string[]> = {
   automotriz: ["auto","moto","cubierta","neumatico","bateria","aceite","repuesto","taller"],
   juguetes: ["juguete","muñeca","peluche","rompecabezas","bloques","autito","juego"],
   libros: ["libro","novela","cuento","comic","manga","revista","libreria"],
-  mascotas: ["perro","gato","mascota","correa","collar","alimento perro","alimento gato","veterinaria"],
+  mascotas: [
+    "mascota","mascotas","perro","perros","gato","gatos","animales","correa","collar","veterinaria",
+    "comida para perros","comida para gatos","comida para animales","alimento para perros","alimento para gatos","alimento para animales","alimentos para mascotas",
+    "alimento para mascotas","alimento perro","alimento gato","ropa de mascotas","ropa para mascotas"
+  ],
 };
 
 function normalizeSearchText(value: string) {
@@ -558,10 +562,16 @@ function normalizeSearchText(value: string) {
 
 function inferLocalCategory(query: string): string {
   const q = normalizeSearchText(query);
+  let best = { category: "", specificity: 0 };
   for (const [category, roots] of Object.entries(LOCAL_SEARCH_ROOTS)) {
-    if (roots.some((root) => q.includes(normalizeSearchText(root)))) return category;
+    for (const root of roots) {
+      const normalizedRoot = normalizeSearchText(root);
+      if (q.includes(normalizedRoot) && normalizedRoot.length > best.specificity) {
+        best = { category, specificity: normalizedRoot.length };
+      }
+    }
   }
-  return "";
+  return best.category;
 }
 
 function localSearchSuggestions(query: string, limit = 8) {
@@ -965,8 +975,14 @@ function HomePageBody() {
         params.set("lng", String(searchLng));
         params.set("radius", String(nearbyBizRadius === 0 ? 999999999 : nearbyBizRadius));
       }
+      if (currentUserId) params.set("userId", currentUserId);
+      const searchToken = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null;
 
-      fetch(`${API}/search?${params.toString()}`, { signal: controller.signal, cache: "no-store" })
+      fetch(`${API}/search?${params.toString()}`, {
+        signal: controller.signal,
+        cache: "no-store",
+        headers: searchToken ? { Authorization: `Bearer ${searchToken}` } : undefined,
+      })
         .then((response) => {
           if (!response.ok) throw new Error(`Search: ${response.status}`);
           return response.json();
