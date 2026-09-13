@@ -1671,6 +1671,21 @@
   animation: nearbyPageIn .24s ease;
 }
 
+.nearby-radius-notice {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0.75rem 0 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
 .nearby-home-list--paged .nearby-home-card,
 .nearby-home-list--paged .nearby-home-skeleton {
   width: 100%;
