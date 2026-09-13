@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
+import android.webkit.WebResourceRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -119,6 +120,15 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(AndroidPermissionBridge(), "RosarioMarketPermissions")
 
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean = request?.url?.let(::openExternalUrlIfNeeded) ?: false
+
+            @Suppress("DEPRECATION")
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean =
+                url?.let { openExternalUrlIfNeeded(Uri.parse(it)) } ?: false
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 pageLoaded = true
@@ -188,6 +198,45 @@ class MainActivity : AppCompatActivity() {
         )
 
         GeofenceManager.scheduleRefresh(this)
+    }
+
+    /**
+     * WebView cannot open Android app schemes such as whatsapp:// and otherwise
+     * replaces Rosario Market with ERR_UNKNOWN_URL_SCHEME. Keep our website in
+     * the WebView and hand WhatsApp (plus any other external scheme) to Android.
+     */
+    private fun openExternalUrlIfNeeded(uri: Uri): Boolean {
+        val scheme = uri.scheme?.lowercase() ?: return false
+        val host = uri.host?.lowercase().orEmpty()
+        val isWhatsAppWebLink = scheme in setOf("http", "https") &&
+            (host == "wa.me" || host == "api.whatsapp.com" || host.endsWith(".whatsapp.com"))
+        val isExternalScheme = scheme !in setOf("http", "https", "about", "data", "javascript")
+
+        if (!isWhatsAppWebLink && !isExternalScheme) return false
+
+        val externalIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
+
+        return try {
+            startActivity(externalIntent)
+            true
+        } catch (_: Exception) {
+            if (scheme == "whatsapp") {
+                val phone = uri.getQueryParameter("phone").orEmpty()
+                val text = uri.getQueryParameter("text").orEmpty()
+                val fallback = Uri.parse(
+                    "https://wa.me/$phone?text=${Uri.encode(text)}"
+                )
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, fallback))
+                } catch (_: Exception) {
+                    // No compatible app/browser: consume the link so WebView
+                    // never navigates to its built-in error page.
+                }
+            }
+            true
+        }
     }
 
     private fun continuePermissionFlow() {
