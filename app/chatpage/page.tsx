@@ -1343,7 +1343,7 @@ function ChatPageInner() {
                     <div className="chat-header-menu">
                       <button onClick={clearActiveConversation} disabled={chatActionBusy}><Eraser size={15} /> Vaciar para mí</button>
                       <div className="chat-menu-section">
-                        <span><Clock3 size={13} /> Mensajes temporales</span>
+                        <span><Clock3 size={13} /> Modo Momento RM</span>
                         {[1, 24, 168].map(hours => (
                           <button key={hours} className={activeConv?.temporaryMode?.enabled && activeConv.temporaryMode.ttlHours === hours ? "active" : ""} onClick={() => setTemporary(hours)}>
                             {hours === 1 ? "1 hora" : hours === 24 ? "24 horas" : "7 días"}
@@ -1385,7 +1385,7 @@ function ChatPageInner() {
                   </div>
                 )}
                 {activeConv?.temporaryMode?.enabled && (
-                  <div className="temporary-chat-notice"><Clock3 size={15} /> Los mensajes nuevos desaparecen en {activeConv.temporaryMode.ttlHours === 1 ? "1 hora" : activeConv.temporaryMode.ttlHours === 24 ? "24 horas" : "7 días"}.</div>
+                  <div className="temporary-chat-notice"><Clock3 size={15} /> Modo Momento RM: lo nuevo desaparece en {activeConv.temporaryMode.ttlHours === 1 ? "1 hora" : activeConv.temporaryMode.ttlHours === 24 ? "24 horas" : "7 días"}.</div>
                 )}
                 {userBlocked && !convBlocked?.isBlocked && (
                   <div className="blocked-chat-notice"><Ban size={15} /> {blockedByMe ? "Bloqueaste a este usuario." : "Este usuario bloqueó la conversación."}</div>
