@@ -370,6 +370,7 @@ body:has(.chat-root) footer { display:none; }
   color:inherit;
   background:rgba(255,255,255,.16);
   cursor:pointer;
+  touch-action:manipulation;
   opacity:.72;
 }
 .bubble { padding-right:38px; }
