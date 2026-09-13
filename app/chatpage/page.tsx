@@ -413,7 +413,9 @@ function ChatPageInner() {
   const [chatMenuOpen, setChatMenuOpen]     = useState(false);
   const [chatActionBusy, setChatActionBusy] = useState(false);
   const [deleteChatTarget, setDeleteChatTarget] = useState<Conversation | null>(null);
+  const [deleteMessageTarget, setDeleteMessageTarget] = useState<Message | null>(null);
   const [deletingChat, setDeletingChat] = useState(false);
+  const [deletingMessage, setDeletingMessage] = useState(false);
 
   // ── Banner state ──────────────────────────────────────────────────────────
   const [announcements, setAnnouncements]         = useState<Announcement[]>([]);
@@ -977,17 +979,30 @@ function ChatPageInner() {
     finally { setDeletingChat(false); }
   };
 
-  const deleteMessage = async (msgId: string) => {
-    if (!confirm("¿Eliminar este mensaje para todos?")) return;
+  const deleteMessage = (msgId: string) => {
+    const target = messages.find((message) => message._id === msgId);
+    if (target) {
+      setSelectedMessageId(null);
+      setDeleteMessageTarget(target);
+    }
+  };
+
+  const confirmDeleteMessage = async () => {
+    if (!deleteMessageTarget || deletingMessage) return;
+    const msgId = deleteMessageTarget._id;
+    setDeletingMessage(true);
     try {
-      await fetch(`${API}/chat/messages/${msgId}`, {
+      const res = await fetch(`${API}/chat/messages/${msgId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) throw new Error();
       setMessages((prev) => prev.filter((m) => m._id !== msgId));
       setSelectedMessageId(null);
+      setDeleteMessageTarget(null);
       socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason: "message_deleted" });
-    } catch { /* silent */ }
+    } catch { /* se conserva el mensaje si el servidor rechaza la operación */ }
+    finally { setDeletingMessage(false); }
   };
 
   const runConversationAction = async (
@@ -1119,6 +1134,30 @@ function ChatPageInner() {
               <button className="chat-confirm-cancel" onClick={() => setDeleteChatTarget(null)} disabled={deletingChat}>Cancelar</button>
               <button className="chat-confirm-delete" onClick={confirmDeleteConversation} disabled={deletingChat}>
                 {deletingChat ? <><Loader2 size={16} className="chat-confirm-spinner" /> Borrando…</> : <><Trash2 size={16} /> Borrar chat</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteMessageTarget && (
+        <div className="chat-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-message-title" onClick={() => !deletingMessage && setDeleteMessageTarget(null)}>
+          <div className="chat-confirm-modal rm-message-delete" onClick={(event) => event.stopPropagation()}>
+            <div className="chat-confirm-brand">
+              <img src="/assets/navbarbolsa.png" alt="Rosario Market" />
+              <span>Rosario <strong>Market</strong></span>
+            </div>
+            <div className="chat-confirm-icon"><Trash2 size={25} /></div>
+            <h3 id="delete-message-title">¿Eliminar este mensaje?</h3>
+            <p>Se borrará para las dos personas y no podrá recuperarse.</p>
+            <div className="chat-confirm-preview">
+              {deleteMessageTarget.image && <span>📷 Imagen</span>}
+              {deleteMessageTarget.text && <span>“{deleteMessageTarget.text.slice(0, 90)}{deleteMessageTarget.text.length > 90 ? "…" : ""}”</span>}
+            </div>
+            <div className="chat-confirm-actions">
+              <button className="chat-confirm-cancel" onClick={() => setDeleteMessageTarget(null)} disabled={deletingMessage}>Conservar</button>
+              <button className="chat-confirm-delete rm-orange-delete" onClick={confirmDeleteMessage} disabled={deletingMessage}>
+                {deletingMessage ? <><Loader2 size={16} className="chat-confirm-spinner" /> Eliminando…</> : <><Trash2 size={16} /> Eliminar para todos</>}
               </button>
             </div>
           </div>

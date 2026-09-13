@@ -327,6 +327,13 @@ body:has(.chat-root) footer { display:none; }
   background:#fef2f2;
   border:1px solid #fecaca;
 }
+.chat-confirm-brand { margin:-10px auto 16px; display:flex; align-items:center; justify-content:center; gap:8px; color:#172033; font-size:.82rem; font-weight:800; }
+.chat-confirm-brand img { width:34px; height:34px; object-fit:contain; filter:drop-shadow(0 3px 7px rgba(249,115,22,.2)); }
+.chat-confirm-brand strong { color:#f97316; }
+.chat-confirm-preview { max-height:72px; margin:15px 0 -4px; padding:10px 12px; overflow:hidden; border-left:3px solid #f97316; border-radius:9px; background:#fff7ed; color:#7c2d12; font-size:.76rem; line-height:1.45; text-align:left; }
+.chat-confirm-preview span { display:block; overflow:hidden; text-overflow:ellipsis; }
+.chat-confirm-modal.rm-message-delete { border-top:4px solid #f97316; }
+.chat-confirm-delete.rm-orange-delete { background:linear-gradient(135deg,#fb923c,#f97316); box-shadow:0 6px 18px rgba(249,115,22,.3); }
 .chat-confirm-modal h3 { margin:0 0 9px; color:#172033; font-size:1.15rem; font-weight:900; }
 .chat-confirm-modal p { margin:0; color:#64748b; font-size:.85rem; line-height:1.6; }
 .chat-confirm-modal p strong { color:#334155; }
@@ -995,6 +1002,7 @@ body:has(.chat-root) footer { display:none; }
 @media (max-width:680px) {
 
   body:has(.chat-root) { overflow:hidden; }
+  html:has(.chat-root) { overflow:hidden; overscroll-behavior:none; }
 
   .chat-root {
     border-radius:0;
