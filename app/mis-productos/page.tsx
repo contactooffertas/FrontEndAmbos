@@ -29,6 +29,9 @@ import {
 } from "../lib/productService";
 import "../styles/misproductos.css";
 
+const API = "https://new-backend-lovat.vercel.app/api";
+const SUPERMARKET_SLUG = "supermercado";
+
 // ── Celda de precio (reutilizable) ──────────────────────────
 // Si hay oferta flash vigente, esa es la que manda sobre el descuento normal.
 function getProductImage(product: Product): string | undefined {
@@ -105,6 +108,7 @@ export default function MisProductosPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [businessCategories, setBusinessCategories] = useState<string[] | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -123,7 +127,15 @@ export default function MisProductosPage() {
   }, []);
 
   useEffect(() => {
-    if (user) fetchProducts();
+    if (!user) return;
+    fetchProducts();
+    const token = localStorage.getItem("marketplace_token");
+    fetch(`${API}/business/my-business`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((business) => setBusinessCategories(Array.isArray(business.categories) ? business.categories : []))
+      .catch(() => setBusinessCategories([]));
   }, [user, fetchProducts]);
 
   const openCreate = () => { setEditTarget(null); setModalOpen(true); };
@@ -434,6 +446,7 @@ export default function MisProductosPage() {
         onSubmit={handleSubmit}
         initial={editTarget}
         loading={saving}
+        allowedCategorySlugs={businessCategories?.includes(SUPERMARKET_SLUG) ? undefined : businessCategories || []}
       />
     </MainLayout>
   );

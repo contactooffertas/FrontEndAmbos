@@ -2,7 +2,7 @@
 // app/negocio/[id]/page.tsx
 
 import { useAuth } from "../context/authContext";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../componentes/MainLayout";
 import "../styles/negocio.css";
 import "../styles/negocio-products.css";
@@ -37,7 +37,13 @@ import { useMarketCategories } from "../hooks/useMarketCategories";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
-const BUSINESS_CATEGORIES = MARKET_CATEGORIES;
+const SUPERMARKET_SLUG = "supermercado";
+const SUPERMARKET_CATEGORY = {
+  id: "supermercado",
+  name: "Supermercado",
+  iconName: "ShoppingBag",
+  slug: SUPERMARKET_SLUG,
+};
 
 const LEGACY_BUSINESS_CATEGORY_ALIASES: Record<string, string> = {
   ropa: "ropa-moda",
@@ -109,6 +115,8 @@ function getRankInfo(rating: number, total: number) {
 function CategorySelector({ selected, onChange, categoryDefs }: { selected: string[]; onChange: (cats: string[]) => void; categoryDefs: typeof MARKET_CATEGORIES }) {
   const toggle = (slug: string) => {
     if (selected.includes(slug)) onChange(selected.filter(s => s !== slug));
+    else if (slug === SUPERMARKET_SLUG) onChange([SUPERMARKET_SLUG]);
+    else if (selected.includes(SUPERMARKET_SLUG)) onChange([slug]);
     else if (selected.length < 2) onChange([...selected, slug]);
   };
   return (
@@ -342,6 +350,12 @@ function ReviewSubmitModal({
 export default function NegocioPage() {
   const { user } = useAuth();
   const { categories: marketCategories } = useMarketCategories();
+  const businessCategoryDefs = useMemo(
+    () => marketCategories.some((category) => category.slug === SUPERMARKET_SLUG)
+      ? marketCategories
+      : [...marketCategories, SUPERMARKET_CATEGORY],
+    [marketCategories],
+  );
   const router = useRouter();
   const params = useParams();
   const bizIdParam = params?.id as string | undefined;
@@ -394,7 +408,7 @@ export default function NegocioPage() {
           if (res.ok) {
             const data = await res.json();
             setBusiness(data);
-            setSelectedCategories(normalizeBusinessCategories(data.categories, marketCategories));
+            setSelectedCategories(normalizeBusinessCategories(data.categories, businessCategoryDefs));
             const userId = (user as any)?._id || (user as any)?.id;
             setIsOwner(data.owner === userId || data.owner?._id === userId);
             if (data.location?.coordinates?.length)
@@ -406,7 +420,7 @@ export default function NegocioPage() {
           if (res.ok) {
             const data = await res.json();
             setBusiness(data);
-            setSelectedCategories(normalizeBusinessCategories(data.categories, marketCategories));
+            setSelectedCategories(normalizeBusinessCategories(data.categories, businessCategoryDefs));
             if (data.location?.coordinates?.length)
               setBizLocation({ lat: data.location.coordinates[1], lng: data.location.coordinates[0], address: data.address || "" });
           } else if (res.status === 404) {
@@ -417,7 +431,7 @@ export default function NegocioPage() {
       finally { setLoading(false); }
     };
     fetchBusiness();
-  }, [token, bizIdParam, user, marketCategories]);
+  }, [token, bizIdParam, user, businessCategoryDefs]);
 
   useEffect(() => {
     if (!bizIdParam || !token) return;
@@ -500,7 +514,7 @@ export default function NegocioPage() {
       const res = await fetch(`${API}/business`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error guardando");
-      setBusiness(data); setSelectedCategories(normalizeBusinessCategories(data.categories, marketCategories));
+      setBusiness(data); setSelectedCategories(normalizeBusinessCategories(data.categories, businessCategoryDefs));
       setEditing(false); setSelectedFile(null); setLogoPreview(null);
       showToast("success", esNuevo ? "Negocio creado!" : "Negocio actualizado!");
     } catch (error: any) { showToast("error", error.message || "Error al guardar"); }
@@ -509,7 +523,7 @@ export default function NegocioPage() {
 
   const handleCancelEdit = () => {
     setEditing(false); setSelectedFile(null); setLogoPreview(null); setLocationError("");
-    setSelectedCategories(normalizeBusinessCategories(business.categories, marketCategories));
+    setSelectedCategories(normalizeBusinessCategories(business.categories, businessCategoryDefs));
     if (business.location?.coordinates?.length)
       setBizLocation({ lat: business.location.coordinates[1], lng: business.location.coordinates[0], address: business.address || "" });
   };
@@ -838,7 +852,7 @@ export default function NegocioPage() {
                 <input className="negocio-input" placeholder="Ciudad" value={business.city} onChange={e => setBusiness({ ...business, city: e.target.value })} />
                 <input className="negocio-input" placeholder="Numero de celular" value={business.phone} onChange={e => setBusiness({ ...business, phone: e.target.value })} />
                 <LocationPicker value={bizLocation} onChange={(loc: any) => { setBizLocation(loc); setLocationError(""); }} userLat={userCoords?.lat} userLng={userCoords?.lng} userCity={userCity} error={locationError} />
-                <CategorySelector selected={selectedCategories} onChange={setSelectedCategories} categoryDefs={marketCategories} />
+                <CategorySelector selected={selectedCategories} onChange={setSelectedCategories} categoryDefs={businessCategoryDefs} />
               </div>
             ) : (
               <>
@@ -855,7 +869,7 @@ export default function NegocioPage() {
                   )}
                 </div>
                 {business.verified ? <span className="negocio-badge"><CheckCircle size={13} /> Verificado</span> : <span className="negocio-badge unverified">Comercio no verificado</span>}
-                <CategoryBadges categories={business.categories} categoryDefs={marketCategories} />
+                <CategoryBadges categories={business.categories} categoryDefs={businessCategoryDefs} />
                 <p className="negocio-description">{business.description || "Agrega una descripcion de tu negocio."}</p>
                 <div className="negocio-meta">
                   <span><MapPin size={13} />{business.address || business.city || "Direccion no definida"}</span>
@@ -999,7 +1013,14 @@ export default function NegocioPage() {
       </div>
 
       {isOwner && !isBusinessBlocked && (
-        <ProductModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={handleProductSubmit} initial={editTarget} loading={productSaving} />
+        <ProductModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleProductSubmit}
+          initial={editTarget}
+          loading={productSaving}
+          allowedCategorySlugs={business.categories?.includes(SUPERMARKET_SLUG) ? undefined : business.categories || []}
+        />
       )}
     </MainLayout>
   );

@@ -25,6 +25,7 @@ type Props = {
   onSubmit: (formData: FormData) => Promise<void>;
   initial?: Product | null;
   loading?: boolean;
+  allowedCategorySlugs?: string[];
 };
 
 export default function ProductModal({
@@ -33,8 +34,12 @@ export default function ProductModal({
   onSubmit,
   initial,
   loading,
+  allowedCategorySlugs,
 }: Props) {
   const { categories } = useMarketCategories();
+  const allowedCategories = allowedCategorySlugs === undefined
+    ? categories
+    : categories.filter((category) => allowedCategorySlugs.includes(category.slug));
   const [form, setForm] = useState<ProductForm>({
     name: "",
     price: "",
@@ -54,7 +59,9 @@ export default function ProductModal({
         name: initial.name,
         price: String(initial.price),
         discount: String(initial.discount ?? 0),
-        category: initial.category,
+        category: allowedCategories.some((category) => category.slug === initial.category)
+          ? initial.category
+          : (allowedCategories[0]?.slug || ""),
         description: initial.description || "",
         stock: String(initial.stock),
         deliveryRadius: String(initial.deliveryRadius ?? 0), // ✅ carga el valor real al editar
@@ -68,7 +75,7 @@ export default function ProductModal({
         name: "",
         price: "",
         discount: "0",
-        category: "electronica",
+        category: allowedCategories[0]?.slug || "",
         description: "",
         stock: "10",
         deliveryRadius: "0",
@@ -76,7 +83,7 @@ export default function ProductModal({
       setImagePreview(null);
     }
     setImageFile(null);
-  }, [initial, open]);
+  }, [initial, open, allowedCategorySlugs, categories]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,6 +123,17 @@ export default function ProductModal({
         icon: "error",
         title: "Contenido no permitido",
         text: "El nombre o la descripción contienen palabras o expresiones no permitidas.",
+        confirmButtonColor: "#f97316",
+      });
+      return;
+    }
+
+    if (!form.category) {
+      const Swal = (await import("sweetalert2")).default;
+      await Swal.fire({
+        icon: "warning",
+        title: "Configurá el rubro del negocio",
+        text: "Antes de publicar, elegí al menos un rubro en la configuración de tu negocio.",
         confirmButtonColor: "#f97316",
       });
       return;
@@ -299,7 +317,7 @@ export default function ProductModal({
           <div className="mp-field">
             <label className="mp-label">Categoría</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
-              {categories.map((category) => {
+              {allowedCategories.map((category) => {
                 const active = form.category === category.slug;
                 return (
                   <button
@@ -327,6 +345,11 @@ export default function ProductModal({
                 );
               })}
             </div>
+            {allowedCategorySlugs === undefined ? (
+              <small className="mp-field-hint">Como supermercado, podés publicar productos en cualquier categoría.</small>
+            ) : (
+              <small className="mp-field-hint">Solo podés usar los rubros configurados para tu negocio.</small>
+            )}
           </div>
 
           {/* Descripción */}
