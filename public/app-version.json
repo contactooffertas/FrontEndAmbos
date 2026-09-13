@@ -1,6 +1,6 @@
 {
-  "version": "3.5.0",
-  "versionCode": 35,
-  "apkUrl": "/downloads/Rosario-Market-3.5.apk",
-  "label": "Rosario Market 3.5"
+  "version": "3.6.0",
+  "versionCode": 36,
+  "apkUrl": "https://github.com/contactooffertas/FrontEndAmbos/releases/download/android-v3.6.0/Rosario-Market-3.6.apk",
+  "label": "Rosario Market 3.6"
 }
