@@ -364,7 +364,20 @@ body:has(.chat-root) footer { display:none; }
 /* Ticks azules cuando fue leído (dentro de burbuja propia) */
 .bubble.mine .b-meta.read-ticks { color:#60a5fa; }
 
-.b-wrap { position:relative; display:flex; align-items:flex-end; }
+.b-wrap {
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  width:max-content;
+  max-width:min(72%,560px);
+}
+
+/* El porcentaje debe calcularse sobre la fila, no sobre el propio contenido.
+   Evita burbujas altas y angostas en pantallas de escritorio. */
+.b-wrap .bubble {
+  width:auto;
+  max-width:100%;
+}
 
 .message-actions-trigger {
   position:absolute;
