@@ -529,11 +529,21 @@ function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius
 }
 
 const LOCAL_SEARCH_ROOTS: Record<string, string[]> = {
-  "ropa-moda": ["calzado","zapatillas","zapatos","botas","sandalias","ropa","remera","camisa","pantalon","jean","pollera","vestido","campera","buzo","gorra","cartera","mochila"],
+  "ropa-moda": [
+    "ropa","moda","tienda de ropa","calzado","zapatillas","zapatos","botas","sandalias",
+    "remera","camisa","pantalon","jean","pollera","vestido","campera","buzo","gorra","gorro",
+    "chalina","bermuda","chaleco","cartera","mochila","medias","medias de hombre","medias de niños",
+    "medias de niñas","medias de nenes","medias de nenas","medias de futbol","medias para deportes",
+    "camiseta de futbol","boxer","boxer para hombres","boxer para niños","ropa interior hombre",
+    "ropa interior niños","ropa interior mujer","ropa interior niñas","bombachas para nenas",
+    "ropa interior para nenas","ropa interior para nenes","ropa para regalo","para regalo",
+    "tanga","tanga roja","tanga azul","tanga verde","tanga negra","tanga blanca",
+    "culote","culote rojo","culote azul","culote verde","culote negro","culote blanco"
+  ],
   electronica: ["electronica","televisor","tv","auriculares","parlante","cargador","camara","radio","microfono","proyector"],
   tecnologia: ["tecnologia","celular","telefono","smartphone","notebook","laptop","computadora","pc","monitor","tablet","teclado","mouse","impresora","router","hardware","software","ssd","memoria ram","procesador","placa de video","consola","joystick"],
   hogar: ["mesa","silla","sillon","mueble","colchon","cama","almohada","cortina","lampara","decoracion","heladera","microondas","termo","mate"],
-  deportes: ["pelota","futbol","botines","bicicleta","pesas","gimnasio","running","camiseta","raqueta"],
+  deportes: ["pelota","futbol","botines","bicicleta","pesas","gimnasio","running","raqueta"],
   alimentos: ["alimentos","comida","pan","panaderia","panadería","panadero","panificados","facturas","medialunas","bizcochos","torta","cafe","yerba","frutas","verduras","carne","asado","chorizo","chorizos","pollo","pollos","carniceria","carnicería","polleria","pollería","almacen","almacén","supermercado","queso","bebidas"],
   "salud-belleza": ["perfume","maquillaje","crema","shampoo","jabon","belleza","cosmetica","peluqueria"],
   automotriz: ["auto","moto","cubierta","neumatico","bateria","aceite","repuesto","taller"],
