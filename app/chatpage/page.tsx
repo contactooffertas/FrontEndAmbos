@@ -453,14 +453,16 @@ function ChatPageInner() {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
       const viewport = window.visualViewport;
-      // getBoundingClientRect y visualViewport.height ya comparten el área
-      // visible. Sumar offsetTop dos veces empujaba el composer bajo el teclado.
-      const visibleBottom = viewport?.height ?? document.documentElement.clientHeight;
+      // VisualViewport.height no incluye el teclado, pero su coordenada inferior
+      // sí necesita offsetTop (Chrome móvil desplaza el viewport por sus barras).
+      const visibleBottom = viewport
+        ? viewport.offsetTop + viewport.height
+        : document.documentElement.clientHeight;
       const rootTop = root.getBoundingClientRect().top;
       const top = Math.max(rootTop, 0);
       const inputFocused = document.activeElement?.classList.contains("input-ta") ?? false;
       const keyboardOpen = inputFocused || (!!viewport && window.innerHeight - viewport.height > 120);
-      const height = Math.max(keyboardOpen ? 160 : 320, Math.floor(visibleBottom - top - 1));
+      const height = Math.max(keyboardOpen ? 1 : 320, Math.floor(visibleBottom - top - 1));
       const next = `${height}px`;
       if (root.style.getPropertyValue("--chat-viewport-height") !== next) {
         root.style.setProperty("--chat-viewport-height", next);
