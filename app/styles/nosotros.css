@@ -100,8 +100,8 @@
   .nosotros-brand-wordmark { font-size:.87rem; }
   .nosotros-hero { min-height:620px; }
   .nosotros-hero-media img { object-position:58% top; }
-  .nosotros-hero-overlay { background:linear-gradient(180deg,rgba(5,24,40,.14) 0%,rgba(5,24,40,.28) 30%,rgba(5,24,40,.84) 64%,rgba(5,24,40,.98) 100%); }
-  .nosotros-hero-content { width:calc(100% - 1.5rem); min-height:620px; padding:15rem 0 2.6rem; justify-content:flex-end; }
+  .nosotros-hero-overlay { background:linear-gradient(180deg,rgba(5,24,40,.72) 0%,rgba(5,24,40,.62) 38%,rgba(5,24,40,.88) 76%,rgba(5,24,40,.98) 100%); }
+  .nosotros-hero-content { width:calc(100% - 1.5rem); min-height:620px; padding:2rem 0 2.6rem; justify-content:flex-start; }
   .nosotros-hero-tag { margin-bottom:.8rem; font-size:.62rem; }
   .nosotros-hero-title { margin-bottom:.9rem; font-size:clamp(2.45rem,12vw,3.5rem); }
   .nosotros-hero-sub { font-size:.9rem; line-height:1.52; }
