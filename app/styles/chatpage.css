@@ -39,13 +39,17 @@
 
 * { box-sizing:border-box; }
 
+/* El chat es una pantalla de aplicación: no necesita el footer del sitio. */
+body:has(.chat-root) footer { display:none; }
+
 /* ══════════════════════════════════════════════════════════════════════════
    ROOT
 ══════════════════════════════════════════════════════════════════════════ */
 .chat-root {
   font-family:'Plus Jakarta Sans',sans-serif;
   display:flex;
-  height:calc(100dvh - 64px);
+  height:var(--chat-viewport-height, calc(100dvh - 64px));
+  min-height:0;
   max-width:1340px;
   margin:0 auto;
   background:#fff;
@@ -837,9 +841,14 @@
 
 @media (max-width:680px) {
 
+  body:has(.chat-root) { overflow:hidden; }
+
   .chat-root {
     border-radius:0;
-    height:calc(100dvh - 56px);
+    width:100%;
+    max-width:100%;
+    height:var(--chat-viewport-height, calc(100dvh - 136px));
+    min-height:320px;
     position:relative;
     overflow:hidden;
   }
@@ -862,11 +871,49 @@
   }
   .ca.active { transform:translateX(0); }
 
+  .ca-header {
+    flex:0 0 auto;
+    min-width:0;
+    min-height:62px;
+    padding:8px 10px;
+    gap:9px;
+  }
+  .ca-header-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .ca-messages {
+    min-height:0;
+    padding:10px 10px 8px;
+    overscroll-behavior:contain;
+  }
+
+  .ca-input {
+    flex:0 0 auto;
+    width:100%;
+    min-width:0;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    gap:8px;
+    align-items:center;
+  }
+  .input-ta {
+    min-width:0;
+    min-height:42px;
+    max-height:96px;
+    padding:10px 14px;
+    border-radius:21px;
+    font-size:.9rem;
+  }
+  .icon-btn { width:42px; height:42px; }
+
   .btn-back-mobile { display:flex !important; }
 
   .ci { padding:14px 16px; }
   .ci + .ci::before { left:14px; right:14px; }
-  .bubble { max-width:min(82%,500px); }
+  .brow { max-width:100%; min-width:0; gap:6px; }
+  .b-wrap { min-width:0; max-width:calc(100% - 36px); }
+  .bubble { max-width:100%; padding:9px 12px 7px; border-radius:17px; font-size:.9rem; line-height:1.45; }
+  .bubble.mine { border-radius:17px 17px 5px 17px; }
+  .bubble.theirs { border-radius:17px 17px 17px 5px; }
+  .b-avatar { width:28px; height:28px; }
   .b-img { max-height:240px; }
   .ci-avatar { width:50px; height:50px; }
   .banner-trigger { font-size:0.81rem; padding:10px 14px; }
@@ -878,12 +925,10 @@
   }
   .banner-modal { max-width:100%; }
 
-  /* En mobile el botón de reporte siempre semivisible */
-  .b-report-btn { opacity:0.45; }
-  .b-del-btn    { opacity:0.35; }
-
-  /* Botón de reporte en mobile: tap area más grande */
-  .b-report-btn { width:32px; height:32px; }
+  /* Las acciones laterales desbordaban el viewport. El reporte general sigue
+     disponible en el encabezado, como en una app de mensajería móvil. */
+  .b-report-btn,
+  .b-del-btn { display:none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
