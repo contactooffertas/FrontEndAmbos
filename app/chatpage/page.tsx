@@ -406,6 +406,7 @@ function ChatPageInner() {
   const socketRef      = useRef<Socket | null>(null);
   const msgsEndRef     = useRef<HTMLDivElement | null>(null);
   const msgsAreaRef    = useRef<HTMLDivElement | null>(null);
+  const chatRootRef    = useRef<HTMLDivElement | null>(null);
   const fileRef        = useRef<HTMLInputElement | null>(null);
   const typingTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeIdRef    = useRef<string | null>(null);
@@ -415,6 +416,39 @@ function ChatPageInner() {
 
   useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
   useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+
+  // El alto del chat debe descontar todo lo que realmente existe arriba
+  // (navbar, categorías y posibles banners), además de reaccionar al teclado
+  // móvil mediante VisualViewport.
+  useEffect(() => {
+    const root = chatRootRef.current;
+    if (!root) return;
+    const updateHeight = () => {
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const top = Math.max(0, root.getBoundingClientRect().top);
+      const height = Math.max(320, Math.floor(viewportHeight - top));
+      const next = `${height}px`;
+      if (root.style.getPropertyValue("--chat-viewport-height") !== next) {
+        root.style.setProperty("--chat-viewport-height", next);
+      }
+    };
+    updateHeight();
+    const frame = requestAnimationFrame(updateHeight);
+    const timer = window.setTimeout(updateHeight, 350);
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(document.body);
+    window.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("scroll", updateHeight);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("scroll", updateHeight);
+    };
+  }, []);
 
   const activeConv = conversations.find((c) => c._id === activeId) ?? null;
   const effectiveConv =
@@ -958,7 +992,7 @@ function ChatPageInner() {
         />
       )}
 
-      <div className="chat-root">
+      <div className="chat-root" ref={chatRootRef}>
         {/* ══ SIDEBAR ══ */}
         <div className={`cs${mobileView === "chat" ? " hide" : ""}`}>
           <div className="cs-header">
@@ -1360,7 +1394,7 @@ function ChatPageInner() {
                   </button>
                   <textarea
                     className="input-ta"
-                    placeholder="Escribí un mensaje... (Enter para enviar)"
+                    placeholder="Escribí un mensaje…"
                     value={text}
                     onChange={handleTyping}
                     onKeyDown={handleKeyDown}
