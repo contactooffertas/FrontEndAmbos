@@ -83,6 +83,15 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun permissionsGranted(): Boolean = allRequiredPermissionsGranted()
+
+        @JavascriptInterface
+        fun deferPermissionPrompt() {
+            runOnUiThread {
+                // Permite seguir usando la app. El aviso podrá mostrarse de nuevo
+                // después de que el usuario navegue a otra pantalla.
+                permissionPromptShownThisSession = false
+            }
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
@@ -285,14 +294,17 @@ class MainActivity : AppCompatActivity() {
                 '<h2 id="rm-permission-title">Negocios cerca tuyo</h2>' +
                 '<p>Activá la ubicación en segundo plano y las notificaciones para que Rosario Market pueda avisarte cuando estés a menos de 300 metros de un negocio, aunque la app esté cerrada o estés usando otra aplicación.</p>' +
                 '<div class="rm-note">En Ubicación elegí “Permitir todo el tiempo”. No necesitás iniciar sesión.</div>' +
-                '<button class="rm-primary" type="button">Activar avisos cercanos</button>' +
-                '<button class="rm-later" type="button">Ahora no</button>' +
+                '<button class="rm-primary" type="button">Permitir en segundo plano</button>' +
+                '<button class="rm-later" type="button">No permitir</button>' +
                 '</div>';
               modal.querySelector('.rm-primary').onclick = function () {
                 modal.remove();
                 window.RosarioMarketPermissions.startPermissionFlow();
               };
-              modal.querySelector('.rm-later').onclick = function () { modal.remove(); };
+              modal.querySelector('.rm-later').onclick = function () {
+                modal.remove();
+                window.RosarioMarketPermissions.deferPermissionPrompt();
+              };
               document.body.appendChild(modal);
             })();
             """.trimIndent(),
