@@ -412,6 +412,8 @@ function ChatPageInner() {
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [chatMenuOpen, setChatMenuOpen]     = useState(false);
   const [chatActionBusy, setChatActionBusy] = useState(false);
+  const [deleteChatTarget, setDeleteChatTarget] = useState<Conversation | null>(null);
+  const [deletingChat, setDeletingChat] = useState(false);
 
   // ── Banner state ──────────────────────────────────────────────────────────
   const [announcements, setAnnouncements]         = useState<Announcement[]>([]);
@@ -947,15 +949,25 @@ function ChatPageInner() {
 
   const deleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("¿Borrar esta conversación? Solo la eliminás de tu vista.")) return;
+    const target = conversations.find((conversation) => conversation._id === id);
+    if (target) setDeleteChatTarget(target);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!deleteChatTarget || deletingChat) return;
+    const id = deleteChatTarget._id;
+    setDeletingChat(true);
     try {
-      await fetch(`${API}/chat/conversations/${id}`, {
+      const res = await fetch(`${API}/chat/conversations/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) throw new Error();
       setConversations((prev) => prev.filter((c) => c._id !== id));
       if (activeId === id) { setActiveId(null); setMessages([]); setMobileView("list"); }
-    } catch { /* silent */ }
+      setDeleteChatTarget(null);
+    } catch { alert("No se pudo borrar el chat. Intentá nuevamente."); }
+    finally { setDeletingChat(false); }
   };
 
   const deleteMessage = async (msgId: string) => {
@@ -1088,6 +1100,24 @@ function ChatPageInner() {
       `}</style>
 
       {/* ── Lightbox ── */}
+      {deleteChatTarget && (
+        <div className="chat-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-chat-title" onClick={() => !deletingChat && setDeleteChatTarget(null)}>
+          <div className="chat-confirm-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="chat-confirm-icon"><Trash2 size={25} /></div>
+            <h3 id="delete-chat-title">¿Borrar este chat?</h3>
+            <p>
+              La conversación con <strong>{deleteChatTarget.other?.name || "este usuario"}</strong> desaparecerá de tu lista. La otra persona conservará sus mensajes.
+            </p>
+            <div className="chat-confirm-actions">
+              <button className="chat-confirm-cancel" onClick={() => setDeleteChatTarget(null)} disabled={deletingChat}>Cancelar</button>
+              <button className="chat-confirm-delete" onClick={confirmDeleteConversation} disabled={deletingChat}>
+                {deletingChat ? <><Loader2 size={16} className="chat-confirm-spinner" /> Borrando…</> : <><Trash2 size={16} /> Borrar chat</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {lightbox && (
         <div className="lightbox" onClick={() => setLightbox(null)}>
           <img src={lightbox} alt="imagen" onClick={(e) => e.stopPropagation()} />
