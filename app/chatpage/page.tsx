@@ -27,6 +27,9 @@ import {
   MoreVertical,
   Reply,
   Pencil,
+  Ban,
+  Eraser,
+  Clock3,
 } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import "../styles/chatpage.css";
@@ -56,6 +59,8 @@ interface Conversation {
   unreadCount: number;
   isBlocked?: boolean;
   blockedBy?: string | null;
+  blockedUsers?: string[];
+  temporaryMode?: { enabled: boolean; ttlHours: number; enabledBy?: string | null };
 }
 interface Message {
   _id: string;
@@ -405,6 +410,8 @@ function ChatPageInner() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo]         = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [chatMenuOpen, setChatMenuOpen]     = useState(false);
+  const [chatActionBusy, setChatActionBusy] = useState(false);
 
   // ── Banner state ──────────────────────────────────────────────────────────
   const [announcements, setAnnouncements]         = useState<Announcement[]>([]);
@@ -646,6 +653,27 @@ function ChatPageInner() {
         setMessages((prev) => prev.map((message) => message._id === edited._id ? edited : message));
       }
     });
+    socket.on("conversation_sync", async ({ conversationId }: { conversationId: string }) => {
+      try {
+        const convRes = await fetch(`${API}/chat/conversations`, {
+          headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+        });
+        if (convRes.ok) {
+          const convs: Conversation[] = await convRes.json();
+          setConversations(convs.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
+        }
+        if (conversationId === activeIdRef.current) {
+          const msgRes = await fetch(`${API}/chat/conversations/${conversationId}/messages`, {
+            headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+          });
+          if (msgRes.ok) {
+            const data = await msgRes.json();
+            setMessages(Array.isArray(data) ? data : (data.messages ?? []));
+            setConvBlocked(data.isBlocked ? { isBlocked: true, blockedBy: data.blockedBy } : null);
+          }
+        }
+      } catch { /* el respaldo REST continúa activo */ }
+    });
 
     socket.on("conversation_blocked", ({ conversationId, blockedBy }: { conversationId: string; blockedBy: string; reason: string }) => {
       setConversations(prev => prev.map(c =>
@@ -719,11 +747,9 @@ function ChatPageInner() {
           if (msgRes.ok && !cancelled) {
             const data = await msgRes.json();
             const incoming: Message[] = Array.isArray(data) ? data : (data.messages ?? []);
-            setMessages(prev => {
-              const map = new Map(prev.map(m => [m._id,m]));
-              incoming.forEach(m => map.set(m._id,m));
-              return Array.from(map.values()).sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime());
-            });
+            // Reemplazar, no fusionar: así desaparecen también los mensajes
+            // temporales vencidos y los que el usuario vació para sí.
+            setMessages(incoming.sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime()));
             void fetch(`${API}/chat/conversations/${current}/read`, {
               method:"POST", headers:{Authorization:`Bearer ${token}`}
             }).catch(()=>{});
@@ -848,6 +874,7 @@ function ChatPageInner() {
         if (!res.ok) throw new Error();
         const updated: Message = await res.json();
         setMessages((prev) => prev.map((message) => message._id === updated._id ? updated : message));
+        socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason: "message_edited" });
         return;
       }
       const fd = new FormData();
@@ -881,6 +908,7 @@ function ChatPageInner() {
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
           )
         );
+        socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason: "message_created" });
       }
     } catch {
       // Si falló, restaurar texto para que el usuario no pierda lo que escribió
@@ -939,7 +967,55 @@ function ChatPageInner() {
       });
       setMessages((prev) => prev.filter((m) => m._id !== msgId));
       setSelectedMessageId(null);
+      socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason: "message_deleted" });
     } catch { /* silent */ }
+  };
+
+  const runConversationAction = async (
+    path: string,
+    options: RequestInit,
+    after: (data: any) => void,
+    reason: string,
+  ) => {
+    if (!activeId || chatActionBusy) return;
+    setChatActionBusy(true);
+    try {
+      const res = await fetch(`${API}/chat/conversations/${activeId}${path}`, {
+        ...options,
+        headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": "application/json" } : {}) },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "No se pudo realizar la acción");
+      after(data);
+      socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason });
+      setChatMenuOpen(false);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "No se pudo realizar la acción");
+    } finally { setChatActionBusy(false); }
+  };
+
+  const clearActiveConversation = () => {
+    if (!confirm("¿Vaciar el chat para vos? La otra persona conservará sus mensajes.")) return;
+    void runConversationAction("/messages", { method: "DELETE" }, () => setMessages([]), "conversation_cleared");
+  };
+
+  const toggleBlockActiveUser = () => {
+    const isMine = !!activeConv?.blockedUsers?.includes(userId);
+    if (!confirm(`¿${isMine ? "Desbloquear" : "Bloquear"} a ${activeConv?.other?.name || "este usuario"}?`)) return;
+    void runConversationAction("/block", { method: "PATCH" }, (data) => {
+      setConversations(prev => prev.map(c => c._id === activeId
+        ? { ...c, blockedUsers: data.blocked ? [...new Set([...(c.blockedUsers || []), userId])] : (c.blockedUsers || []).filter(id => id !== userId) }
+        : c));
+    }, "user_block_changed");
+  };
+
+  const setTemporary = (ttlHours: number | null) => {
+    void runConversationAction("/temporary", {
+      method: "PATCH",
+      body: JSON.stringify({ enabled: ttlHours !== null, ttlHours: ttlHours || 24 }),
+    }, (data) => {
+      setConversations(prev => prev.map(c => c._id === activeId ? { ...c, temporaryMode: data.temporaryMode } : c));
+    }, "temporary_mode_changed");
   };
 
   const startReply = (message: Message) => {
@@ -962,6 +1038,9 @@ function ChatPageInner() {
     c.other?.name?.toLowerCase().includes(search.toLowerCase())
   );
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+  const blockedByMe = !!activeConv?.blockedUsers?.includes(userId);
+  const userBlocked = !!activeConv?.blockedUsers?.length;
+  const sendingBlocked = !!convBlocked?.isBlocked || userBlocked;
 
   if (!user)
     return (
@@ -1256,6 +1335,28 @@ function ChatPageInner() {
                     <span style={{ display: "none" }} className="report-label-desktop">Reportar</span>
                   </button>
                 )}
+                <div className="chat-header-menu-wrap">
+                  <button className="chat-header-menu-trigger" onClick={() => setChatMenuOpen(v => !v)} aria-label="Opciones del chat">
+                    <MoreVertical size={19} />
+                  </button>
+                  {chatMenuOpen && (
+                    <div className="chat-header-menu">
+                      <button onClick={clearActiveConversation} disabled={chatActionBusy}><Eraser size={15} /> Vaciar para mí</button>
+                      <div className="chat-menu-section">
+                        <span><Clock3 size={13} /> Mensajes temporales</span>
+                        {[1, 24, 168].map(hours => (
+                          <button key={hours} className={activeConv?.temporaryMode?.enabled && activeConv.temporaryMode.ttlHours === hours ? "active" : ""} onClick={() => setTemporary(hours)}>
+                            {hours === 1 ? "1 hora" : hours === 24 ? "24 horas" : "7 días"}
+                          </button>
+                        ))}
+                        {activeConv?.temporaryMode?.enabled && <button onClick={() => setTemporary(null)}>Desactivar</button>}
+                      </div>
+                      <button className={blockedByMe ? "unblock" : "danger"} onClick={toggleBlockActiveUser} disabled={chatActionBusy}>
+                        <Ban size={15} /> {blockedByMe ? "Desbloquear usuario" : "Bloquear usuario"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Messages area */}
@@ -1282,6 +1383,12 @@ function ChatPageInner() {
                       </div>
                     </div>
                   </div>
+                )}
+                {activeConv?.temporaryMode?.enabled && (
+                  <div className="temporary-chat-notice"><Clock3 size={15} /> Los mensajes nuevos desaparecen en {activeConv.temporaryMode.ttlHours === 1 ? "1 hora" : activeConv.temporaryMode.ttlHours === 24 ? "24 horas" : "7 días"}.</div>
+                )}
+                {userBlocked && !convBlocked?.isBlocked && (
+                  <div className="blocked-chat-notice"><Ban size={15} /> {blockedByMe ? "Bloqueaste a este usuario." : "Este usuario bloqueó la conversación."}</div>
                 )}
 
                 {msgsLoading ? (
@@ -1452,7 +1559,7 @@ function ChatPageInner() {
               )}
 
               {/* Input — hidden when conversation is blocked */}
-              {convBlocked?.isBlocked ? (
+              {sendingBlocked ? (
                 <div style={{
                   padding: "16px 20px",
                   background: "linear-gradient(135deg, #1a0a0a, #2d0f0f)",
@@ -1466,7 +1573,9 @@ function ChatPageInner() {
                     </span>
                   </div>
                   <p style={{ margin: 0, fontSize: "0.78rem", color: "rgba(248,113,113,0.7)", textAlign: "center", lineHeight: 1.5 }}>
-                    {convBlocked.blockedBy === userId
+                    {userBlocked
+                      ? (blockedByMe ? "Bloqueaste a este usuario. Podés desbloquearlo desde el menú del chat." : "Este usuario bloqueó la conversación. No se pueden enviar mensajes.")
+                      : convBlocked?.blockedBy === userId
                       ? "Reportaste a este usuario. El equipo está revisando el caso. Mientras tanto, no podés enviar mensajes."
                       : "Un reporte está siendo revisado por el equipo. No podés enviar mensajes por ahora."}
                   </p>
