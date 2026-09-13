@@ -1,4 +1,4 @@
-name: Build Rosario Market Android 3.6
+name: Build Rosario Market Android 3.6.1
 
 on:
   push:
@@ -38,21 +38,21 @@ jobs:
         run: gradle assembleDebug --stacktrace
 
       - name: Rename APK
-        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-3.6.apk
+        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-3.6.1.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rosario-Market-3.6-APK
-          path: Rosario-Market-3.6.apk
+          name: Rosario-Market-3.6.1-APK
+          path: Rosario-Market-3.6.1.apk
           retention-days: 30
 
       - name: Publish APK for website download
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view android-v3.6.0 >/dev/null 2>&1; then
-            gh release upload android-v3.6.0 Rosario-Market-3.6.apk --clobber
+          if gh release view android-v3.6.1 >/dev/null 2>&1; then
+            gh release upload android-v3.6.1 Rosario-Market-3.6.1.apk --clobber
           else
-            gh release create android-v3.6.0 Rosario-Market-3.6.apk --title "Rosario Market 3.6" --notes "Rosario Market Android 3.6 con permisos claros para ubicación en segundo plano y notificaciones de cercanía."
+            gh release create android-v3.6.1 Rosario-Market-3.6.1.apk --title "Rosario Market 3.6.1" --notes "Corrige el aviso persistente y evita que abrir la app dispare falsos avisos de cercanía."
           fi

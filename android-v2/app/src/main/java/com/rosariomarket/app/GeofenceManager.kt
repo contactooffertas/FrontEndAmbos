@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.work.*
 import com.google.android.gms.location.Geofence
@@ -22,6 +23,12 @@ object GeofenceManager {
     private const val MAX_GEOFENCES = 90
     private const val API = "https://new-backend-lovat.vercel.app/api/business/nearby"
     private val client = OkHttpClient()
+    @Volatile private var registrationInProgress = false
+
+    fun invalidateRegistration(context: Context) {
+        context.getSharedPreferences("geofence_state", Context.MODE_PRIVATE)
+            .edit().remove("fingerprint").apply()
+    }
 
     fun scheduleRefresh(context: Context) {
         val request = PeriodicWorkRequestBuilder<GeofenceRefreshWorker>(15, TimeUnit.MINUTES)
@@ -32,6 +39,7 @@ object GeofenceManager {
     @SuppressLint("MissingPermission")
     fun refresh(context: Context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+        if (Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) return
         val fused = LocationServices.getFusedLocationProviderClient(context)
         fused.lastLocation.addOnSuccessListener { location ->
             if (location != null) Thread { runCatching { register(context, fetchNearby(location.latitude, location.longitude)) } }.start()
@@ -68,15 +76,30 @@ object GeofenceManager {
     @SuppressLint("MissingPermission")
     private fun register(context: Context, places: List<BusinessPlace>) {
         if (places.isEmpty() || ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+        if (Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+        val fingerprint = places.sortedBy { it.id }.joinToString(";") {
+            "${it.id}:${it.lat}:${it.lng}:${it.name}:${it.address.orEmpty()}"
+        }
+        val state = context.getSharedPreferences("geofence_state", Context.MODE_PRIVATE)
+        synchronized(this) {
+            if (registrationInProgress || state.getString("fingerprint", null) == fingerprint) return
+            registrationInProgress = true
+        }
         val prefs = context.getSharedPreferences("geofences", Context.MODE_PRIVATE); val editor = prefs.edit().clear()
         val fences = places.map { p ->
             editor.putString(p.id, "${p.name}|${p.address.orEmpty()}")
             Geofence.Builder().setRequestId(p.id).setCircularRegion(p.lat, p.lng, RADIUS)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER).setExpirationDuration(Geofence.NEVER_EXPIRE).setNotificationResponsiveness(60_000).build()
         }; editor.apply()
-        val request = GeofencingRequest.Builder().setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER).addGeofences(fences).build()
+        // No disparamos ENTER al registrar: así abrir la app no genera falsos
+        // avisos. Google Play Services notificará el próximo ingreso real al radio.
+        val request = GeofencingRequest.Builder().setInitialTrigger(0).addGeofences(fences).build()
         val pi = PendingIntent.getBroadcast(context, 2020, Intent(context, GeofenceBroadcastReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
         val client = LocationServices.getGeofencingClient(context)
-        client.removeGeofences(pi).addOnCompleteListener { client.addGeofences(request, pi) }
+        client.removeGeofences(pi).addOnCompleteListener {
+            client.addGeofences(request, pi)
+                .addOnSuccessListener { state.edit().putString("fingerprint", fingerprint).apply() }
+                .addOnCompleteListener { registrationInProgress = false }
+        }
     }
 }

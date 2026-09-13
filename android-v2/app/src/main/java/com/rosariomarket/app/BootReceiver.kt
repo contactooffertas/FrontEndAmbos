@@ -6,6 +6,10 @@ import android.content.Intent
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) { GeofenceManager.scheduleRefresh(context); GeofenceManager.refresh(context) }
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            GeofenceManager.invalidateRegistration(context)
+            GeofenceManager.scheduleRefresh(context)
+            GeofenceManager.refresh(context)
+        }
     }
 }

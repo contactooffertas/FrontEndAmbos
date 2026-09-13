@@ -255,6 +255,14 @@ class MainActivity : AppCompatActivity() {
         return foregroundGranted && backgroundGranted && notificationsGranted
     }
 
+    private fun hidePermissionPrompt() {
+        if (!::webView.isInitialized || !pageLoaded) return
+        webView.evaluateJavascript(
+            "document.getElementById('rm-background-permission-modal')?.remove();",
+            null
+        )
+    }
+
     private fun showPermissionPrompt() {
         if (
             !::webView.isInitialized ||
@@ -264,6 +272,18 @@ class MainActivity : AppCompatActivity() {
         ) return
 
         permissionPromptShownThisSession = true
+        val needsForeground = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+        val needsBackground = Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+        val needsNotifications = Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) != PackageManager.PERMISSION_GRANTED
 
         webView.evaluateJavascript(
             """
@@ -287,14 +307,25 @@ class MainActivity : AppCompatActivity() {
                 `;
                 document.head.appendChild(style);
               }
+              var needsForeground = $needsForeground;
+              var needsBackground = $needsBackground;
+              var needsNotifications = $needsNotifications;
+              var title = needsForeground ? 'Activá los avisos cercanos' : (needsBackground ? 'Ubicación en segundo plano' : 'Activá las notificaciones');
+              var message = needsForeground
+                ? 'Android primero solicitará la ubicación mientras usás la app. Después podrás habilitar el acceso permanente para recibir avisos aunque Rosario Market esté cerrada.'
+                : (needsBackground
+                    ? 'Para recibir avisos al acercarte a un negocio aunque la app esté cerrada, falta habilitar la ubicación permanente.'
+                    : 'La ubicación permanente ya está habilitada. Solo falta permitir las notificaciones para poder mostrarte los avisos cercanos.');
+              var note = needsBackground ? 'En la configuración elegí Ubicación > “Permitir todo el tiempo”.' : 'Podés rechazarlo y seguir usando Rosario Market normalmente.';
+              var action = needsForeground ? 'Continuar' : (needsBackground ? 'Abrir configuración' : 'Permitir notificaciones');
               var modal = document.createElement('div');
               modal.id = 'rm-background-permission-modal';
               modal.innerHTML = '<div class="rm-box" role="dialog" aria-modal="true" aria-labelledby="rm-permission-title">' +
                 '<div class="rm-logo">RM</div>' +
-                '<h2 id="rm-permission-title">Negocios cerca tuyo</h2>' +
-                '<p>Activá la ubicación en segundo plano y las notificaciones para que Rosario Market pueda avisarte cuando estés a menos de 300 metros de un negocio, aunque la app esté cerrada o estés usando otra aplicación.</p>' +
-                '<div class="rm-note">En Ubicación elegí “Permitir todo el tiempo”. No necesitás iniciar sesión.</div>' +
-                '<button class="rm-primary" type="button">Permitir en segundo plano</button>' +
+                '<h2 id="rm-permission-title">' + title + '</h2>' +
+                '<p>' + message + '</p>' +
+                '<div class="rm-note">' + note + ' No necesitás iniciar sesión.</div>' +
+                '<button class="rm-primary" type="button">' + action + '</button>' +
                 '<button class="rm-later" type="button">No permitir</button>' +
                 '</div>';
               modal.querySelector('.rm-primary').onclick = function () {
@@ -323,6 +354,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (allRequiredPermissionsGranted()) {
+            hidePermissionPrompt()
             GeofenceManager.scheduleRefresh(this)
             GeofenceManager.refresh(this)
         } else if (::webView.isInitialized) {
