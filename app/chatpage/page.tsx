@@ -453,14 +453,14 @@ function ChatPageInner() {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
       const viewport = window.visualViewport;
-      // visualViewport.offsetTop es indispensable cuando Android desplaza la
-      // página para mostrar el teclado. Sin sumarlo queda un bloque vacío.
-      const visibleTop = viewport?.offsetTop ?? 0;
-      const visibleBottom = visibleTop + (viewport?.height ?? window.innerHeight);
+      // getBoundingClientRect y visualViewport.height ya comparten el área
+      // visible. Sumar offsetTop dos veces empujaba el composer bajo el teclado.
+      const visibleBottom = viewport?.height ?? document.documentElement.clientHeight;
       const rootTop = root.getBoundingClientRect().top;
-      const top = Math.max(rootTop, visibleTop);
-      const keyboardOpen = !!viewport && window.innerHeight - viewport.height > 120;
-      const height = Math.max(keyboardOpen ? 220 : 320, Math.floor(visibleBottom - top));
+      const top = Math.max(rootTop, 0);
+      const inputFocused = document.activeElement?.classList.contains("input-ta") ?? false;
+      const keyboardOpen = inputFocused || (!!viewport && window.innerHeight - viewport.height > 120);
+      const height = Math.max(keyboardOpen ? 160 : 320, Math.floor(visibleBottom - top - 1));
       const next = `${height}px`;
       if (root.style.getPropertyValue("--chat-viewport-height") !== next) {
         root.style.setProperty("--chat-viewport-height", next);
@@ -473,12 +473,16 @@ function ChatPageInner() {
     window.addEventListener("resize", updateHeight);
     window.visualViewport?.addEventListener("resize", updateHeight);
     window.visualViewport?.addEventListener("scroll", updateHeight);
+    document.addEventListener("focusin", updateHeight);
+    document.addEventListener("focusout", updateHeight);
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(timer);
       window.removeEventListener("resize", updateHeight);
       window.visualViewport?.removeEventListener("resize", updateHeight);
       window.visualViewport?.removeEventListener("scroll", updateHeight);
+      document.removeEventListener("focusin", updateHeight);
+      document.removeEventListener("focusout", updateHeight);
     };
   }, []);
 
@@ -1208,8 +1212,8 @@ function ChatPageInner() {
           <div className="cs-header">
             <h2 className="cs-title">
               <Link href="/" className="brand-link">
-                <span className="brand-logo"><span className="brand-off">Off</span></span>
-                <span className="brand-ertas">ertas</span>
+                <img className="brand-rm-logo" src="/assets/navbarbolsa.png" alt="Rosario Market" />
+                <span className="brand-rm-name">Rosario <strong>Market</strong></span>
               </Link>
               <MessageCircle size={20} className="chat-icon" />
               {totalUnread > 0 && (
@@ -1668,6 +1672,7 @@ function ChatPageInner() {
                     value={text}
                     onChange={handleTyping}
                     onKeyDown={handleKeyDown}
+                    onFocus={() => window.setTimeout(() => scrollToBottom("instant"), 120)}
                     rows={1}
                     onInput={(e) => {
                       const t = e.target as HTMLTextAreaElement;
