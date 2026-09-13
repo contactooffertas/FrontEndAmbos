@@ -1067,3 +1067,5 @@ body:has(.chat-root) footer { display:none; }
   white-space: nowrap;
   line-height: 1;
 }
+
+/* Deployment retry: chat actions release. */
