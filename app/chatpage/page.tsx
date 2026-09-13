@@ -24,6 +24,9 @@ import {
   ChevronLeft,
   Bell,
   Flag,
+  MoreVertical,
+  Reply,
+  Pencil,
 } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import "../styles/chatpage.css";
@@ -62,6 +65,14 @@ interface Message {
   image?: string;
   createdAt: string;
   readBy: string[];
+  editedAt?: string | null;
+  replyTo?: string | null;
+  replySnapshot?: {
+    messageId?: string | null;
+    text?: string;
+    image?: string | null;
+    senderName?: string;
+  };
 }
 
 interface Announcement {
@@ -391,6 +402,9 @@ function ChatPageInner() {
   const [typing, setTyping]                 = useState(false);
   const [mobileView, setMobileView]         = useState<"list" | "chat">("list");
   const [lightbox, setLightbox]             = useState<string | null>(null);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo]         = useState<Message | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
   // ── Banner state ──────────────────────────────────────────────────────────
   const [announcements, setAnnouncements]         = useState<Announcement[]>([]);
@@ -627,6 +641,11 @@ function ChatPageInner() {
       if (conversationId === activeIdRef.current)
         setMessages((prev) => prev.filter((m) => m._id !== messageId));
     });
+    socket.on("message_edited", (edited: Message) => {
+      if (edited.conversation === activeIdRef.current) {
+        setMessages((prev) => prev.map((message) => message._id === edited._id ? edited : message));
+      }
+    });
 
     socket.on("conversation_blocked", ({ conversationId, blockedBy }: { conversationId: string; blockedBy: string; reason: string }) => {
       setConversations(prev => prev.map(c =>
@@ -805,21 +824,37 @@ function ChatPageInner() {
     // Guardar valores antes de limpiar
     const sentText = text.trim();
     const sentFile = imgFile;
+    const replyMessage = replyingTo;
+    const messageBeingEdited = editingMessage;
 
     // Limpiar UI inmediatamente (optimista)
     setText("");
     setImgFile(null);
     setImgPreview(null);
+    setReplyingTo(null);
+    setEditingMessage(null);
     const ta = document.querySelector<HTMLTextAreaElement>(".input-ta");
     if (ta) ta.style.height = "auto";
 
     socketRef.current?.emit("stop_typing", { conversationId: activeId });
 
     try {
+      if (messageBeingEdited) {
+        const res = await fetch(`${API}/chat/messages/${messageBeingEdited._id}`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ text: sentText }),
+        });
+        if (!res.ok) throw new Error();
+        const updated: Message = await res.json();
+        setMessages((prev) => prev.map((message) => message._id === updated._id ? updated : message));
+        return;
+      }
       const fd = new FormData();
       fd.append("conversationId", activeId);
       if (sentText) fd.append("text", sentText);
       if (sentFile) fd.append("image", sentFile);
+      if (replyMessage) fd.append("replyTo", replyMessage._id);
 
       const res = await fetch(`${API}/chat/messages`, {
         method: "POST",
@@ -850,6 +885,8 @@ function ChatPageInner() {
     } catch {
       // Si falló, restaurar texto para que el usuario no pierda lo que escribió
       setText(sentText);
+      setReplyingTo(replyMessage);
+      setEditingMessage(messageBeingEdited);
     } finally {
       setSending(false);
     }
@@ -894,13 +931,31 @@ function ChatPageInner() {
   };
 
   const deleteMessage = async (msgId: string) => {
+    if (!confirm("¿Eliminar este mensaje para todos?")) return;
     try {
       await fetch(`${API}/chat/messages/${msgId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessages((prev) => prev.filter((m) => m._id !== msgId));
+      setSelectedMessageId(null);
     } catch { /* silent */ }
+  };
+
+  const startReply = (message: Message) => {
+    setReplyingTo(message);
+    setEditingMessage(null);
+    setSelectedMessageId(null);
+    document.querySelector<HTMLTextAreaElement>(".input-ta")?.focus();
+  };
+
+  const startEdit = (message: Message) => {
+    if (!message.text) return;
+    setEditingMessage(message);
+    setReplyingTo(null);
+    setText(message.text);
+    setSelectedMessageId(null);
+    document.querySelector<HTMLTextAreaElement>(".input-ta")?.focus();
   };
 
   const filtered    = conversations.filter((c) =>
@@ -1290,7 +1345,27 @@ function ChatPageInner() {
                                   <Flag size={11} />
                                 </button>
                               )}
+                              <button
+                                className="message-actions-trigger"
+                                onClick={() => setSelectedMessageId((current) => current === msg._id ? null : msg._id)}
+                                aria-label="Acciones del mensaje"
+                              >
+                                <MoreVertical size={15} />
+                              </button>
+                              {selectedMessageId === msg._id && (
+                                <div className={`message-actions-menu ${mine ? "mine" : "theirs"}`}>
+                                  <button onClick={() => startReply(msg)}><Reply size={14} /> Responder</button>
+                                  {mine && msg.text && <button onClick={() => startEdit(msg)}><Pencil size={14} /> Editar</button>}
+                                  {mine && <button className="danger" onClick={() => deleteMessage(msg._id)}><Trash2 size={14} /> Eliminar</button>}
+                                </div>
+                              )}
                               <div className={`bubble ${mine ? "mine" : "theirs"}`}>
+                                {msg.replySnapshot?.messageId && (
+                                  <div className="quoted-message">
+                                    <strong>{msg.replySnapshot.senderName || "Mensaje"}</strong>
+                                    <span>{msg.replySnapshot.text || (msg.replySnapshot.image ? "📷 Imagen" : "Mensaje")}</span>
+                                  </div>
+                                )}
                                 {msg.image && (
                                   <div className={`b-img-wrap${imgOnly ? " img-only" : ""}`}>
                                     <img
@@ -1311,6 +1386,7 @@ function ChatPageInner() {
                                   </span>
                                 )}
                                 <div className={`b-meta${mine && allRead ? " read-ticks" : ""}`}>
+                                  {msg.editedAt && <span className="edited-label">editado</span>}
                                   <span>{timeFull(msg.createdAt)}</span>
                                   {mine && (
                                     allRead
@@ -1350,6 +1426,15 @@ function ChatPageInner() {
               </div>
 
               {/* Image preview */}
+              {(replyingTo || editingMessage) && (
+                <div className="composer-context">
+                  <div>
+                    <strong>{editingMessage ? "Editando mensaje" : `Respondiendo a ${replyingTo?.sender?.name || "mensaje"}`}</strong>
+                    <span>{editingMessage?.text || replyingTo?.text || (replyingTo?.image ? "📷 Imagen" : "")}</span>
+                  </div>
+                  <button onClick={() => { setReplyingTo(null); setEditingMessage(null); if (editingMessage) setText(""); }} aria-label="Cancelar"><X size={17} /></button>
+                </div>
+              )}
               {imgPreview && (
                 <div className="img-preview-bar">
                   <img src={imgPreview} alt="preview" />
@@ -1389,9 +1474,9 @@ function ChatPageInner() {
               ) : (
                 <div className="ca-input">
                   <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
-                  <button className="icon-btn btn-attach" onClick={() => fileRef.current?.click()} title="Adjuntar imagen">
+                  {!editingMessage && <button className="icon-btn btn-attach" onClick={() => fileRef.current?.click()} title="Adjuntar imagen">
                     <ImageIcon size={18} />
-                  </button>
+                  </button>}
                   <textarea
                     className="input-ta"
                     placeholder="Escribí un mensaje…"
