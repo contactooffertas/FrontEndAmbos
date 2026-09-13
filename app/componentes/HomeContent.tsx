@@ -134,7 +134,7 @@ const HOME_RADIUS_OPTIONS = [
 const NEARBY_FETCH_THRESHOLD_METERS = 100;
 
 const imgUrl = (url?: string) =>
-  url || "/assets/offerton.png";
+  url || "/assets/navbarbolsa.png";
 
 const getProductImage = (product: Product): string | undefined =>
   product.image ||
@@ -142,6 +142,8 @@ const getProductImage = (product: Product): string | undefined =>
   product.photo ||
   product.thumbnail ||
   product.images?.find(Boolean);
+const getProductDisplayImage = (product: Product): string =>
+  getProductImage(product) || product.business?.logo || "/assets/navbarbolsa.png";
 const logoUrl = (name: string, url?: string) =>
   url ||
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=300&background=f97316&color=fff`;
@@ -237,10 +239,10 @@ function StarRow({ rating = 0, size = 13 }: { rating?: number; size?: number }) 
 }
 
 function HeroSlider({ products }: { products: Product[] }) {
-  // El Hero debe mostrar fotos reales del producto. Si una imagen falta o falla,
-  // ese producto sale del pool y se usa el siguiente disponible.
+  // Si una foto falta, mantenemos el producto relacionado usando el logo del
+  // negocio o la imagen institucional; nunca lo reemplazamos por otro rubro.
   const [brokenImageIds, setBrokenImageIds] = useState<Set<string>>(new Set());
-  const usePool = products.filter((p) => Boolean(getProductImage(p)) && !brokenImageIds.has(p._id));
+  const usePool = products.filter((p) => !brokenImageIds.has(p._id));
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -282,14 +284,14 @@ function HeroSlider({ products }: { products: Product[] }) {
             )}
             <img
               decoding="async"
-              src={getProductImage(p)!}
+              src={getProductDisplayImage(p)}
               alt={p.name}
-              onError={() => {
-                setBrokenImageIds((current) => {
-                  const next = new Set(current);
-                  next.add(p._id);
-                  return next;
-                });
+              onError={(event) => {
+                if (!event.currentTarget.src.endsWith("/assets/navbarbolsa.png")) {
+                  event.currentTarget.src = "/assets/navbarbolsa.png";
+                  return;
+                }
+                setBrokenImageIds((current) => new Set(current).add(p._id));
               }}
             />
             <div className="hero-card-body">
@@ -1072,7 +1074,6 @@ function HomePageBody() {
   const heroProducts = (searchParam
     ? dedupeById(allProducts)
     : dedupeById([...publicHeroProducts, ...allProducts]))
-    .filter((product) => Boolean(getProductImage(product)))
     .slice(0, 12);
   const hasFeatured = allProducts.some((p) => p._isFeatured);
   const gridProducts = allProducts.filter((p) => !reportedProductIds.has(p._id));

@@ -60,6 +60,10 @@ export interface Product {
   category: string;
   stock: number;
   image?: string;
+  imageUrl?: string;
+  photo?: string;
+  thumbnail?: string;
+  images?: string[];
   imagePublicId?: string;
   businessId?: string;
   createdAt?: string;

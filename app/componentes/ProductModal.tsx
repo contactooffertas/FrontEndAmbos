@@ -59,7 +59,10 @@ export default function ProductModal({
         stock: String(initial.stock),
         deliveryRadius: String(initial.deliveryRadius ?? 0), // ✅ carga el valor real al editar
       });
-      setImagePreview(initial.image || null);
+      setImagePreview(
+        initial.image || initial.imageUrl || initial.photo ||
+        initial.thumbnail || initial.images?.find(Boolean) || null
+      );
     } else {
       setForm({
         name: "",
@@ -95,6 +98,17 @@ export default function ProductModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!initial && !imageFile) {
+      const Swal = (await import("sweetalert2")).default;
+      await Swal.fire({
+        icon: "warning",
+        title: "Agregá una imagen",
+        text: "Seleccioná la foto que querés mostrar para este producto.",
+        confirmButtonColor: "#f97316",
+      });
+      return;
+    }
 
     if (containsForbiddenContent(form.name, form.description)) {
       const Swal = (await import("sweetalert2")).default;
