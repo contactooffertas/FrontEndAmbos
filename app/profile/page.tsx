@@ -11,6 +11,7 @@ import {
   AlertTriangle, CheckCircle, XCircle, Shield, ShieldCheck, ChevronLeft, Locate, 
   LocateOff,
   Handshake,
+  Trash2,
 } from "lucide-react";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
@@ -641,6 +642,38 @@ export default function ProfilePage() {
     finally { setAvatarLoading(false); }
   };
 
+  const handleAvatarDelete = async () => {
+    const Swal = (await import("sweetalert2")).default;
+    const confirmed = await Swal.fire({
+      title: "¿Eliminar tu foto?",
+      text: "Volverás a usar el avatar predeterminado de Rosario Market.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#f97316",
+      cancelButtonColor: "#64748b",
+    });
+    if (!confirmed.isConfirmed) return;
+
+    setAvatarLoading(true);
+    try {
+      const res = await fetch(`${API}/user/avatar`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error eliminando avatar");
+      setAvatarPreview(null);
+      updateUser({ avatar: data.avatar });
+      Swal.fire({ icon:"success", title:"Foto eliminada", timer:1500, showConfirmButton:false, toast:true, position:"top-end" });
+    } catch (err:any) {
+      Swal.fire({ icon:"error", title:err.message || "Error eliminando avatar" });
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     const Swal = (await import("sweetalert2")).default;
@@ -797,6 +830,21 @@ export default function ProfilePage() {
               >
                 <Camera size={14}/>
                 {avatarLoading ? "Subiendo foto..." : "Cambiar foto"}
+              </button>
+              <button
+                type="button"
+                onClick={handleAvatarDelete}
+                disabled={avatarLoading}
+                style={{
+                  display:"inline-flex", alignItems:"center", gap:6,
+                  marginLeft:8, border:"1.5px solid #fecaca", background:"#fff",
+                  color:"#dc2626", borderRadius:10, padding:"7px 12px",
+                  fontSize:"0.78rem", fontWeight:700,
+                  cursor:avatarLoading?"wait":"pointer"
+                }}
+              >
+                <Trash2 size={14}/>
+                Eliminar foto
               </button>
             </div>
             <div style={{ marginTop:10 }}>
