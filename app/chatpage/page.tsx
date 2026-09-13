@@ -446,27 +446,34 @@ function ChatPageInner() {
   useEffect(() => {
     const root = chatRootRef.current;
     if (!root) return;
+    let raf = 0;
     const updateHeight = () => {
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      const top = Math.max(0, root.getBoundingClientRect().top);
-      const height = Math.max(320, Math.floor(viewportHeight - top));
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+      const viewport = window.visualViewport;
+      // visualViewport.offsetTop es indispensable cuando Android desplaza la
+      // página para mostrar el teclado. Sin sumarlo queda un bloque vacío.
+      const visibleTop = viewport?.offsetTop ?? 0;
+      const visibleBottom = visibleTop + (viewport?.height ?? window.innerHeight);
+      const rootTop = root.getBoundingClientRect().top;
+      const top = Math.max(rootTop, visibleTop);
+      const keyboardOpen = !!viewport && window.innerHeight - viewport.height > 120;
+      const height = Math.max(keyboardOpen ? 220 : 320, Math.floor(visibleBottom - top));
       const next = `${height}px`;
       if (root.style.getPropertyValue("--chat-viewport-height") !== next) {
         root.style.setProperty("--chat-viewport-height", next);
       }
+      root.classList.toggle("keyboard-open", keyboardOpen);
+      });
     };
     updateHeight();
-    const frame = requestAnimationFrame(updateHeight);
     const timer = window.setTimeout(updateHeight, 350);
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(document.body);
     window.addEventListener("resize", updateHeight);
     window.visualViewport?.addEventListener("resize", updateHeight);
     window.visualViewport?.addEventListener("scroll", updateHeight);
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(raf);
       window.clearTimeout(timer);
-      observer.disconnect();
       window.removeEventListener("resize", updateHeight);
       window.visualViewport?.removeEventListener("resize", updateHeight);
       window.visualViewport?.removeEventListener("scroll", updateHeight);
@@ -862,7 +869,7 @@ function ChatPageInner() {
     setReplyingTo(null);
     setEditingMessage(null);
     const ta = document.querySelector<HTMLTextAreaElement>(".input-ta");
-    if (ta) ta.style.height = "auto";
+    if (ta) { ta.style.height = "auto"; ta.style.overflowY = "hidden"; }
 
     socketRef.current?.emit("stop_typing", { conversationId: activeId });
 
@@ -1626,7 +1633,9 @@ function ChatPageInner() {
                     onInput={(e) => {
                       const t = e.target as HTMLTextAreaElement;
                       t.style.height = "auto";
-                      t.style.height = Math.min(t.scrollHeight, 120) + "px";
+                      const maxHeight = 112;
+                      t.style.height = Math.min(t.scrollHeight, maxHeight) + "px";
+                      t.style.overflowY = t.scrollHeight > maxHeight ? "auto" : "hidden";
                     }}
                   />
                   <button
