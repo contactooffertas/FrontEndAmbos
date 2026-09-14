@@ -1,5 +1,13 @@
 package com.rosariomarket.app
 
+import android.content.Context
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import okhttp3.MediaType.Companion.toMediaType
@@ -7,6 +15,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 class RosarioMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -18,14 +27,32 @@ class RosarioMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         val data = message.data
-        val title = message.notification?.title ?: data["title"] ?: "Rosario Market"
-        val body = message.notification?.body ?: data["body"] ?: "Tenés un mensaje nuevo"
-        val url = data["url"] ?: "/chatpage"
+        val title = data["title"] ?: message.notification?.title ?: "Rosario Market"
+        val body = data["body"] ?: message.notification?.body ?: "Tenés una notificación nueva"
+        val url = data["url"] ?: "/"
         val conversationId = data["conversationId"].orEmpty()
         val messageId = data["messageId"].orEmpty()
-        if (messageId.isNotBlank()) FcmDelivery.acknowledge(this, messageId)
-        val count = data["badgeCount"]?.toIntOrNull() ?: 1
-        NotificationHelper.showChat(this, title, body, url, conversationId, messageId, count)
+        val count = data["badgeCount"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+        val type = data["type"] ?: "general"
+        val tag = data["tag"].orEmpty()
+        val image = data["image"].orEmpty()
+
+        // Enqueue first: WorkManager retries the receipt when the network is
+        // temporarily unavailable, even if Android stops this service.
+        if (messageId.isNotBlank()) FcmDelivery.enqueue(this, messageId)
+
+        NotificationHelper.show(
+            context = this,
+            title = title,
+            body = body,
+            url = url,
+            conversationId = conversationId,
+            messageId = messageId,
+            badgeCount = count,
+            type = type,
+            tag = tag,
+            imageUrl = image,
+        )
     }
 }
 
@@ -33,8 +60,8 @@ object FcmRegistration {
     private val client = OkHttpClient()
     private const val RETRY_WINDOW_MS = 6 * 60 * 60 * 1000L
 
-    fun send(context: android.content.Context, auth: String, token: String) {
-        val prefs = context.getSharedPreferences("rm_push", android.content.Context.MODE_PRIVATE)
+    fun send(context: Context, auth: String, token: String) {
+        val prefs = context.getSharedPreferences("rm_push", Context.MODE_PRIVATE)
         prefs.edit().putString("auth", auth).putString("fcm_token", token).apply()
 
         val sameToken = prefs.getString("registered_fcm_token", "") == token
@@ -69,20 +96,22 @@ object FcmRegistration {
     }
 }
 
-
 object FcmDelivery {
-    private val client = OkHttpClient()
-    fun acknowledge(context: android.content.Context, messageId: String) {
-        val auth = context.getSharedPreferences("rm_push", android.content.Context.MODE_PRIVATE)
-            .getString("auth", "").orEmpty()
-        if (auth.isBlank()) return
-        Thread {
-            val request = Request.Builder()
-                .url("https://new-backend-lovat.vercel.app/api/chat/messages/$messageId/delivered")
-                .header("Authorization", "Bearer $auth")
-                .post("{}".toRequestBody("application/json".toMediaType()))
-                .build()
-            runCatching { client.newCall(request).execute().close() }
-        }.start()
+    fun enqueue(context: Context, messageId: String) {
+        val request = OneTimeWorkRequestBuilder<FcmDeliveryWorker>()
+            .setInputData(workDataOf("messageId" to messageId))
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "rm-delivery-$messageId",
+            ExistingWorkPolicy.KEEP,
+            request,
+        )
     }
 }
