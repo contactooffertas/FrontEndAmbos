@@ -128,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         NotificationHelper.createChannel(this)
+        NotificationHelper.opened(this, intent)
 
         webView = WebView(this)
         rootView = FrameLayout(this)
@@ -254,6 +255,16 @@ class MainActivity : AppCompatActivity() {
         )
 
         GeofenceManager.scheduleRefresh(this)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationHelper.opened(this, intent)
+        val target = intent.getStringExtra("url")
+        if (::webView.isInitialized && !target.isNullOrBlank()) {
+            webView.loadUrl(target)
+        }
     }
 
     private fun showBrandedIntro() {
