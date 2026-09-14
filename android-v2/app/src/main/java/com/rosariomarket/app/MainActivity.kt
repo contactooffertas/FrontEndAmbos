@@ -107,9 +107,13 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun registerAuthToken(authToken: String) {
             if (authToken.isBlank()) return
-            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-                FcmRegistration.send(this@MainActivity, authToken, token)
-            }
+            FirebaseMessaging.getInstance().token
+                .addOnSuccessListener { token ->
+                    FcmRegistration.send(this@MainActivity, authToken, token)
+                }
+                .addOnFailureListener {
+                    // The page retries registration periodically.
+                }
         }
 
         @JavascriptInterface
@@ -186,18 +190,18 @@ class MainActivity : AppCompatActivity() {
                     (function(){
                       if(window.__rmPushSyncStarted) return;
                       window.__rmPushSyncStarted=true;
-                      var last='';
                       function syncPush(){
                         var t=localStorage.getItem('marketplace_token')||'';
-                        if(t && t!==last && window.RosarioMarketPush){
-                          last=t;
+                        if(t && window.RosarioMarketPush){
                           window.RosarioMarketPush.registerAuthToken(t);
                         }
                       }
                       syncPush();
-                      setInterval(syncPush,3000);
-                      var originalSet=localStorage.setItem.bind(localStorage);
-                      localStorage.setItem=function(k,v){originalSet(k,v);if(k==='marketplace_token')setTimeout(syncPush,0);};
+                      setInterval(syncPush,30000);
+                      window.addEventListener('focus', syncPush);
+                      document.addEventListener('visibilitychange', function(){
+                        if(document.visibilityState==='visible') syncPush();
+                      });
                     })();
                     """.trimIndent(),
                     null
