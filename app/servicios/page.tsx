@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
+import Swal from "sweetalert2";
 import {
   BadgeCheck,
   Camera,
@@ -97,7 +98,7 @@ export default function ServiciosPage() {
       return;
     }
     if (user?.role !== "user") {
-      alert("Para ofrecer un servicio necesitás una cuenta común. Las cuentas seller administran únicamente su negocio y sus productos.");
+      await Swal.fire({ icon:"info", title:"Cuenta no habilitada", text:"Para ofrecer un servicio necesitás una cuenta común. Las cuentas seller administran únicamente su negocio y sus productos.", confirmButtonColor:"#f97316" });
       return;
     }
     const r = await fetch(`${API}/services/mine`, {
@@ -159,10 +160,11 @@ export default function ServiciosPage() {
     if (r.ok) {
       setFormOpen(false);
       await load();
-    } else alert((await r.json()).message || "No se pudo guardar");
+    } else await Swal.fire({ icon:"error", title:"No se pudo guardar", text:(await r.json()).message || "Intentá nuevamente.", confirmButtonColor:"#f97316" });
   };
   const removeAvatar = async () => {
-    if (!confirm("¿Eliminar la foto del perfil?")) return;
+    const confirmation = await Swal.fire({ icon:"warning", title:"¿Eliminar la foto del perfil?", showCancelButton:true, confirmButtonText:"Eliminar", cancelButtonText:"Cancelar", confirmButtonColor:"#f97316", cancelButtonColor:"#123a5a" });
+    if (!confirmation.isConfirmed) return;
     const r = await fetch(`${API}/services/mine/avatar`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
@@ -170,12 +172,8 @@ export default function ServiciosPage() {
     if (r.ok) setMine((await r.json()).profile);
   };
   const deleteProfile = async () => {
-    if (
-      !confirm(
-        "¿Eliminar definitivamente tu perfil profesional y sus opiniones?",
-      )
-    )
-      return;
+    const confirmation = await Swal.fire({ icon:"warning", title:"¿Eliminar el perfil profesional?", text:"También se eliminarán sus opiniones. Esta acción es definitiva.", showCancelButton:true, confirmButtonText:"Eliminar perfil", cancelButtonText:"Cancelar", confirmButtonColor:"#f97316", cancelButtonColor:"#123a5a" });
+    if (!confirmation.isConfirmed) return;
     const r = await fetch(`${API}/services/mine`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
