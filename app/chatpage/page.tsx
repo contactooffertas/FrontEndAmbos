@@ -32,6 +32,7 @@ import {
   Clock3,
 } from "lucide-react";
 import { io, Socket } from "socket.io-client";
+import Swal from "sweetalert2";
 import "../styles/chatpage.css";
 
 const API = "https://new-backend-lovat.vercel.app/api";
@@ -975,10 +976,10 @@ function ChatPageInner() {
     }, 1500);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 5 * 1024 * 1024) { alert("La imagen no puede superar 5 MB"); return; }
+    if (f.size > 5 * 1024 * 1024) { await Swal.fire({ icon:"warning", title:"Imagen demasiado grande", text:"La imagen no puede superar 5 MB.", confirmButtonColor:"#f97316" }); return; }
     setImgFile(f);
     const reader = new FileReader();
     reader.onload = (ev) => setImgPreview(ev.target?.result as string);
@@ -1016,11 +1017,14 @@ function ChatPageInner() {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const problem = await res.json().catch(() => ({}));
+        throw new Error(problem.error || "No se pudo enviar el mensaje");
+      }
       setConversations((prev) => prev.filter((c) => c._id !== id));
       if (activeId === id) { setActiveId(null); setMessages([]); setMobileView("list"); }
       setDeleteChatTarget(null);
-    } catch { alert("No se pudo borrar el chat. Intentá nuevamente."); }
+    } catch { await Swal.fire({ icon:"error", title:"No se pudo borrar el chat", text:"Intentá nuevamente.", confirmButtonColor:"#f97316" }); }
     finally { setDeletingChat(false); }
   };
 
@@ -1069,18 +1073,20 @@ function ChatPageInner() {
       socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason });
       setChatMenuOpen(false);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "No se pudo realizar la acción");
+      await Swal.fire({ icon:"error", title:"No se pudo realizar la acción", text:error instanceof Error ? error.message : "Intentá nuevamente.", confirmButtonColor:"#f97316" });
     } finally { setChatActionBusy(false); }
   };
 
-  const clearActiveConversation = () => {
-    if (!confirm("¿Vaciar el chat para vos? La otra persona conservará sus mensajes.")) return;
+  const clearActiveConversation = async () => {
+    const result = await Swal.fire({ icon:"warning", title:"¿Vaciar el chat?", text:"La otra persona conservará sus mensajes.", showCancelButton:true, confirmButtonText:"Vaciar para mí", cancelButtonText:"Cancelar", confirmButtonColor:"#f97316", cancelButtonColor:"#123a5a" });
+    if (!result.isConfirmed) return;
     void runConversationAction("/messages", { method: "DELETE" }, () => setMessages([]), "conversation_cleared");
   };
 
-  const toggleBlockActiveUser = () => {
+  const toggleBlockActiveUser = async () => {
     const isMine = !!activeConv?.blockedUsers?.includes(userId);
-    if (!confirm(`¿${isMine ? "Desbloquear" : "Bloquear"} a ${activeConv?.other?.name || "este usuario"}?`)) return;
+    const result = await Swal.fire({ icon:"question", title:`¿${isMine ? "Desbloquear" : "Bloquear"} usuario?`, text:activeConv?.other?.name || "Este usuario", showCancelButton:true, confirmButtonText:isMine?"Desbloquear":"Bloquear", cancelButtonText:"Cancelar", confirmButtonColor:"#f97316", cancelButtonColor:"#123a5a" });
+    if (!result.isConfirmed) return;
     void runConversationAction("/block", { method: "PATCH" }, (data) => {
       setConversations(prev => prev.map(c => c._id === activeId
         ? { ...c, blockedUsers: data.blocked ? [...new Set([...(c.blockedUsers || []), userId])] : (c.blockedUsers || []).filter(id => id !== userId) }
