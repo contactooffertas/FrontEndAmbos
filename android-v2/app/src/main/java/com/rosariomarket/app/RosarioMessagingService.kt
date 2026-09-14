@@ -31,13 +31,40 @@ class RosarioMessagingService : FirebaseMessagingService() {
 
 object FcmRegistration {
     private val client = OkHttpClient()
+    private const val RETRY_WINDOW_MS = 6 * 60 * 60 * 1000L
+
     fun send(context: android.content.Context, auth: String, token: String) {
-        context.getSharedPreferences("rm_push", android.content.Context.MODE_PRIVATE).edit().putString("auth", auth).apply()
+        val prefs = context.getSharedPreferences("rm_push", android.content.Context.MODE_PRIVATE)
+        prefs.edit().putString("auth", auth).putString("fcm_token", token).apply()
+
+        val sameToken = prefs.getString("registered_fcm_token", "") == token
+        val sameAuth = prefs.getString("registered_auth", "") == auth
+        val lastSuccess = prefs.getLong("registered_at", 0L)
+        if (sameToken && sameAuth && System.currentTimeMillis() - lastSuccess < RETRY_WINDOW_MS) return
+
         Thread {
             val json = JSONObject().put("token", token).put("platform", "android").toString()
-            val request = Request.Builder().url("https://new-backend-lovat.vercel.app/api/push/fcm/register")
-                .header("Authorization", "Bearer $auth").post(json.toRequestBody("application/json".toMediaType())).build()
-            runCatching { client.newCall(request).execute().close() }
+            val request = Request.Builder()
+                .url("https://new-backend-lovat.vercel.app/api/push/fcm/register")
+                .header("Authorization", "Bearer $auth")
+                .post(json.toRequestBody("application/json".toMediaType()))
+                .build()
+
+            runCatching {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        prefs.edit()
+                            .putString("registered_fcm_token", token)
+                            .putString("registered_auth", auth)
+                            .putLong("registered_at", System.currentTimeMillis())
+                            .apply()
+                    } else {
+                        prefs.edit().remove("registered_at").apply()
+                    }
+                }
+            }.onFailure {
+                prefs.edit().remove("registered_at").apply()
+            }
         }.start()
     }
 }
