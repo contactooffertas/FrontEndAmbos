@@ -4,4 +4,10 @@
         <item name="android:statusBarColor">#111827</item>
         <item name="android:navigationBarColor">#111827</item>
     </style>
+
+    <style name="Theme.RosarioMarket.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/app_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.RosarioMarket</item>
+    </style>
 </resources>
