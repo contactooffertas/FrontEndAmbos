@@ -5,7 +5,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
 
 object NotificationHelper {
     private const val CHANNEL = "nearby_businesses"
@@ -17,6 +19,7 @@ object NotificationHelper {
             NotificationChannel(CHAT_CHANNEL, "Mensajes de Rosario Market", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Mensajes individuales, grupos y reacciones del chat"
                 enableVibration(true)
+                setShowBadge(true)
             })
     }
     fun showNearby(context: Context, businessId: String, businessName: String, address: String) {
@@ -35,11 +38,22 @@ object NotificationHelper {
         val open = Intent(context, MainActivity::class.java).putExtra("url", target)
         val requestCode = (messageId.ifBlank { conversationId.ifBlank { target } }).hashCode()
         val pending = PendingIntent.getActivity(context, requestCode, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val sender = Person.Builder().setName(title).build()
         val notification = NotificationCompat.Builder(context, CHAT_CHANNEL)
-            .setSmallIcon(android.R.drawable.sym_action_chat).setContentTitle(title).setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body)).setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE).setAutoCancel(true).setContentIntent(pending)
-            .setNumber(badgeCount.coerceAtLeast(1)).setGroup("rm-chat").build()
+            .setSmallIcon(R.drawable.ic_rm_notification)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.app_icon))
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.MessagingStyle(sender).addMessage(body, System.currentTimeMillis(), sender))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setAutoCancel(true)
+            .setContentIntent(pending)
+            .setNumber(badgeCount.coerceAtLeast(1))
+            .setGroup("rm-chat")
+            .build()
         context.getSystemService(NotificationManager::class.java).notify(requestCode, notification)
     }
 }
