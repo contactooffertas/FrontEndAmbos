@@ -18,6 +18,7 @@ import android.webkit.WebViewClient
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -95,6 +96,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private inner class AndroidPushBridge {
+        @JavascriptInterface
+        fun registerAuthToken(authToken: String) {
+            if (authToken.isBlank()) return
+            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                FcmRegistration.send(this@MainActivity, authToken, token)
+            }
+        }
+
+        @JavascriptInterface
+        fun logout() {
+            getSharedPreferences("rm_push", MODE_PRIVATE).edit().remove("auth").apply()
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,6 +134,7 @@ class MainActivity : AppCompatActivity() {
 
         webView.addJavascriptInterface(AndroidShareBridge(), "RosarioMarketAndroid")
         webView.addJavascriptInterface(AndroidPermissionBridge(), "RosarioMarketPermissions")
+        webView.addJavascriptInterface(AndroidPushBridge(), "RosarioMarketPush")
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
@@ -148,6 +165,10 @@ class MainActivity : AppCompatActivity() {
                       };
                     })();
                     """.trimIndent(),
+                    null
+                )
+                view?.evaluateJavascript(
+                    "(function(){var t=localStorage.getItem('marketplace_token');if(t&&window.RosarioMarketPush){window.RosarioMarketPush.registerAuthToken(t);}})();",
                     null
                 )
                 showPermissionPrompt()
