@@ -8,6 +8,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.graphics.Color
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -23,6 +28,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
+    private lateinit var rootView: FrameLayout
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pageLoaded = false
     private var permissionPromptShownThisSession = false
@@ -120,7 +126,13 @@ class MainActivity : AppCompatActivity() {
         NotificationHelper.createChannel(this)
 
         webView = WebView(this)
-        setContentView(webView)
+        rootView = FrameLayout(this)
+        rootView.addView(webView, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        setContentView(rootView)
+        showBrandedIntro()
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
@@ -170,7 +182,24 @@ class MainActivity : AppCompatActivity() {
                     null
                 )
                 view?.evaluateJavascript(
-                    "(function(){var t=localStorage.getItem('marketplace_token');if(t&&window.RosarioMarketPush){window.RosarioMarketPush.registerAuthToken(t);}})();",
+                    """
+                    (function(){
+                      if(window.__rmPushSyncStarted) return;
+                      window.__rmPushSyncStarted=true;
+                      var last='';
+                      function syncPush(){
+                        var t=localStorage.getItem('marketplace_token')||'';
+                        if(t && t!==last && window.RosarioMarketPush){
+                          last=t;
+                          window.RosarioMarketPush.registerAuthToken(t);
+                        }
+                      }
+                      syncPush();
+                      setInterval(syncPush,3000);
+                      var originalSet=localStorage.setItem.bind(localStorage);
+                      localStorage.setItem=function(k,v){originalSet(k,v);if(k==='marketplace_token')setTimeout(syncPush,0);};
+                    })();
+                    """.trimIndent(),
                     null
                 )
                 showPermissionPrompt()
@@ -223,6 +252,32 @@ class MainActivity : AppCompatActivity() {
         GeofenceManager.scheduleRefresh(this)
     }
 
+    private fun showBrandedIntro() {
+        val overlay = FrameLayout(this).apply {
+            setBackgroundColor(Color.WHITE)
+            elevation = 100f
+        }
+        val size = (190 * resources.displayMetrics.density).toInt()
+        val logo = ImageView(this).apply {
+            setImageResource(R.drawable.app_icon)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            alpha = 0f
+            scaleX = 0.72f
+            scaleY = 0.72f
+        }
+        overlay.addView(logo, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+        rootView.addView(overlay, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(550).start()
+        overlay.postDelayed({
+            overlay.animate().alpha(0f).setDuration(350).withEndAction {
+                rootView.removeView(overlay)
+            }.start()
+        }, 1450)
+    }
+
     /**
      * WebView cannot open Android app schemes such as whatsapp:// and otherwise
      * replaces Rosario Market with ERR_UNKNOWN_URL_SCHEME. Keep our website in
@@ -264,6 +319,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun continuePermissionFlow() {
         if (
+            Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return
+        }
+        if (
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -275,17 +337,6 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
-            return
-        }
-
-        if (
-            Build.VERSION.SDK_INT >= 33 &&
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
             return
         }
 
@@ -356,6 +407,11 @@ class MainActivity : AppCompatActivity() {
             this,
             Manifest.permission.POST_NOTIFICATIONS
         ) != PackageManager.PERMISSION_GRANTED
+
+        if (needsNotifications) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return
+        }
 
         webView.evaluateJavascript(
             """
