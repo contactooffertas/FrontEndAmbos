@@ -29,11 +29,11 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).setContentIntent(pending).build()
         context.getSystemService(NotificationManager::class.java).notify(businessId.hashCode(), n)
     }
-    fun showChat(context: Context, title: String, body: String, url: String, conversationId: String, badgeCount: Int) {
+    fun showChat(context: Context, title: String, body: String, url: String, conversationId: String, messageId: String, badgeCount: Int) {
         createChannel(context)
         val target = if (url.startsWith("http")) url else "https://www.rosariomarket.com.ar$url"
         val open = Intent(context, MainActivity::class.java).putExtra("url", target)
-        val requestCode = (conversationId.ifBlank { target }).hashCode()
+        val requestCode = (messageId.ifBlank { conversationId.ifBlank { target } }).hashCode()
         val pending = PendingIntent.getActivity(context, requestCode, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = NotificationCompat.Builder(context, CHAT_CHANNEL)
             .setSmallIcon(android.R.drawable.sym_action_chat).setContentTitle(title).setContentText(body)
