@@ -255,9 +255,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        webView.loadUrl(
-            intent.getStringExtra("url") ?: "https://www.rosariomarket.com.ar"
-        )
+        webView.loadUrl(NotificationHelper.normalizeTargetUrl(intent.getStringExtra("url")))
 
         GeofenceManager.scheduleRefresh(this)
     }
@@ -268,7 +266,7 @@ class MainActivity : AppCompatActivity() {
         NotificationHelper.opened(this, intent)
         val target = intent.getStringExtra("url")
         if (::webView.isInitialized && !target.isNullOrBlank()) {
-            webView.loadUrl(target)
+            webView.loadUrl(NotificationHelper.normalizeTargetUrl(target))
         }
     }
 
