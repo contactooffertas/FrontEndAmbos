@@ -71,6 +71,7 @@ interface Message {
   text?: string;
   image?: string;
   createdAt: string;
+  deliveredBy?: string[];
   readBy: string[];
   editedAt?: string | null;
   replyTo?: string | null;
@@ -637,6 +638,13 @@ function ChatPageInner() {
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
       });
+    });
+
+    socket.on("message_delivered", ({ messageId, userId }: { messageId: string; userId: string }) => {
+      setMessages((prev) => prev.map((m) => {
+        if (m._id !== messageId || m.deliveredBy?.includes(userId)) return m;
+        return { ...m, deliveredBy: [...(m.deliveredBy || []), userId] };
+      }));
     });
 
     socket.on("messages_read", ({ conversationId }: { conversationId: string }) => {
