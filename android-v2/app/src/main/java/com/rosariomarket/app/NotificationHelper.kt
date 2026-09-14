@@ -6,11 +6,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 
 object NotificationHelper {
-    const val CHANNEL = "rm_notifications_v397"
+    private const val SITE_ORIGIN = "https://www.rosariomarket.com.ar"
+    const val CHANNEL = "rm_notifications_v398"
     private const val GROUP = "rm-notifications"
     private const val SUMMARY_ID = 396000
     const val EXTRA_NOTIFICATION_ID = "rm_notification_id"
@@ -18,12 +20,13 @@ object NotificationHelper {
     fun createChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
         val prefs = context.getSharedPreferences("rm_notifications", Context.MODE_PRIVATE)
-        if (!prefs.getBoolean("migrated_v397", false)) {
+        if (!prefs.getBoolean("migrated_v398", false)) {
             manager.cancelAll()
+            manager.deleteNotificationChannel("rm_notifications_v397")
             manager.deleteNotificationChannel("rm_notifications_v396")
             manager.deleteNotificationChannel("rm_chat_messages")
             manager.deleteNotificationChannel("rm_chat_messages_v2")
-            prefs.edit().putBoolean("migrated_v397", true).apply()
+            prefs.edit().putBoolean("migrated_v398", true).apply()
         }
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL, "Notificaciones de Rosario Market", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -56,7 +59,7 @@ object NotificationHelper {
         imageUrl: String,
     ) {
         createChannel(context)
-        val target = if (url.startsWith("http")) url else "https://www.rosariomarket.com.ar$url"
+        val target = normalizeTargetUrl(url, conversationId)
         val stableKey = messageId.ifBlank { tag.ifBlank { "$type-$target-" + System.currentTimeMillis() } }
         val notificationId = stableKey.hashCode()
         val open = Intent(context, MainActivity::class.java)
@@ -98,12 +101,44 @@ object NotificationHelper {
 
     fun opened(context: Context, intent: Intent?) {
         val id = intent?.getIntExtra(EXTRA_NOTIFICATION_ID, Int.MIN_VALUE) ?: Int.MIN_VALUE
-        if (id == Int.MIN_VALUE) return
         val manager = context.getSystemService(NotificationManager::class.java)
+        if (id == Int.MIN_VALUE) {
+            // La notificación resumen no tiene id individual. Al tocarla debe
+            // desaparecer junto con el contador acumulado.
+            if (!intent?.getStringExtra("url").isNullOrBlank()) manager.cancelAll()
+            return
+        }
         manager.cancel(id)
         val remaining = currentVisibleCount(context)
         if (remaining <= 0) manager.cancel(SUMMARY_ID) else showSummary(context, manager, remaining)
         intent?.removeExtra(EXTRA_NOTIFICATION_ID)
+    }
+
+    /** Convierte cualquier ruta recibida por FCM en una URL web válida. */
+    fun normalizeTargetUrl(rawUrl: String?, conversationId: String = ""): String {
+        var value = rawUrl.orEmpty().trim()
+
+        // Versiones anteriores podían recibir/guardar file:///chatpage%3F...
+        // y WebView intentaba abrir un archivo local inexistente.
+        if (value.startsWith("file://", ignoreCase = true)) {
+            value = value.substring(7).trimStart('/')
+        }
+        value = runCatching { Uri.decode(value) }.getOrDefault(value)
+
+        if (value.isBlank() || value == "/") {
+            value = if (conversationId.isNotBlank()) {
+                "/chatpage?conversationId=${Uri.encode(conversationId)}"
+            } else "/"
+        }
+
+        if (value.startsWith("http://", true) || value.startsWith("https://", true)) {
+            val parsed = runCatching { Uri.parse(value) }.getOrNull()
+            if (parsed?.host.equals("rosariomarket.com.ar", true) ||
+                parsed?.host.equals("www.rosariomarket.com.ar", true)) return value
+            return SITE_ORIGIN
+        }
+
+        return "$SITE_ORIGIN/${value.trimStart('/')}"
     }
 
     private fun currentVisibleCount(context: Context): Int {
