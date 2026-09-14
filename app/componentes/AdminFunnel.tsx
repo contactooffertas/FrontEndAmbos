@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, MousePointerClick, Smartphone, Users, UserRoundCheck, Globe2, RefreshCw, Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 const API = "https://new-backend-lovat.vercel.app/api";
 
@@ -46,7 +47,8 @@ export default function AdminFunnel(){
     const scopeText=mode==="all"
       ?"TODOS los datos de Leads y tracking"
       : `los datos de Leads y tracking de los últimos ${days} días`;
-    if(!window.confirm(`¿Seguro que querés borrar ${scopeText}? Esta acción no afecta usuarios, negocios, productos ni pedidos y no se puede deshacer.`)) return;
+    const confirmation=await Swal.fire({icon:"warning",title:"¿Borrar datos de métricas?",text:`Se borrarán ${scopeText}. No afecta usuarios, negocios, productos ni pedidos.`,showCancelButton:true,confirmButtonText:"Borrar datos",cancelButtonText:"Cancelar",confirmButtonColor:"#f97316",cancelButtonColor:"#123a5a"});
+    if(!confirmation.isConfirmed) return;
 
     setCleaning(true); setError("");
     try{
@@ -58,7 +60,7 @@ export default function AdminFunnel(){
       const json=await res.json();
       if(!res.ok) throw new Error(json.message||"No se pudieron limpiar los datos");
       await load();
-      window.alert(`${json.message} Eventos borrados: ${json.deleted?.trackingEvents||0}. Leads borrados: ${json.deleted?.leadProfiles||0}.`);
+      await Swal.fire({icon:"success",title:"Datos eliminados",text:`${json.message} Eventos borrados: ${json.deleted?.trackingEvents||0}. Leads borrados: ${json.deleted?.leadProfiles||0}.`,confirmButtonColor:"#f97316"});
     }catch(e:any){
       setError(e.message||"Error limpiando los datos");
     }finally{
