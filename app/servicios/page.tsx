@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import MainLayout from "../componentes/MainLayout";
+import { useAuth } from "../context/authContext";
 import {
   BadgeCheck,
   Camera,
@@ -56,6 +57,7 @@ type Provider = {
 };
 
 export default function ServiciosPage() {
+  const { user } = useAuth();
   const [profiles, setProfiles] = useState<Provider[]>([]),
     [q, setQ] = useState(""),
     [trade, setTrade] = useState(""),
@@ -92,6 +94,10 @@ export default function ServiciosPage() {
   const openForm = async () => {
     if (!token) {
       location.href = "/login?next=/servicios";
+      return;
+    }
+    if (user?.role !== "user") {
+      alert("Para ofrecer un servicio necesitás una cuenta común. Las cuentas seller administran únicamente su negocio y sus productos.");
       return;
     }
     const r = await fetch(`${API}/services/mine`, {
@@ -207,9 +213,13 @@ export default function ServiciosPage() {
               <button onClick={() => void load()}>Buscar</button>
             </div>
           </div>
-          <button className="provider-cta" onClick={() => void openForm()}>
-            <Wrench /> {mine ? "Editar mi perfil" : "Ofrecer mis servicios"}
-          </button>
+          {user?.role !== "seller" && user?.role !== "admin" ? (
+            <button className="provider-cta" onClick={() => void openForm()}>
+              <Wrench /> {mine ? "Editar mi perfil" : "Ofrecer mis servicios"}
+            </button>
+          ) : (
+            <p className="provider-account-note">Los servicios se publican desde una cuenta común independiente del negocio.</p>
+          )}
         </section>
         <section className="service-sections">
           <button
