@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Servicios técnicos">
+  <defs><linearGradient id="b" x1="20" y1="12" x2="100" y2="108"><stop stop-color="#0d6094"/><stop offset="1" stop-color="#07365f"/></linearGradient></defs>
+  <circle cx="60" cy="60" r="57" fill="url(#b)"/><circle cx="60" cy="44" r="18" fill="#f6b34b"/>
+  <path fill="#f47b20" d="M38 46c1-17 9-27 22-27s21 10 22 27h-7c-1-10-6-17-15-17s-14 7-15 17zM25 101c2-28 14-42 35-42s33 14 35 42z"/>
+  <path fill="#fff" d="M46 64l14 18 14-18-5 37H51z"/><path fill="#f6b34b" d="M33 92l13-13 7 7-13 13z"/><circle cx="32" cy="96" r="6" fill="#f6b34b"/>
+</svg>
