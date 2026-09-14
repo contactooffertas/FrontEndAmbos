@@ -17,6 +17,14 @@ object NotificationHelper {
 
     fun createChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
+        val prefs = context.getSharedPreferences("rm_notifications", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("migrated_v397", false)) {
+            manager.cancelAll()
+            manager.deleteNotificationChannel("rm_notifications_v396")
+            manager.deleteNotificationChannel("rm_chat_messages")
+            manager.deleteNotificationChannel("rm_chat_messages_v2")
+            prefs.edit().putBoolean("migrated_v397", true).apply()
+        }
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL, "Notificaciones de Rosario Market", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Mensajes, pedidos, ofertas y avisos de Rosario Market"
