@@ -11,6 +11,12 @@ type PaymentSettings = {
   mercadopago: { enabled: boolean; paymentLink: string };
 };
 
+type MercadoPagoConnection = {
+  available: boolean;
+  connected: boolean;
+  connectedAt?: string | null;
+};
+
 const EMPTY_SETTINGS: PaymentSettings = {
   bna: { enabled: false, paymentLink: "" },
   santafe: { enabled: false, paymentLink: "" },
@@ -27,6 +33,8 @@ export default function PaymentSettingsPanel({
   const [settings, setSettings] = useState<PaymentSettings>(EMPTY_SETTINGS);
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [mpConnection, setMpConnection] = useState<MercadoPagoConnection>({ available: false, connected: false });
+  const [connectingMp, setConnectingMp] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -56,6 +64,7 @@ export default function PaymentSettingsPanel({
             },
           });
         }
+        if (data?.mercadoPago) setMpConnection(data.mercadoPago);
       })
       .finally(() => setLoadingSettings(false));
   }, [token]);
@@ -110,6 +119,29 @@ export default function PaymentSettingsPanel({
     } finally {
       setSavingSettings(false);
     }
+  };
+
+  const connectMercadoPago = async () => {
+    if (!token) return;
+    setConnectingMp(true);
+    const Swal = (await import("sweetalert2")).default;
+    try {
+      const res = await fetch(`${API}/business/mercadopago/connect`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok || !data.authorizationUrl) {
+        await Swal.fire({ icon: "info", title: "Pago automático próximamente", text: data.message || "Rosario Market todavía debe activar sus credenciales de Mercado Pago.", confirmButtonColor: "#f97316" });
+        return;
+      }
+      window.location.assign(data.authorizationUrl);
+    } finally {
+      setConnectingMp(false);
+    }
+  };
+
+  const disconnectMercadoPago = async () => {
+    if (!token) return;
+    const res = await fetch(`${API}/business/mercadopago/connect`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) setMpConnection(prev => ({ ...prev, connected: false, connectedAt: null }));
   };
 
   if (loadingSettings || !token) return null;
@@ -208,6 +240,27 @@ export default function PaymentSettingsPanel({
                 fontSize: 12,
               }}
             />
+            {key === "mercadopago" && (
+              <div style={{ marginTop: 8, padding: 10, borderRadius: 10, background: mpConnection.connected ? "#ecfdf5" : "#eff6ff", border: `1px solid ${mpConnection.connected ? "#a7f3d0" : "#bfdbfe"}` }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: mpConnection.connected ? "#047857" : "#1d4ed8", marginBottom: 6 }}>
+                  {mpConnection.connected ? "✓ Mercado Pago automático conectado" : "Pago automático por producto y monto"}
+                </div>
+                <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 11, lineHeight: 1.45 }}>
+                  {mpConnection.connected
+                    ? "Cada pedido abrirá con sus productos y el total exacto en tu cuenta."
+                    : "El link manual seguirá disponible. Cuando Rosario Market active la pasarela, conectá tu cuenta una sola vez."}
+                </p>
+                {mpConnection.connected ? (
+                  <button type="button" onClick={disconnectMercadoPago} style={{ border: "1px solid #fecaca", background: "#fff", color: "#b91c1c", borderRadius: 8, padding: "6px 9px", fontSize: 11, fontWeight: 800, cursor: "pointer" }}>
+                    Desconectar Mercado Pago
+                  </button>
+                ) : (
+                  <button type="button" onClick={connectMercadoPago} disabled={connectingMp} style={{ border: 0, background: "#009ee3", color: "#fff", borderRadius: 8, padding: "7px 10px", fontSize: 11, fontWeight: 800, cursor: connectingMp ? "wait" : "pointer" }}>
+                    {connectingMp ? "Conectando..." : "Conectar mi Mercado Pago"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ))}
