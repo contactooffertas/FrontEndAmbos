@@ -12,11 +12,17 @@ import androidx.core.app.Person
 
 object NotificationHelper {
     private const val CHANNEL = "nearby_businesses"
-    private const val CHAT_CHANNEL = "rm_chat_messages_v2"
+    private const val CHAT_CHANNEL = "rm_chat_messages"
     fun createChannel(context: Context) {
-        context.getSystemService(NotificationManager::class.java).createNotificationChannel(
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val prefs = context.getSharedPreferences("rm_notifications", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("chat_channel_reset_v394", false)) {
+            manager.deleteNotificationChannel(CHAT_CHANNEL)
+            prefs.edit().putBoolean("chat_channel_reset_v394", true).apply()
+        }
+        manager.createNotificationChannel(
             NotificationChannel(CHANNEL, "Negocios cerca tuyo", NotificationManager.IMPORTANCE_HIGH).apply { description = "Avisos cuando entrás en el radio de un negocio de Rosario Market" })
-        context.getSystemService(NotificationManager::class.java).createNotificationChannel(
+        manager.createNotificationChannel(
             NotificationChannel(CHAT_CHANNEL, "Mensajes de Rosario Market", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Mensajes individuales, grupos y reacciones del chat"
                 enableVibration(true)
