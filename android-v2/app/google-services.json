@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "324014770163",
+    "project_id": "rosariomarket-fdd7d",
+    "storage_bucket": "rosariomarket-fdd7d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324014770163:android:f2c803644219ae0bdab486",
+        "android_client_info": {
+          "package_name": "com.rosariomarket.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOj_n4DxJsB_I9q8sv2i8nQkJiqpmo-vA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
