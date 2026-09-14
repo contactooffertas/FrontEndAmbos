@@ -10,7 +10,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 
 object NotificationHelper {
-    const val CHANNEL = "rm_notifications_v396"
+    const val CHANNEL = "rm_notifications_v397"
     private const val GROUP = "rm-notifications"
     private const val SUMMARY_ID = 396000
     const val EXTRA_NOTIFICATION_ID = "rm_notification_id"
@@ -81,6 +81,11 @@ object NotificationHelper {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.notify(notificationId, builder.build())
         showSummary(context, manager, badgeCount)
+    }
+
+    fun clearAll(context: Context) {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.cancelAll()
     }
 
     fun opened(context: Context, intent: Intent?) {
