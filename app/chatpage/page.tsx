@@ -61,6 +61,8 @@ interface Conversation {
   blockedBy?: string | null;
   blockedUsers?: string[];
   temporaryMode?: { enabled: boolean; ttlHours: number; enabledBy?: string | null };
+  kind?: "direct" | "group";
+  name?: string;
 }
 interface Message {
   _id: string;
@@ -78,6 +80,7 @@ interface Message {
     image?: string | null;
     senderName?: string;
   };
+  reactions?: { user: string; emoji: string }[];
 }
 
 interface Announcement {
@@ -968,6 +971,21 @@ function ChatPageInner() {
     if (target) setDeleteChatTarget(target);
   };
 
+  const reactToMessage = async (messageId: string, emoji: string) => {
+    try {
+      const res = await fetch(`${API}/chat/messages/${messageId}/reactions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setMessages(prev => prev.map(message => message._id === messageId ? { ...message, reactions: data.reactions } : message));
+      setSelectedMessageId(null);
+      socketRef.current?.emit("sync_conversation", { conversationId: activeId, reason: "message_reaction" });
+    } catch { /* la sincronización periódica recuperará el estado */ }
+  };
+
   const confirmDeleteConversation = async () => {
     if (!deleteChatTarget || deletingChat) return;
     const id = deleteChatTarget._id;
@@ -1543,6 +1561,9 @@ function ChatPageInner() {
                               </button>
                               {selectedMessageId === msg._id && (
                                 <div className={`message-actions-menu ${mine ? "mine" : "theirs"}`}>
+                                  <div className="reaction-picker" aria-label="Reaccionar">
+                                    {["👍","❤️","😂","😮","😢","🙏","✅"].map(emoji=><button type="button" key={emoji} onClick={()=>void reactToMessage(msg._id,emoji)} aria-label={`Reaccionar ${emoji}`}>{emoji}</button>)}
+                                  </div>
                                   <button onClick={() => startReply(msg)}><Reply size={14} /> Responder</button>
                                   {mine && msg.text && <button onClick={() => startEdit(msg)}><Pencil size={14} /> Editar</button>}
                                   {mine && <button className="danger" onClick={() => deleteMessage(msg._id)}><Trash2 size={14} /> Eliminar</button>}
@@ -1584,6 +1605,7 @@ function ChatPageInner() {
                                   )}
                                 </div>
                               </div>
+                              {!!msg.reactions?.length && <div className="message-reactions">{Object.entries(msg.reactions.reduce<Record<string,number>>((acc,r)=>{acc[r.emoji]=(acc[r.emoji]||0)+1;return acc},{})).map(([emoji,count])=><button key={emoji} onClick={()=>void reactToMessage(msg._id,emoji)}>{emoji}{count>1&&<span>{count}</span>}</button>)}</div>}
                             </div>
                           </div>
                         </div>
