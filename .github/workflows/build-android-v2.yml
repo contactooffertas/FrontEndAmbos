@@ -54,3 +54,5 @@ jobs:
 # Retry confirmed FCM registration and visible background push
 
 # Fresh Android channel for heads-up content and launcher badge
+
+# Rebuild 3.9.4 with locally reset legacy message channel
