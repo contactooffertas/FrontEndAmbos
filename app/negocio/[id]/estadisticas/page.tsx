@@ -40,7 +40,7 @@ function pct(value: number, total: number) {
 }
 
 export default function EstadisticasPage() {
-  const { id } = useParams<{ id: string }>();
+  const id = useParams<{ id: string }>()?.id;
   const router = useRouter();
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);

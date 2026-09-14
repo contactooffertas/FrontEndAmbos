@@ -864,7 +864,11 @@ function HomePageBody() {
   const { categories } = useMarketCategories();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const searchParam = searchParams.get("search") || "";
+  const rawSearchParam = searchParams?.get("search") ?? null;
+  // Un query vacío o compuesto sólo por espacios no es una búsqueda real.
+  // Algunos WebView restauran esa URL al volver a abrir la app y antes eso
+  // dejaba portada, negocios y productos atrapados en "sin resultados".
+  const searchParam = rawSearchParam?.trim() || "";
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [publicHeroProducts, setPublicHeroProducts] = useState<Product[]>([]);
   const [featuredBusinesses, setFeaturedBusinesses] = useState<FeaturedBusiness[]>([]);
@@ -894,6 +898,12 @@ function HomePageBody() {
   const [nearbyBizRadius, setNearbyBizRadius] = useState<number>(() => { if (typeof window === "undefined") return 3000; const saved = localStorage.getItem("nearbyRadius"); return saved ? parseInt(saved) : 3000; });
   const nearbyWatchIdRef = useRef<number | null>(null);
   const lastFetchedNearbyCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (rawSearchParam !== null && !searchParam) {
+      router.replace("/", { scroll: false });
+    }
+  }, [rawSearchParam, searchParam, router]);
 
   const startNearbyWatch = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) { if (userHasLoc) { setNearbyLat(userLat); setNearbyLng(userLng); setNearbyGeoStatus("ok"); } else setNearbyGeoStatus("error"); return; }
@@ -1068,10 +1078,13 @@ function HomePageBody() {
   }, [currentUserId, userHasLoc, userLat, userLng, userRadius, activeCategory, searchParam]);
   useEffect(() => { if (!allProducts.length) return; const token = typeof window !== "undefined" ? localStorage.getItem("marketplace_token") : null; if (!token) { setReportedProductIds(new Set()); return; } const productIds = allProducts.filter((p) => !p._isFeatured).map((p) => p._id); if (!productIds.length) return; fetch(`${API}/reports/batch-check`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ productIds }) }).then((r) => (r.ok ? r.json() : null)).then((data) => { if (data?.reportedIds) setReportedProductIds(new Set(data.reportedIds as string[])); }).catch(() => {}); }, [allProducts]);
   useEffect(() => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 4500);
+    let active = true;
+    const controllers = new Set<AbortController>();
 
-    const readList = async (url: string) => {
+    const readList = async (url: string, timeoutMs: number) => {
+      const controller = new AbortController();
+      controllers.add(controller);
+      const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
       try {
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
         if (!response.ok) return [];
@@ -1079,25 +1092,35 @@ function HomePageBody() {
         return Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
       } catch {
         return [];
+      } finally {
+        window.clearTimeout(timeout);
+        controllers.delete(controller);
       }
     };
 
-    void Promise.all([
-      readList(`${API}/products/random?limit=18`),
-      readList(`${API}/products/featured?limit=18`),
-      readList(`${API}/products?limit=50`),
-    ]).then(([randomProducts, featuredProducts, publicProducts]) => {
-      const merged = dedupeById([
-        ...randomProducts,
-        ...featuredProducts,
-        ...publicProducts,
+    const loadPublicHero = async () => {
+      const firstAttempt = await Promise.all([
+        readList(`${API}/products/random?limit=18`, 6500),
+        readList(`${API}/products/featured?limit=18`, 6500),
+        readList(`${API}/products?limit=50`, 6500),
       ]);
-      if (merged.length) setPublicHeroProducts(shuffleArray(merged));
-    }).finally(() => window.clearTimeout(timeout));
+      let merged = dedupeById(firstAttempt.flat());
+
+      // El backend puede tardar más en responder durante un arranque en frío.
+      // Si las tres lecturas fallan juntas, hacemos una lectura pública más
+      // larga para que el hero no desaparezca por un fallo transitorio.
+      if (!merged.length && active) {
+        merged = dedupeById(await readList(`${API}/products?limit=50`, 12000));
+      }
+      if (active && merged.length) setPublicHeroProducts(shuffleArray(merged));
+    };
+
+    void loadPublicHero();
 
     return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
+      active = false;
+      controllers.forEach((controller) => controller.abort());
+      controllers.clear();
     };
   }, []);
 
@@ -1112,8 +1135,8 @@ function HomePageBody() {
   // El hero nunca repite productos para completar lugares.
   // En inicio usa un pool público aleatorio; si hay 4 o más, el slider
   // va rotando de a 3 entre productos distintos.
-  const heroProducts = (searchParam
-    ? dedupeById(allProducts)
+  const heroProducts = (searchParam && allProducts.length
+    ? dedupeById([...allProducts, ...publicHeroProducts])
     : dedupeById([...publicHeroProducts, ...allProducts]))
     .slice(0, 12);
   const hasFeatured = allProducts.some((p) => p._isFeatured);

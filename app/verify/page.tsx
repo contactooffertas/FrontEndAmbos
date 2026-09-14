@@ -15,7 +15,7 @@ function VerifyContent() {
   const [timer, setTimer] = useState<number>(60);
 
   useEffect(() => {
-    const emailFromUrl = searchParams.get("email");
+    const emailFromUrl = searchParams?.get("email");
     if (emailFromUrl) {
       setEmail(emailFromUrl);
     }

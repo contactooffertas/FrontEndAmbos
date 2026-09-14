@@ -782,8 +782,8 @@ function ChatPageInner() {
 
   useEffect(() => {
     if (!token || convsLoading) return;
-    const convId = params.get("conversationId");
-    const bId    = params.get("businessId");
+    const convId = params?.get("conversationId");
+    const bId    = params?.get("businessId");
     if (convId) {
       const exists = conversations.find((c) => c._id === convId);
       if (exists) { openConversation(convId); } else {

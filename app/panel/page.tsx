@@ -555,7 +555,7 @@ function PanelContent() {
   } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultTab = (searchParams.get("tab") as Tab) || "cart";
+  const defaultTab = (searchParams?.get("tab") as Tab) || "cart";
 
   const [tab, setTab] = useState<Tab>(defaultTab);
   const [purchases, setPurchases] = useState<Purchase[]>([]);

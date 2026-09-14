@@ -247,7 +247,7 @@ function GpsBadge({ gps, onRefresh, profileHasLoc }: {
 
 // ── Página principal ─────────────────────────────────────────────────────────
 export default function NegocioPublicoPage() {
-  const { id }        = useParams<{ id: string }>();
+  const id            = useParams<{ id: string }>()?.id;
   const { user }      = useAuth();
   const { addToCart } = useCart();
   const router        = useRouter();
@@ -269,8 +269,8 @@ export default function NegocioPublicoPage() {
   const initialAffiliateParamsRef = useRef<{ productId: string | null; ref: string | null } | null>(null);
   if (initialAffiliateParamsRef.current === null) {
     initialAffiliateParamsRef.current = {
-      productId: searchParams.get("p"),
-      ref: (searchParams.get("ref") || "").trim() || null,
+      productId: searchParams?.get("p") ?? null,
+      ref: (searchParams?.get("ref") || "").trim() || null,
     };
   }
   const highlightProductId = initialAffiliateParamsRef.current.productId;

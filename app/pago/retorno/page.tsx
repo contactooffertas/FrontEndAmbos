@@ -14,7 +14,7 @@ function ReturnContent() {
   const [message, setMessage] = useState("Registrando tu regreso del proveedor de pago...");
 
   useEffect(() => {
-    const orderId = params.get("orderId");
+    const orderId = params?.get("orderId");
     const token = localStorage.getItem("marketplace_token");
 
     if (!orderId || !token) {
