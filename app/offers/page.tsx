@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 type Offer = {
   id: number;
@@ -34,7 +35,7 @@ export default function OffersPage() {
 
   const saveOffer = async () => {
     if (!title || !price) {
-      alert("Completa todos los campos");
+      await Swal.fire({ icon:"warning", title:"Faltan datos", text:"Completá todos los campos.", confirmButtonColor:"#f97316" });
       return;
     }
     try {
@@ -61,7 +62,8 @@ export default function OffersPage() {
   };
 
   const deleteOffer = async (id: number) => {
-    if (!confirm("¿Seguro que querés eliminar esta oferta?")) return;
+    const confirmation = await Swal.fire({ icon:"warning", title:"¿Eliminar esta oferta?", showCancelButton:true, confirmButtonText:"Eliminar", cancelButtonText:"Cancelar", confirmButtonColor:"#f97316", cancelButtonColor:"#123a5a" });
+    if (!confirmation.isConfirmed) return;
     try {
       const res = await fetch(`https://notifica-back.vercel.app/api/offers/${id}`, {
         method: "DELETE",
