@@ -2,6 +2,7 @@ package com.rosariomarket.app
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -11,7 +12,7 @@ import androidx.core.app.Person
 
 object NotificationHelper {
     private const val CHANNEL = "nearby_businesses"
-    private const val CHAT_CHANNEL = "rm_chat_messages"
+    private const val CHAT_CHANNEL = "rm_chat_messages_v2"
     fun createChannel(context: Context) {
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel(CHANNEL, "Negocios cerca tuyo", NotificationManager.IMPORTANCE_HIGH).apply { description = "Avisos cuando entrás en el radio de un negocio de Rosario Market" })
@@ -19,6 +20,10 @@ object NotificationHelper {
             NotificationChannel(CHAT_CHANNEL, "Mensajes de Rosario Market", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Mensajes individuales, grupos y reacciones del chat"
                 enableVibration(true)
+                vibrationPattern = longArrayOf(0, 220, 100, 220)
+                enableLights(true)
+                lightColor = 0xFFF97316.toInt()
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 setShowBadge(true)
             })
     }
