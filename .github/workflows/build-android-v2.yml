@@ -53,6 +53,20 @@ jobs:
             gh release create android-v3.9.6 Rosario-Market-3.9.6.apk --title "Rosario Market 3.9.6" --notes "Notificaciones nativas en segundo plano, contador acumulado y confirmación de entrega."
           fi
 
+      - name: Publish APK inside Rosario Market website
+        run: |
+          mkdir -p /tmp/rm-apk
+          cp Rosario-Market-3.9.6.apk /tmp/rm-apk/Rosario-Market-3.9.6.apk
+          git fetch origin main
+          git checkout -B main origin/main
+          mkdir -p public/downloads
+          cp /tmp/rm-apk/Rosario-Market-3.9.6.apk public/downloads/Rosario-Market-3.9.6.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/downloads/Rosario-Market-3.9.6.apk
+          git commit -m "chore(android): publish downloadable APK 3.9.6"
+          git push origin main
+
 # Rosario Market Android 3.9.6
 # Rebuild with navbarbolsa launch illustration
 # Deploy website metadata for Android 3.9.4
