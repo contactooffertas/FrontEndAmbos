@@ -89,11 +89,15 @@ object GeofenceManager {
         val fences = places.map { p ->
             editor.putString(p.id, "${p.name}|${p.address.orEmpty()}")
             Geofence.Builder().setRequestId(p.id).setCircularRegion(p.lat, p.lng, RADIUS)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER).setExpirationDuration(Geofence.NEVER_EXPIRE).setNotificationResponsiveness(60_000).build()
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER).setExpirationDuration(Geofence.NEVER_EXPIRE).setNotificationResponsiveness(30_000).build()
         }; editor.apply()
-        // No disparamos ENTER al registrar: así abrir la app no genera falsos
-        // avisos. Google Play Services notificará el próximo ingreso real al radio.
-        val request = GeofencingRequest.Builder().setInitialTrigger(0).addGeofences(fences).build()
+        // If the user is already inside a 300 m radius when Android restores
+        // the fences, trigger ENTER immediately. The per-business cooldown below
+        // prevents repeated alerts when the app or phone restarts.
+        val request = GeofencingRequest.Builder()
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            .addGeofences(fences)
+            .build()
         val pi = PendingIntent.getBroadcast(context, 2020, Intent(context, GeofenceBroadcastReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
         val client = LocationServices.getGeofencingClient(context)
         client.removeGeofences(pi).addOnCompleteListener {
