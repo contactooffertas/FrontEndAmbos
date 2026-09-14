@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import MainLayout from "../../componentes/MainLayout";
+import Swal from "sweetalert2";
 import {
   BadgeCheck,
   Building2,
@@ -52,7 +53,7 @@ export default function ServiceDetail() {
   };
   const wa = String(p.whatsapp || p.phone || "").replace(/\D/g, "");
   const priceUnits:Record<string,string>={hour:"hora",visit:"visita",shift:"turno",day:"día"};
-  const submitReview=async(e:React.FormEvent)=>{e.preventDefault();const token=localStorage.getItem("marketplace_token");if(!token){router.push(`/login?next=/servicios/${id}`);return}const r=await fetch(`${API}/services/${id}/rate`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({rating:reviewRating,comment:reviewComment,serviceReceived:true})});if(r.ok){setReviewComment("");const refreshed=await fetch(`${API}/services/${id}`,{cache:"no-store"});setData(await refreshed.json())}else alert((await r.json()).message||"No se pudo publicar la opinión")};
+  const submitReview=async(e:React.FormEvent)=>{e.preventDefault();const token=localStorage.getItem("marketplace_token");if(!token){router.push(`/login?next=/servicios/${id}`);return}const r=await fetch(`${API}/services/${id}/rate`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({rating:reviewRating,comment:reviewComment,serviceReceived:true})});if(r.ok){setReviewComment("");const refreshed=await fetch(`${API}/services/${id}`,{cache:"no-store"});setData(await refreshed.json())}else await Swal.fire({icon:"error",title:"No se pudo publicar",text:(await r.json()).message||"Intentá nuevamente.",confirmButtonColor:"#f97316"})};
   return (
     <MainLayout>
       <div className="service-detail">
