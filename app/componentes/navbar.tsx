@@ -67,7 +67,7 @@ export default function Navbar(){
         const unreadTotal=chatItems.reduce((sum:number,c:any)=>sum+Number(c.unreadCount||0),0);
         setChatUnread(unreadTotal);
         const pendingOrderItems = Array.isArray(sellerOrders)
-          ? sellerOrders.filter((o:any)=>user.role==="seller" ? o.status==="pending" && !o.sellerSeenAt : ["confirmed","shipped","delivered","returned"].includes(o.status) && !o.buyerStatusSeenAt)
+          ? sellerOrders.filter((o:any)=>user.role==="seller" ? ["pending","delivered","returned"].includes(o.status) && !o.sellerSeenAt : ["confirmed","shipped","delivered","returned"].includes(o.status) && !o.buyerStatusSeenAt)
           : [];
         setPendingOrders(user.role==="seller" ? pendingOrderItems.length : 0);
 
@@ -87,8 +87,8 @@ export default function Navbar(){
         }));
         const orderNotices:Notice[]=pendingOrderItems.slice(0,10).map((o:any)=>({
           id:`order-${o._id}`,
-          title:user.role==="seller"?"Nueva orden de compra":"Tu pedido cambió de estado",
-          body:user.role==="seller"?`${o.buyer?.name||"Un comprador"} realizó un pedido`:`${o.businessName||"El negocio"}: ${o.status==="shipped"?"pedido despachado":o.status==="confirmed"?"pedido confirmado":o.status==="delivered"?"pedido entregado":"pedido actualizado"}`,
+          title:user.role==="seller"?(o.status==="delivered"?"Venta terminada":o.status==="returned"?"Pedido devuelto":"Nueva orden de compra"):"Tu pedido cambió de estado",
+          body:user.role==="seller"?(o.status==="delivered"?`${o.buyer?.name||"El comprador"} confirmó que se queda con el producto`:o.status==="returned"?`${o.buyer?.name||"El comprador"} devolvió el pedido`:`${o.buyer?.name||"Un comprador"} realizó un pedido`):`${o.businessName||"El negocio"}: ${o.status==="shipped"?"pedido despachado":o.status==="confirmed"?"pedido confirmado":o.status==="delivered"?"pedido entregado":"pedido actualizado"}`,
           url:user.role==="seller"?"/ordenes":"/panel?tab=purchases",
           kind:user.role==="seller"?"seller-order":"buyer-order"
         }));

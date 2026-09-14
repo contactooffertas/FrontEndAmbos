@@ -585,8 +585,15 @@ function PanelContent() {
 
   useEffect(() => {
     loadPurchases();
-    const interval = window.setInterval(loadPurchases, 15000);
-    return () => window.clearInterval(interval);
+    const interval = window.setInterval(loadPurchases, 5000);
+    const refresh = () => loadPurchases();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [user, tab]);
 
   if (loading ||!user) return null;
@@ -685,12 +692,18 @@ function PanelContent() {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok)
+    const data = await res.json().catch(() => ({}));
+    const Swal = (await import("sweetalert2")).default;
+    if (res.ok) {
       setPurchases((prev) =>
         prev.map((o) =>
           o._id === orderId? {...o, status: "delivered" as const } : o,
         ),
       );
+      await Swal.fire({ icon: "success", title: "Compra terminada", text: "Confirmaste que te quedás con el producto. Ya podés calificar al vendedor.", confirmButtonColor: "#f97316" });
+    } else {
+      await Swal.fire({ icon: "error", title: "No se pudo confirmar", text: data.message || "Intentá nuevamente." });
+    }
   };
 
   const handleReturn = async (orderId: string) => {
@@ -1033,6 +1046,9 @@ function PanelContent() {
                             flexWrap: "wrap",
                           }}
                         >
+                          <div style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "#e0f2fe", color: "#075985", fontSize: ".82rem", fontWeight: 800 }}>
+                            🚚 El vendedor despachó tu pedido. Cuando lo recibas, confirmá qué querés hacer.
+                          </div>
                           <button
                             onClick={() => handleKeep(p._id)}
                             style={{

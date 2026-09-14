@@ -54,7 +54,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.
   pending:   { label: "Pendiente",  color: "#f59e0b", icon: <Clock size={14} /> },
   confirmed: { label: "Confirmado", color: "#3b82f6", icon: <CheckCircle size={14} /> },
   shipped:   { label: "Enviado",    color: "#0ea5e9", icon: <Truck size={14} /> },
-  delivered: { label: "Entregado",  color: "#10b981", icon: <CheckCircle size={14} /> },
+  delivered: { label: "Venta terminada", color: "#10b981", icon: <CheckCircle size={14} /> },
   returned:  { label: "Devuelto",   color: "#ef4444", icon: <RotateCcw size={14} /> },
 };
 
@@ -347,8 +347,15 @@ export default function OrdenesPage() {
       Notification.requestPermission().catch(() => {});
     }
     fetchOrders();
-    const interval = setInterval(() => fetchOrders(true), 15000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => fetchOrders(true), 5000);
+    const refresh = () => void fetchOrders(true);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [user]);
 
   const handleShip = async (orderId: string) => {
@@ -591,7 +598,12 @@ export default function OrdenesPage() {
                     )}
                     {status === "delivered" && (
                       <p className="orden-delivered-msg">
-                        ✅ Vendido — el comprador confirmó la recepción
+                        ✅ Venta terminada — el comprador se quedó con el producto
+                      </p>
+                    )}
+                    {status === "shipped" && (
+                      <p className="orden-delivered-msg" style={{ color: "#0369a1", background: "#e0f2fe" }}>
+                        🚚 Pedido despachado — esperando que el comprador confirme si se lo queda
                       </p>
                     )}
                     {status === "returned" && (
@@ -620,7 +632,6 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
-
 
 
 
