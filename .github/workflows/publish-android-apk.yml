@@ -44,6 +44,7 @@ jobs:
             exit 0
           fi
           git commit -m "release(android): publish Rosario Market 3.9.2 APK"
+          git pull --rebase origin main
           git push origin main
 
 # Android 3.9.2 release
