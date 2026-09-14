@@ -9,7 +9,7 @@ import CategoryIcon from "./cateroryicon";
 import { useMarketCategories } from "../hooks/useMarketCategories";
 import { containsForbiddenContent } from "../lib/contentPolicy";
 import "../styles/navbar.css";
-import { Home, Search, User, Package, Store, LogOut, ChevronDown, ShoppingCart, Bell, MessageCircle, Handshake, Shield, MapPin } from "lucide-react";
+import { Home, Search, User, Package, Store, LogOut, ChevronDown, ShoppingCart, Bell, MessageCircle, Handshake, Shield, MapPin, Wrench } from "lucide-react";
 
 // Navbar validado para Turbopack.
 const API="https://new-backend-lovat.vercel.app/api";
@@ -127,7 +127,7 @@ export default function Navbar(){
         <span className="navbar-logo-badge"><img src="/assets/navbarbolsa.png" alt="" className="navbar-logo-badge-img"/></span>
         <span className="navbar-logo-wordmark"><span className="navbar-logo-word-main">Rosario</span><span className="navbar-logo-word-accent">Market</span></span>
       </Link>
-      <form className="navbar-search" onSubmit={handleSearch}><Search size={16} className="navbar-search-icon"/><input placeholder="Buscar productos, negocios..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/></form>
+      <form className="navbar-search" onSubmit={handleSearch}><Search size={16} className="navbar-search-icon"/><input placeholder="Buscar productos, negocios o servicios..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/></form>
       <div className="navbar-actions">
         {user&&<div ref={notifRef} style={{position:"relative"}}>
           <button className="bell-btn" onClick={()=>setNotifOpen(v=>!v)} title="Notificaciones" aria-label="Notificaciones"><Bell size={17}/>{notices.length>0&&<span className="badge">{notices.length>9?"9+":notices.length}</span>}</button>
@@ -140,6 +140,7 @@ export default function Navbar(){
             <Link href="/profile"><User size={15}/>Mi perfil y configuración</Link>
             <Link href="/profile"><MapPin size={15}/>Negocios cerca</Link>
             <Link href="/chatpage"><MessageCircle size={15}/>Mensajes / Chat</Link>
+            <Link href="/servicios"><Wrench size={15}/>Servicios profesionales</Link>
             <Link href="/programa-afiliados"><Handshake size={15}/>Programa de Afiliados</Link>
             {user.role==="seller"&&<><Link href="/negocio"><Store size={15}/>Mi negocio</Link><Link href="/mis-productos"><Package size={15}/>Mis productos</Link><Link href="/ordenes"><Package size={15}/>Pedidos recibidos{pendingOrders>0&&<span className="badge" style={{position:"static",marginLeft:"auto"}}>{pendingOrders>9?"9+":pendingOrders}</span>}</Link></>}
             <Link href="/panel?tab=purchases"><Package size={15}/>Mis compras</Link>
@@ -149,7 +150,7 @@ export default function Navbar(){
         </div>:<div className="auth-buttons"><Link href="/login" className="login-link">Iniciar sesión</Link><Link href="/register" className="register-button">Registrarse</Link></div>}
       </div>
     </div></header>
-    <nav className="category-bar"><div className="category-bar-inner"><Link href="/" className={`category-item ${pathname==="/"?"active":""}`}><Home size={20}/></Link>{user?.role==="seller"&&<Link href="/ordenes" className={`category-item ${pathname==="/ordenes"?"active":""}`} title="Órdenes"><Package size={20}/>{pendingOrders>0&&<span className="badge">{pendingOrders>9?"9+":pendingOrders}</span>}</Link>}{NAV_CATEGORIES.map(c=><Link key={c.id} href={`/categoria/${c.slug}`} className={`category-item ${currentSlug===c.slug?"active":""}`} title={c.name}><CategoryIcon name={c.iconName} size={21}/></Link>)}</div></nav>
+    <nav className="category-bar"><div className="category-bar-inner"><Link href="/" className={`category-item ${pathname==="/"?"active":""}`}><Home size={20}/></Link><Link href="/servicios" className={`category-item ${pathname.startsWith("/servicios")?"active":""}`} title="Servicios"><CategoryIcon name="Servicios" size={28}/></Link>{user?.role==="seller"&&<Link href="/ordenes" className={`category-item ${pathname==="/ordenes"?"active":""}`} title="Órdenes"><Package size={20}/>{pendingOrders>0&&<span className="badge">{pendingOrders>9?"9+":pendingOrders}</span>}</Link>}{NAV_CATEGORIES.map(c=><Link key={c.id} href={`/categoria/${c.slug}`} className={`category-item ${currentSlug===c.slug?"active":""}`} title={c.name}><CategoryIcon name={c.iconName} size={21}/></Link>)}</div></nav>
     <style>{`.bell-btn{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:1.5px solid #f97316;background:#1c1c1c;color:#f97316;cursor:pointer}.badge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:99px;font-size:9px;padding:2px 4px}.notif-panel{position:fixed;top:4.5rem;left:.5rem;right:.5rem;max-width:340px;margin-left:auto;max-height:70vh;overflow:auto;background:#111;border:1px solid #ffffff1a;border-radius:14px;z-index:99999;color:white}.notif-head{display:flex;justify-content:space-between;padding:.75rem 1rem}.notif-head button,.notif-row{background:none;border:0;color:inherit}.notif-row{width:100%;display:flex;flex-direction:column;text-align:left;padding:.75rem 1rem;border-top:1px solid #ffffff12}.notif-empty{padding:1rem;color:#aaa}`}</style>
   </>;
 }
