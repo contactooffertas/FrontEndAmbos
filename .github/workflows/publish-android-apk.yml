@@ -45,3 +45,5 @@ jobs:
           fi
           git commit -m "release(android): publish Rosario Market 3.8 APK"
           git push origin main
+
+# Android 3.9 release
