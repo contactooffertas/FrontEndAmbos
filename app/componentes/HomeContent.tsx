@@ -897,6 +897,7 @@ function HomePageBody() {
   const [nearbyBizError, setNearbyBizError] = useState("");
   const [nearbyBizRadius, setNearbyBizRadius] = useState<number>(() => { if (typeof window === "undefined") return 3000; const saved = localStorage.getItem("nearbyRadius"); return saved ? parseInt(saved) : 3000; });
   const nearbyWatchIdRef = useRef<number | null>(null);
+  const nativeGeoSyncedRef = useRef(false);
   const lastFetchedNearbyCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
@@ -909,10 +910,35 @@ function HomePageBody() {
     if (typeof navigator === "undefined" || !navigator.geolocation) { if (userHasLoc) { setNearbyLat(userLat); setNearbyLng(userLng); setNearbyGeoStatus("ok"); } else setNearbyGeoStatus("error"); return; }
     setNearbyGeoStatus((prev) => (prev === "ok" ? prev : "loading"));
     if (nearbyWatchIdRef.current !== null) navigator.geolocation.clearWatch(nearbyWatchIdRef.current);
-    nearbyWatchIdRef.current = navigator.geolocation.watchPosition((pos) => { setNearbyLat(pos.coords.latitude); setNearbyLng(pos.coords.longitude); setNearbyGeoStatus("ok"); }, (err) => { if (userHasLoc) { setNearbyLat(userLat); setNearbyLng(userLng); setNearbyGeoStatus("ok"); } else setNearbyGeoStatus(err.code === 1 ? "denied" : "error"); }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
+    nearbyWatchIdRef.current = navigator.geolocation.watchPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setNearbyLat(lat);
+      setNearbyLng(lng);
+      setNearbyGeoStatus("ok");
+
+      // En la APK el permiso puede estar concedido en Android aunque el perfil
+      // todavía conserve locationEnabled=false. Sincronizamos la primera
+      // posición igualmente para habilitar cercanía y avisos FCM nativos.
+      if (!nativeGeoSyncedRef.current && /RosarioMarketAndroid\//i.test(navigator.userAgent)) {
+        const token = localStorage.getItem("marketplace_token");
+        if (token) {
+          nativeGeoSyncedRef.current = true;
+          void fetch(`${API}/push-geo/location`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ lat, lng }),
+          }).catch(() => { nativeGeoSyncedRef.current = false; });
+        }
+      }
+    }, (err) => { if (userHasLoc) { setNearbyLat(userLat); setNearbyLng(userLng); setNearbyGeoStatus("ok"); } else setNearbyGeoStatus(err.code === 1 ? "denied" : "error"); }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
   }, [userHasLoc, userLat, userLng]);
 
   useEffect(() => { if (userHasLoc && nearbyGeoStatus === "idle") startNearbyWatch(); }, [userHasLoc, nearbyGeoStatus, startNearbyWatch]);
+  useEffect(() => {
+    if (nearbyGeoStatus !== "idle" || typeof navigator === "undefined") return;
+    if (/RosarioMarketAndroid\//i.test(navigator.userAgent)) startNearbyWatch();
+  }, [nearbyGeoStatus, startNearbyWatch]);
   useEffect(() => () => { if (nearbyWatchIdRef.current !== null && typeof navigator !== "undefined" && navigator.geolocation) navigator.geolocation.clearWatch(nearbyWatchIdRef.current); }, []);
   const requestNearbyLocation = useCallback(() => { startNearbyWatch(); }, [startNearbyWatch]);
   const handleNearbyRadiusChange = (value: number) => { setSearchRadiusInfo(null); setNearbyBizRadius(value); localStorage.setItem("nearbyRadius", String(value)); lastFetchedNearbyCoordsRef.current = null; };
