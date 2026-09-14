@@ -12,8 +12,8 @@ android {
         applicationId = "com.rosariomarket.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 49
-        versionName = "3.9.6"
+        versionCode = 50
+        versionName = "3.9.7"
     }
 
     compileOptions {
