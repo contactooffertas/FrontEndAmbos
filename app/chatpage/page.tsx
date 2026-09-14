@@ -158,6 +158,14 @@ function playNotif() {
   }
 }
 
+function clearNativeNotifications() {
+  try {
+    (window as any).RosarioMarketPush?.clearNotifications?.();
+  } catch {
+    /* web/PWA: no native bridge */
+  }
+}
+
 function ConvSkeleton() {
   return (
     <>
@@ -603,7 +611,9 @@ function ChatPageInner() {
         fetch(`${API}/chat/conversations/${msg.conversation}/read`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
-        });
+        }).then((response) => {
+          if (response.ok) clearNativeNotifications();
+        }).catch(() => {})
         // ── Aviso instantáneo por socket de que ya lo vi, además del fetch
         //    REST de arriba — así el otro usuario ve la tilde azul en el
         //    momento, sin depender de que el backend reemita el evento ──
@@ -780,7 +790,9 @@ function ChatPageInner() {
             setMessages(incoming.sort((a,b)=>new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime()));
             void fetch(`${API}/chat/conversations/${current}/read`, {
               method:"POST", headers:{Authorization:`Bearer ${token}`}
-            }).catch(()=>{});
+            }).then((response) => {
+              if (response.ok) clearNativeNotifications();
+            }).catch(()=>{})
           }
         }
       } catch {}
@@ -848,10 +860,11 @@ function ChatPageInner() {
         ));
       }
 
-      await fetch(`${API}/chat/conversations/${id}/read`, {
+      const readResponse = await fetch(`${API}/chat/conversations/${id}/read`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (readResponse.ok) clearNativeNotifications()
       // ── Avisamos por socket que ya leímos, además del fetch REST de arriba,
       //    para que el que envió vea la tilde azul al instante ──
       socketRef.current?.emit("read_messages", { conversationId: id });
