@@ -573,13 +573,21 @@ function PanelContent() {
     const token = localStorage.getItem("marketplace_token");
     fetch(`${API}/orders/my`, { headers: { Authorization: `Bearer ${token}` } })
      .then((r) => r.json())
-     .then((data) => setPurchases(Array.isArray(data)? data : []))
+     .then(async (data) => {
+       setPurchases(Array.isArray(data)? data : []);
+       if (tab === "purchases") {
+         await fetch(`${API}/orders/my/read`, { method: "PATCH", headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
+         window.dispatchEvent(new Event("rm-orders-read"));
+       }
+     })
      .catch(() => {});
   };
 
   useEffect(() => {
     loadPurchases();
-  }, [user]);
+    const interval = window.setInterval(loadPurchases, 15000);
+    return () => window.clearInterval(interval);
+  }, [user, tab]);
 
   if (loading ||!user) return null;
 

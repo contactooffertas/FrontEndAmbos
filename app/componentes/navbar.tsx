@@ -13,7 +13,7 @@ import { Home, Search, User, Package, Store, LogOut, ChevronDown, ShoppingCart, 
 
 // Navbar validado para Turbopack.
 const API="https://new-backend-lovat.vercel.app/api";
-type Notice={id:string;title:string;body:string;url?:string;kind?:"announcement"|"chat"};
+type Notice={id:string;title:string;body:string;url?:string;kind?:"announcement"|"chat"|"seller-order"|"buyer-order"};
 
 export default function Navbar(){
   const {user,logout}=useAuth();
@@ -52,9 +52,7 @@ export default function Navbar(){
         const [annRes,chatRes,ordersRes]=await Promise.all([
           fetch(`${API}/announcements/active`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"}),
           fetch(`${API}/chat/conversations`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"}),
-          user.role==="seller"
-            ? fetch(`${API}/orders/seller`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"})
-            : Promise.resolve(null)
+          fetch(`${API}/orders/${user.role==="seller"?"seller":"my"}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"})
         ]);
 
         if(cancelled)return;
@@ -69,9 +67,9 @@ export default function Navbar(){
         const unreadTotal=chatItems.reduce((sum:number,c:any)=>sum+Number(c.unreadCount||0),0);
         setChatUnread(unreadTotal);
         const pendingOrderItems = Array.isArray(sellerOrders)
-          ? sellerOrders.filter((o:any)=>o.status==="pending")
+          ? sellerOrders.filter((o:any)=>user.role==="seller" ? o.status==="pending" && !o.sellerSeenAt : ["confirmed","shipped","delivered","returned"].includes(o.status) && !o.buyerStatusSeenAt)
           : [];
-        setPendingOrders(pendingOrderItems.length);
+        setPendingOrders(user.role==="seller" ? pendingOrderItems.length : 0);
 
         const annNotices:Notice[]=unseenAnnouncements.slice(0,20).map((x:any)=>({
           id:String(x._id),
@@ -89,9 +87,10 @@ export default function Navbar(){
         }));
         const orderNotices:Notice[]=pendingOrderItems.slice(0,10).map((o:any)=>({
           id:`order-${o._id}`,
-          title:"Nueva orden de compra",
-          body:`${o.buyer?.name||"Un comprador"} realizó un pedido`,
-          url:"/ordenes"
+          title:user.role==="seller"?"Nueva orden de compra":"Tu pedido cambió de estado",
+          body:user.role==="seller"?`${o.buyer?.name||"Un comprador"} realizó un pedido`:`${o.businessName||"El negocio"}: ${o.status==="shipped"?"pedido despachado":o.status==="confirmed"?"pedido confirmado":o.status==="delivered"?"pedido entregado":"pedido actualizado"}`,
+          url:user.role==="seller"?"/ordenes":"/panel?tab=purchases",
+          kind:user.role==="seller"?"seller-order":"buyer-order"
         }));
         setNotices([...orderNotices,...chatNotices,...annNotices]);
       }catch{}
@@ -100,10 +99,24 @@ export default function Navbar(){
     void loadCenter();
     const interval=setInterval(loadCenter,10000);
     const onFocus=()=>void loadCenter();
+    const onOrdersRead=()=>void loadCenter();
     window.addEventListener("focus",onFocus);
     document.addEventListener("visibilitychange",onFocus);
-    return()=>{cancelled=true;clearInterval(interval);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onFocus)};
+    window.addEventListener("rm-orders-read",onOrdersRead);
+    return()=>{cancelled=true;clearInterval(interval);window.removeEventListener("focus",onFocus);document.removeEventListener("visibilitychange",onFocus);window.removeEventListener("rm-orders-read",onOrdersRead)};
   },[user?.id]);
+
+  const openNotice=async(n:Notice)=>{
+    setNotices(prev=>prev.filter(x=>x.id!==n.id));
+    setNotifOpen(false);
+    const token=localStorage.getItem("marketplace_token");
+    if(token && (n.kind==="seller-order"||n.kind==="buyer-order")){
+      await fetch(`${API}/orders/${n.kind==="seller-order"?"seller":"my"}/read`,{method:"PATCH",headers:{Authorization:`Bearer ${token}`}}).catch(()=>null);
+      setPendingOrders(0);
+    }
+    if(n.kind==="announcement") localStorage.setItem(`rm_nav_ann_seen_${n.id}`,"1");
+    if(n.url) router.push(n.url);
+  };
 
   const handleSearch=(e:React.FormEvent)=>{e.preventDefault();const q=searchQuery.trim();if(containsForbiddenContent(q)){setSearchQuery("");return;}if(q)router.push(`/?search=${encodeURIComponent(q)}#offers`)};
   const currentSlug=pathname.startsWith("/categoria/")?(pathname.split("/categoria/")[1]?.split("?")[0]??""):"";
@@ -118,7 +131,7 @@ export default function Navbar(){
       <div className="navbar-actions">
         {user&&<div ref={notifRef} style={{position:"relative"}}>
           <button className="bell-btn" onClick={()=>setNotifOpen(v=>!v)} title="Notificaciones" aria-label="Notificaciones"><Bell size={17}/>{notices.length>0&&<span className="badge">{notices.length>9?"9+":notices.length}</span>}</button>
-          {notifOpen&&<div className="notif-panel"><div className="notif-head"><b>Notificaciones</b>{notices.length>0&&<button onClick={()=>setNotices([])}>Limpiar</button>}</div>{notices.length===0?<div className="notif-empty">No tenés notificaciones</div>:notices.map(n=><button key={n.id} className="notif-row" onClick={()=>{setNotifOpen(false);if(n.url)router.push(n.url)}}><b>{n.title}</b><span>{n.body}</span></button>)}</div>}
+          {notifOpen&&<div className="notif-panel"><div className="notif-head"><b>Notificaciones</b></div>{notices.length===0?<div className="notif-empty">No tenés notificaciones</div>:notices.map(n=><button key={n.id} className="notif-row" onClick={()=>void openNotice(n)}><b>{n.title}</b><span>{n.body}</span></button>)}</div>}
         </div>}
         {user&&<Link href="/panel?tab=cart" className="cart-button" aria-label="Carrito"><ShoppingCart size={20}/>{cartCount>0&&<span className="cart-badge">{cartCount}</span>}</Link>}
         {user?<div className="user-menu" ref={dropdownRef}>

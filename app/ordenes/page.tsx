@@ -317,6 +317,13 @@ export default function OrdenesPage() {
         : [];
       setOrders(data);
 
+      // Abrir esta pantalla equivale a leer las notificaciones de pedidos.
+      await fetch(`${API}/orders/seller/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => null);
+      window.dispatchEvent(new Event("rm-orders-read"));
+
       const incoming = new Set(data.map(o => o._id));
       const isNew    = new Set<string>();
       incoming.forEach(id => { if (!prevOrderIds.current.has(id)) isNew.add(id); });
@@ -351,10 +358,18 @@ export default function OrdenesPage() {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json().catch(() => ({}));
+      const Swal = (await import("sweetalert2")).default;
       if (res.ok) {
         setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: "shipped" } : o));
         setNewOrderIds(prev => { const n = new Set(prev); n.delete(orderId); return n; });
+        await Swal.fire({ icon: "success", title: "Pedido despachado", text: "El comprador ya verá el pedido como enviado.", timer: 2200, showConfirmButton: false });
+      } else {
+        await Swal.fire({ icon: "error", title: "No se pudo despachar", text: data.message || "Intentá nuevamente." });
       }
+    } catch {
+      const Swal = (await import("sweetalert2")).default;
+      await Swal.fire({ icon: "error", title: "Sin conexión", text: "No se pudo actualizar el pedido." });
     } finally {
       setDispatching(null);
     }
@@ -605,7 +620,6 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
-
 
 
 
