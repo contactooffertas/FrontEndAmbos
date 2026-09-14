@@ -4,6 +4,7 @@ import Link from "next/link";
 import MainLayout from "../componentes/MainLayout";
 import {
   BadgeCheck,
+  Camera,
   Clock3,
   HeartPulse,
   MapPin,
@@ -66,6 +67,8 @@ export default function ServiciosPage() {
     [formOpen, setFormOpen] = useState(false),
     [mine, setMine] = useState<any>(null),
     [saving, setSaving] = useState(false);
+  const [profileArea, setProfileArea] = useState("technical");
+  const [avatarPreview, setAvatarPreview] = useState("");
   const token =
     typeof window !== "undefined"
       ? localStorage.getItem("marketplace_token")
@@ -94,7 +97,10 @@ export default function ServiciosPage() {
     const r = await fetch(`${API}/services/mine`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    setMine((await r.json()) || {});
+    const current = (await r.json()) || {};
+    setMine(current);
+    setProfileArea(current.serviceArea || "technical");
+    setAvatarPreview(current.avatar || "");
     setFormOpen(true);
   };
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -149,8 +155,31 @@ export default function ServiciosPage() {
       await load();
     } else alert((await r.json()).message || "No se pudo guardar");
   };
-  const removeAvatar=async()=>{if(!confirm("¿Eliminar la foto del perfil?"))return;const r=await fetch(`${API}/services/mine/avatar`,{method:"DELETE",headers:{Authorization:`Bearer ${token}`}});if(r.ok)setMine((await r.json()).profile)};
-  const deleteProfile=async()=>{if(!confirm("¿Eliminar definitivamente tu perfil profesional y sus opiniones?"))return;const r=await fetch(`${API}/services/mine`,{method:"DELETE",headers:{Authorization:`Bearer ${token}`}});if(r.ok){setMine(null);setFormOpen(false);await load()}};
+  const removeAvatar = async () => {
+    if (!confirm("¿Eliminar la foto del perfil?")) return;
+    const r = await fetch(`${API}/services/mine/avatar`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (r.ok) setMine((await r.json()).profile);
+  };
+  const deleteProfile = async () => {
+    if (
+      !confirm(
+        "¿Eliminar definitivamente tu perfil profesional y sus opiniones?",
+      )
+    )
+      return;
+    const r = await fetch(`${API}/services/mine`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (r.ok) {
+      setMine(null);
+      setFormOpen(false);
+      await load();
+    }
+  };
   return (
     <MainLayout>
       <div className="services-page">
@@ -359,9 +388,15 @@ export default function ServiciosPage() {
                     {p.neighborhoods?.length
                       ? p.neighborhoods.slice(0, 2).join(" · ")
                       : "Rosario"}
-                    {p.serviceRadiusKm ? ` · hasta ${p.serviceRadiusKm} km` : ""}
+                    {p.serviceRadiusKm
+                      ? ` · hasta ${p.serviceRadiusKm} km`
+                      : ""}
                   </div>
-                  {p.serviceArea === "care" && <div className="care-badge"><HeartPulse /> Domicilio · hospital · clínica</div>}
+                  {p.serviceArea === "care" && (
+                    <div className="care-badge">
+                      <HeartPulse /> Domicilio · hospital · clínica
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}
@@ -392,11 +427,74 @@ export default function ServiciosPage() {
                   </p>
                 </div>
               </div>
-              {mine?._id&&<div className="profile-manager"><img src={mine.avatar||"/assets/offerton.jpg"} alt="Avatar actual"/><div><b>Panel de mi perfil</b><span>Estado: {mine.verificationStatus==="verified"?"Verificado":mine.verificationStatus==="pending"?"En revisión":"Sin verificar"}</span><span>{mine.active!==false?"Publicado":"Pausado"}</span></div>{mine.avatar&&<button type="button" onClick={()=>void removeAvatar()}>Eliminar avatar</button>}</div>}
-              <label>
-                Avatar profesional
-                <input name="avatar" type="file" accept="image/*" />
-              </label>
+              {mine?._id && (
+                <div className="profile-manager">
+                  <img
+                    src={mine.avatar || "/assets/offerton.jpg"}
+                    alt="Avatar actual"
+                  />
+                  <div>
+                    <b>Panel de mi perfil</b>
+                    <span>
+                      Estado:{" "}
+                      {mine.verificationStatus === "verified"
+                        ? "Verificado"
+                        : mine.verificationStatus === "pending"
+                          ? "En revisión"
+                          : "Sin verificar"}
+                    </span>
+                    <span>
+                      {mine.active !== false ? "Publicado" : "Pausado"}
+                    </span>
+                  </div>
+                  {mine.avatar && (
+                    <button type="button" onClick={() => void removeAvatar()}>
+                      Eliminar avatar
+                    </button>
+                  )}
+                </div>
+              )}
+              <section className="form-section avatar-section">
+                <div className="avatar-picker">
+                  <img
+                    src={
+                      avatarPreview || mine?.avatar || "/assets/offerton.jpg"
+                    }
+                    alt="Vista previa del avatar"
+                  />
+                  <label className="avatar-upload">
+                    <Camera size={18} />
+                    <span>
+                      {avatarPreview || mine?.avatar
+                        ? "Cambiar foto"
+                        : "Elegir foto"}
+                    </span>
+                    <input
+                      name="avatar"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setAvatarPreview(URL.createObjectURL(file));
+                      }}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <h3>Foto profesional</h3>
+                  <p>
+                    Usá una foto clara de tu rostro. JPG, PNG o WebP de hasta 5
+                    MB.
+                  </p>
+                </div>
+              </section>
+              <div className="form-section-title">
+                <span>1</span>
+                <div>
+                  <b>Datos principales</b>
+                  <small>Lo primero que verán las familias</small>
+                </div>
+              </div>
               <div className="form-two">
                 <label>
                   Nombre para mostrar *
@@ -418,18 +516,58 @@ export default function ServiciosPage() {
                 </label>
               </div>
               <div className="form-two">
-                <label>Sección<select name="serviceArea" defaultValue={mine?.serviceArea || "technical"}><option value="technical">Técnicos y oficios</option><option value="care">Salud y cuidados</option><option value="general">Otros servicios</option></select></label>
-                <label>Sexo (opcional)<select name="gender" defaultValue={mine?.gender || ""}><option value="">Prefiero no indicarlo</option><option value="female">Femenino</option><option value="male">Masculino</option></select></label>
+                <label>
+                  Sección
+                  <select
+                    name="serviceArea"
+                    value={profileArea}
+                    onChange={(e) => setProfileArea(e.target.value)}
+                  >
+                    <option value="technical">Técnicos y oficios</option>
+                    <option value="care">Salud y cuidados</option>
+                    <option value="general">Otros servicios</option>
+                  </select>
+                </label>
+                <label>
+                  Sexo (opcional)
+                  <select name="gender" defaultValue={mine?.gender || ""}>
+                    <option value="">Prefiero no indicarlo</option>
+                    <option value="female">Femenino</option>
+                    <option value="male">Masculino</option>
+                  </select>
+                </label>
               </div>
-              <label>
-                Oficios o especialidades *
-                <input
-                  name="trades"
-                  required
-                  defaultValue={mine?.trades?.join(", ")}
-                  placeholder="Enfermero/a, cuidador/a, electricista..."
-                />
-              </label>
+              <fieldset className="specialty-field">
+                <legend>Oficios o especialidades *</legend>
+                <p>Podés seleccionar más de una.</p>
+                <div className="specialty-grid">
+                  {(profileArea === "care" ? CARE : TRADES).map((item) => (
+                    <label className="specialty-chip" key={item}>
+                      <input
+                        type="checkbox"
+                        name="trades"
+                        value={item}
+                        defaultChecked={mine?.trades?.includes(item)}
+                      />
+                      <span>{item}</span>
+                    </label>
+                  ))}
+                </div>
+                <label>
+                  Otra especialidad
+                  <input
+                    name="trades"
+                    placeholder="Escribí otra si no aparece"
+                  />
+                </label>
+              </fieldset>
+              <div className="form-section-title">
+                <span>2</span>
+                <div>
+                  <b>Presentación y contacto</b>
+                  <small>Explicá qué hacés y cómo contactarte</small>
+                </div>
+              </div>
               <label>
                 Presentación breve
                 <input
@@ -484,8 +622,28 @@ export default function ServiciosPage() {
                 </label>
               </div>
               <div className="form-two">
-                <label>Modalidad del precio<select name="pricingUnit" defaultValue={mine?.pricingUnit || "visit"}><option value="hour">Por hora</option><option value="visit">Por visita</option><option value="shift">Por turno</option><option value="day">Por día</option></select></label>
-                <label>Radio de atención (km)<input name="serviceRadiusKm" type="number" min="1" max="40" defaultValue={mine?.serviceRadiusKm || 8}/></label>
+                <label>
+                  Modalidad del precio
+                  <select
+                    name="pricingUnit"
+                    defaultValue={mine?.pricingUnit || "visit"}
+                  >
+                    <option value="hour">Por hora</option>
+                    <option value="visit">Por visita</option>
+                    <option value="shift">Por turno</option>
+                    <option value="day">Por día</option>
+                  </select>
+                </label>
+                <label>
+                  Radio de atención (km)
+                  <input
+                    name="serviceRadiusKm"
+                    type="number"
+                    min="1"
+                    max="40"
+                    defaultValue={mine?.serviceRadiusKm || 8}
+                  />
+                </label>
               </div>
               <label>
                 Dirección (opcional)
@@ -520,7 +678,57 @@ export default function ServiciosPage() {
                   placeholder="Lun a sáb 8 a 19 h"
                 />
               </label>
-              <fieldset className="verification-box"><legend><HeartPulse size={18}/> Opciones de cuidado y salud</legend><p>Completalo si atendés pacientes o personas mayores.</p><div className="check-row"><label className="check"><input type="checkbox" name="careSettings" value="home" defaultChecked={mine?.careSettings?.includes("home")}/> Domicilio</label><label className="check"><input type="checkbox" name="careSettings" value="hospital" defaultChecked={mine?.careSettings?.includes("hospital")}/> Hospital</label><label className="check"><input type="checkbox" name="careSettings" value="clinic" defaultChecked={mine?.careSettings?.includes("clinic")}/> Clínica</label><label className="check"><input type="checkbox" name="careSettings" value="overnight" defaultChecked={mine?.careSettings?.includes("overnight")}/> Turno nocturno</label></div><label>Matrícula profesional (privada hasta verificar)<input name="professionalRegistration" defaultValue={mine?.professionalRegistration}/></label></fieldset>
+              <fieldset className="verification-box">
+                <legend>
+                  <HeartPulse size={18} /> Opciones de cuidado y salud
+                </legend>
+                <p>Completalo si atendés pacientes o personas mayores.</p>
+                <div className="check-row">
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      name="careSettings"
+                      value="home"
+                      defaultChecked={mine?.careSettings?.includes("home")}
+                    />{" "}
+                    Domicilio
+                  </label>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      name="careSettings"
+                      value="hospital"
+                      defaultChecked={mine?.careSettings?.includes("hospital")}
+                    />{" "}
+                    Hospital
+                  </label>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      name="careSettings"
+                      value="clinic"
+                      defaultChecked={mine?.careSettings?.includes("clinic")}
+                    />{" "}
+                    Clínica
+                  </label>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      name="careSettings"
+                      value="overnight"
+                      defaultChecked={mine?.careSettings?.includes("overnight")}
+                    />{" "}
+                    Turno nocturno
+                  </label>
+                </div>
+                <label>
+                  Matrícula profesional (privada hasta verificar)
+                  <input
+                    name="professionalRegistration"
+                    defaultValue={mine?.professionalRegistration}
+                  />
+                </label>
+              </fieldset>
               <div className="check-row">
                 <label className="check">
                   <input
@@ -599,7 +807,15 @@ export default function ServiciosPage() {
               <button className="save-provider" disabled={saving}>
                 {saving ? "Guardando…" : "Publicar perfil"}
               </button>
-              {mine?._id&&<button className="delete-provider" type="button" onClick={()=>void deleteProfile()}>Eliminar mi perfil profesional</button>}
+              {mine?._id && (
+                <button
+                  className="delete-provider"
+                  type="button"
+                  onClick={() => void deleteProfile()}
+                >
+                  Eliminar mi perfil profesional
+                </button>
+              )}
             </form>
           </div>
         )}
