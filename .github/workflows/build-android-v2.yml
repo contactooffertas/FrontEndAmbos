@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout Android 3.9.6 source branch
         uses: actions/checkout@v4
@@ -42,6 +42,16 @@ jobs:
           name: Rosario-Market-3.9.6-APK
           path: Rosario-Market-3.9.6.apk
           retention-days: 30
+
+      - name: Publish direct APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view android-v3.9.6 >/dev/null 2>&1; then
+            gh release upload android-v3.9.6 Rosario-Market-3.9.6.apk --clobber
+          else
+            gh release create android-v3.9.6 Rosario-Market-3.9.6.apk --title "Rosario Market 3.9.6" --notes "Notificaciones nativas en segundo plano, contador acumulado y confirmación de entrega."
+          fi
 
 # Rosario Market Android 3.9.6
 # Rebuild with navbarbolsa launch illustration
