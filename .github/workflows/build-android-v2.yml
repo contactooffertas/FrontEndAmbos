@@ -1,4 +1,4 @@
-name: Build Rosario Market Android 3.9
+name: Build Rosario Market Android 3.9.1
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout Android 3.9 source branch
+      - name: Checkout Android 3.9.1 source branch
         uses: actions/checkout@v4
         with:
           ref: rosario-market-android-v2
@@ -34,15 +34,16 @@ jobs:
         run: gradle assembleDebug --stacktrace
 
       - name: Rename APK
-        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-3.9.apk
+        run: cp android-v2/app/build/outputs/apk/debug/app-debug.apk Rosario-Market-3.9.1.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Rosario-Market-3.9-APK
-          path: Rosario-Market-3.9.apk
+          name: Rosario-Market-3.9.1-APK
+          path: Rosario-Market-3.9.1.apk
           retention-days: 30
 
-# Rosario Market Android 3.9
+# Rosario Market Android 3.9.1
 # Rebuild with navbarbolsa launch illustration
-# Deploy website metadata for Android 3.9
+# Deploy website metadata for Android 3.9.1
+# Fix visible intro and persistent FCM registration
