@@ -724,8 +724,8 @@ export default function SellerDashboard({ businessName }: SellerDashboardProps):
   };
 
   const handleDelete = async (applicationId: string) => {
-    const confirmed = window.confirm("¿Eliminar definitivamente a este afiliado?");
-    if (!confirmed) return;
+    const confirmation = await Swal.fire({ icon:"warning", title:"¿Eliminar este afiliado?", text:"La eliminación será definitiva.", showCancelButton:true, confirmButtonText:"Eliminar", cancelButtonText:"Cancelar", confirmButtonColor:"#f97316", cancelButtonColor:"#123a5a" });
+    if (!confirmation.isConfirmed) return;
     setActingId(applicationId);
     try {
       await authFetch(`/applications/${applicationId}`, { method: "DELETE" });
