@@ -117,6 +117,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun clearNotifications() {
+            NotificationHelper.clearAll(this@MainActivity)
+        }
+
+        @JavascriptInterface
         fun logout() {
             getSharedPreferences("rm_push", MODE_PRIVATE).edit().remove("auth").apply()
         }
