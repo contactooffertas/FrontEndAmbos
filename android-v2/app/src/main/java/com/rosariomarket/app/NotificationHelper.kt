@@ -90,7 +90,7 @@ object NotificationHelper {
         manager.cancel(id)
         val remaining = currentVisibleCount(context)
         if (remaining <= 0) manager.cancel(SUMMARY_ID) else showSummary(context, manager, remaining)
-        intent.removeExtra(EXTRA_NOTIFICATION_ID)
+        intent?.removeExtra(EXTRA_NOTIFICATION_ID)
     }
 
     private fun currentVisibleCount(context: Context): Int {
