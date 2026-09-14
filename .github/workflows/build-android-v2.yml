@@ -58,3 +58,5 @@ jobs:
 # Rebuild 3.9.4 with locally reset legacy message channel
 
 # Build 3.9.6: data-only FCM, reliable delivery ACK and accumulated launcher badge
+
+# Retry 3.9.6 after Kotlin nullable-intent fix
