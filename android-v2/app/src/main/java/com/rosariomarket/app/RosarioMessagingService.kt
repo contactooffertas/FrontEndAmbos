@@ -22,8 +22,10 @@ class RosarioMessagingService : FirebaseMessagingService() {
         val body = message.notification?.body ?: data["body"] ?: "Tenés un mensaje nuevo"
         val url = data["url"] ?: "/chatpage"
         val conversationId = data["conversationId"].orEmpty()
+        val messageId = data["messageId"].orEmpty()
+        if (messageId.isNotBlank()) FcmDelivery.acknowledge(this, messageId)
         val count = data["badgeCount"]?.toIntOrNull() ?: 1
-        NotificationHelper.showChat(this, title, body, url, conversationId, count)
+        NotificationHelper.showChat(this, title, body, url, conversationId, messageId, count)
     }
 }
 
@@ -35,6 +37,24 @@ object FcmRegistration {
             val json = JSONObject().put("token", token).put("platform", "android").toString()
             val request = Request.Builder().url("https://new-backend-lovat.vercel.app/api/push/fcm/register")
                 .header("Authorization", "Bearer $auth").post(json.toRequestBody("application/json".toMediaType())).build()
+            runCatching { client.newCall(request).execute().close() }
+        }.start()
+    }
+}
+
+
+object FcmDelivery {
+    private val client = OkHttpClient()
+    fun acknowledge(context: android.content.Context, messageId: String) {
+        val auth = context.getSharedPreferences("rm_push", android.content.Context.MODE_PRIVATE)
+            .getString("auth", "").orEmpty()
+        if (auth.isBlank()) return
+        Thread {
+            val request = Request.Builder()
+                .url("https://new-backend-lovat.vercel.app/api/chat/messages/$messageId/delivered")
+                .header("Authorization", "Bearer $auth")
+                .post("{}".toRequestBody("application/json".toMediaType()))
+                .build()
             runCatching { client.newCall(request).execute().close() }
         }.start()
     }
