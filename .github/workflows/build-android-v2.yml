@@ -86,3 +86,5 @@ jobs:
 # Retry 3.9.7 after Kotlin nullable-intent fix
 
 # Build 3.9.7: reliable closed-app push, geofence ENTER and badge cleanup
+
+# Rebuild 3.9.7 with legacy notification cleanup
