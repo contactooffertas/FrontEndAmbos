@@ -439,7 +439,21 @@ function FlashOfferOverlay({ products }: { products: Product[] }) {
 }
 
 function NearbyBusinessCard({ biz }: { biz: NearbyHomeBusiness }) {
-  return <Link href={`/negocio/${biz._id}`} className="nearby-home-card"><img decoding="async" src={logoUrl(biz.name, biz.logo)} alt={biz.name} className="nearby-home-card-logo" /><div className="nearby-home-card-info"><div className="nearby-home-card-name-row"><span className="nearby-home-card-name">{biz.name}</span>{biz.verified && <CheckCircle size={12} className="nearby-home-card-verified" />}</div><div className="nearby-home-card-distance"><Navigation size={11} /> {biz.distanceLabel}</div><div className="nearby-home-card-rating"><StarRow rating={biz.rating ?? 0} size={11} /><span className="nearby-home-card-rating-text">{(biz.rating ?? 0) > 0 ? biz.rating!.toFixed(1) : "Sin votos"}</span></div></div><ArrowRight size={16} className="nearby-home-card-arrow" /></Link>;
+  const coords = biz.location?.coordinates;
+  const routeHref = coords
+    ? `/recorrido/${biz._id}?lat=${coords[1]}&lng=${coords[0]}&name=${encodeURIComponent(biz.name)}`
+    : null;
+  return <div className="nearby-home-card">
+    <Link href={`/negocio/${biz._id}`} style={{ display: "contents", color: "inherit", textDecoration: "none" }}>
+      <img decoding="async" src={logoUrl(biz.name, biz.logo)} alt={biz.name} className="nearby-home-card-logo" />
+      <div className="nearby-home-card-info">
+        <div className="nearby-home-card-name-row"><span className="nearby-home-card-name">{biz.name}</span>{biz.verified && <CheckCircle size={12} className="nearby-home-card-verified" />}</div>
+        <div className="nearby-home-card-distance"><Navigation size={11} /> {biz.distanceLabel}</div>
+        <div className="nearby-home-card-rating"><StarRow rating={biz.rating ?? 0} size={11} /><span className="nearby-home-card-rating-text">{(biz.rating ?? 0) > 0 ? biz.rating!.toFixed(1) : "Sin votos"}</span></div>
+      </div>
+    </Link>
+    {routeHref ? <Link href={routeHref} title="Cómo llegar" aria-label={`Cómo llegar a ${biz.name}`} style={{ display:"grid",placeItems:"center",width:38,height:38,borderRadius:12,background:"rgba(249,115,22,.14)",color:"#f97316",flexShrink:0 }}><Navigation size={17}/></Link> : <ArrowRight size={16} className="nearby-home-card-arrow" />}
+  </div>;
 }
 
 function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius, onRadiusChange, onRequestLocation, live, radiusNotice }: { geoStatus: NearbyGeoStatus; businesses: NearbyHomeBusiness[]; loading: boolean; error: string; radius: number; onRadiusChange: (v: number) => void; onRequestLocation: () => void; live?: boolean; radiusNotice?: string }) {
