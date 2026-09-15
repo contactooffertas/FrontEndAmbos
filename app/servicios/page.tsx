@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
@@ -70,6 +70,7 @@ export default function ServiciosPage() {
     [formOpen, setFormOpen] = useState(false),
     [mine, setMine] = useState<any>(null),
     [saving, setSaving] = useState(false);
+  const panelOpened = useRef(false);
   const [profileArea, setProfileArea] = useState("technical");
   const [avatarPreview, setAvatarPreview] = useState("");
   const token =
@@ -110,6 +111,12 @@ export default function ServiciosPage() {
     setAvatarPreview(current.avatar || "");
     setFormOpen(true);
   };
+  useEffect(() => {
+    if (panelOpened.current || !user || typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("panel") !== "1") return;
+    panelOpened.current = true;
+    void openForm();
+  }, [user]);
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
