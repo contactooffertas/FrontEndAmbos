@@ -9,3 +9,13 @@
 .route-title h1{font-size:1.35rem}
 .route-stats div{background:#151e29;border-color:rgba(255,255,255,.09)}
 .route-near{background:#151e29}
+
+/* Leaflet global CSS collision guard: Home styles target generic .leaflet-* classes. */
+.route-leaflet .leaflet-pane,.route-leaflet .leaflet-tile,.route-leaflet .leaflet-marker-icon,.route-leaflet .leaflet-marker-shadow,.route-leaflet .leaflet-tile-container,.route-leaflet .leaflet-pane>svg,.route-leaflet .leaflet-pane>canvas{position:absolute!important;left:0;top:0}
+.route-leaflet .leaflet-tile{width:256px!important;height:256px!important;max-width:none!important;max-height:none!important;padding:0!important;margin:0!important;border:0!important;object-fit:fill!important}
+.route-leaflet .leaflet-tile-pane{z-index:200!important}
+.route-leaflet .leaflet-overlay-pane{z-index:400!important}
+.route-leaflet .leaflet-marker-pane{z-index:600!important}
+.route-leaflet .leaflet-tooltip-pane{z-index:650!important}
+.route-leaflet .leaflet-control{position:relative!important;z-index:800!important}
+.route-leaflet img{display:block}
