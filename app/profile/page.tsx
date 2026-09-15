@@ -12,6 +12,7 @@ import {
   LocateOff,
   Handshake,
   Trash2,
+  Wrench,
 } from "lucide-react";
 import MainLayout from "../componentes/MainLayout";
 import { useAuth } from "../context/authContext";
@@ -953,6 +954,7 @@ export default function ProfilePage() {
             <div className="profile-card">
               <h3>Accesos rápidos</h3>
               <div className="profile-quick-links">
+                {u.role === "user" && <Link href="/servicios?panel=1" className="btn btn-outline profile-quick-btn"><Wrench size={15} strokeWidth={1.75}/> Panel de mis servicios</Link>}
                 <Link href="/mis-productos" className="btn btn-outline profile-quick-btn"><Package size={15} strokeWidth={1.75}/> Mis productos</Link>
                 {u.businessId && <Link href={`/negocio?id=${u.businessId}`} className="btn btn-outline profile-quick-btn"><Store size={15} strokeWidth={1.75}/> Mi negocio</Link>}
                 <Link href={latestConvId&&totalUnread>0?`/chatpage?conversationId=${latestConvId}`:"/chatpage"} className="btn profile-quick-btn profile-chat-btn">
