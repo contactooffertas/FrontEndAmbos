@@ -63,18 +63,22 @@ export default function RecorridoPage() {
   const near=meters>0&&meters<=300;
   const distanceLabel=meters<1000?`${Math.round(meters)} m`:`${(meters/1000).toFixed(1)} km`;
   const minutes=Math.max(1,Math.round((route?.duration||meters/1.3)/60));
+  const center=user&&destination?{lat:(user.lat+destination.lat)/2,lng:(user.lng+destination.lng)/2}:destination;
+  const span=user&&destination?Math.max(Math.abs(user.lat-destination.lat),Math.abs(user.lng-destination.lng),0.003):0.006;
+  const bbox=center?`${center.lng-span},${center.lat-span},${center.lng+span},${center.lat+span}`:"";
+  const osmSrc=bbox?`https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${destination?.lat}%2C${destination?.lng}`:"";
 
   return <main className="route-page">
     <header className="route-header"><button onClick={()=>router.back()} aria-label="Volver"><ArrowLeft/></button><div><strong>Cómo llegar</strong><span>{name}</span></div></header>
     <section className="route-map">
-      <svg viewBox="0 0 1000 620" role="img" aria-label={`Recorrido hasta ${name}`}>
-        <defs><pattern id="grid" width="90" height="90" patternUnits="userSpaceOnUse"><path d="M 90 0 L 0 0 0 90" className="street-grid"/></pattern></defs>
-        <rect width="1000" height="620" className="map-bg"/><rect width="1000" height="620" fill="url(#grid)"/>
+      {osmSrc && <iframe className="route-osm" src={osmSrc} title={`Mapa hasta ${name}`} loading="eager" />}
+      <svg viewBox="0 0 1000 620" className="route-overlay" role="img" aria-label={`Recorrido hasta ${name}`}>
         {polyline&&<polyline points={polyline} className="route-line"/>}
-        {userXY&&<g transform={`translate(${userXY.x} ${userXY.y})`}><circle r="24" className="user-halo"/><circle r="11" className="user-dot"/><text y="-32" textAnchor="middle">Vos</text></g>}
-        {destXY&&<g transform={`translate(${destXY.x} ${destXY.y})`}><circle r="17" className="dest-dot"/><text y="-28" textAnchor="middle">{name.slice(0,22)}</text></g>}
+        {userXY&&<g transform={`translate(${userXY.x} ${userXY.y})`}><circle r="28" className="user-halo"/><circle r="12" className="user-dot"/><text y="-34" textAnchor="middle">Vos</text></g>}
+        {destXY&&<g transform={`translate(${destXY.x} ${destXY.y})`}><circle r="18" className="dest-dot"/><text y="-30" textAnchor="middle">{name.slice(0,22)}</text></g>}
       </svg>
       <div className="route-live"><Navigation size={14}/>{status}</div>
+      <div className="route-map-note">Mapa real · recorrido en vivo</div>
     </section>
     <section className="route-sheet">
       <div className="route-title"><div className="route-store-icon"><Store/></div><div><h1>{name}</h1><p><MapPin size={14}/> destino seleccionado</p></div></div>
