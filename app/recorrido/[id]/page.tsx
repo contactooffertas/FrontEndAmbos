@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, MapPin, Navigation, Store } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Store, Bus, Footprints, ExternalLink } from "lucide-react";
 import "../../styles/recorrido.css";
 
 type Point={lat:number;lng:number};
@@ -37,6 +37,7 @@ export default function RecorridoPage(){
   const name=search.get("name")||"Negocio";
   const [user,setUser]=useState<Point|null>(null),[route,setRoute]=useState<RouteData|null>(null);
   const [status,setStatus]=useState("Buscando tu ubicación…");
+  const [mode,setMode]=useState<"walk"|"bus">("walk");
   const watchRef=useRef<number|null>(null),mapEl=useRef<HTMLDivElement|null>(null),mapRef=useRef<any>(null);
   const userMarker=useRef<any>(null),destMarker=useRef<any>(null),routeLayer=useRef<any>(null),firstFit=useRef(true);
   const lastRoutedPoint=useRef<Point|null>(null);
@@ -102,12 +103,16 @@ export default function RecorridoPage(){
   const distanceLabel=meters<1000?`${Math.round(meters)} m`:`${(meters/1000).toFixed(1)} km`;
   const minutes=Math.max(1,Math.round((route?.duration||meters/1.3)/60));
 
+  const comoLlegoUrl=user&&destination?`https://www.google.com/maps/dir/?api=1&origin=${user.lat},${user.lng}&destination=${destination.lat},${destination.lng}&travelmode=transit`:"";
+
   return <main className="route-page">
     <header className="route-header"><button onClick={()=>router.back()} aria-label="Volver"><ArrowLeft/></button><div><strong>Cómo llegar</strong><span>{name}</span></div></header>
-    <section className="route-map"><div ref={mapEl} className="route-leaflet"/><div className="route-live"><Navigation size={14}/>{status}</div><div className="route-map-note">Ruta peatonal · ubicación en vivo</div></section>
+    <div className="route-mode-tabs"><button className={mode==="walk"?"active":""} onClick={()=>setMode("walk")}><Footprints size={17}/> Caminando</button><button className={mode==="bus"?"active":""} onClick={()=>setMode("bus")}><Bus size={17}/> Colectivo</button></div>
+    <section className="route-map"><div ref={mapEl} className="route-leaflet"/><div className="route-live"><Navigation size={14}/>{status}</div><div className="route-map-note">{mode==="walk"?"Ruta peatonal · ubicación en vivo":"Destino y ubicación listos"}</div></section>
     <section className="route-sheet">
       <div className="route-title"><div className="route-store-icon"><Store/></div><div><h1>{name}</h1><p><MapPin size={14}/> destino seleccionado</p></div></div>
-      {user&&destination&&<><div className="route-stats"><div><b>{distanceLabel}</b><span>distancia restante</span></div><div><b>~{minutes} min</b><span>caminando</span></div></div><div className={near?"route-near active":"route-near"}>{near?<><b>¡Estás cerca!</b><span>{name} está a {distanceLabel}.</span></>:<><b>Seguí acercándote</b><span>La ruta se actualiza con tu ubicación. Te avisamos al entrar en 300 m.</span></>}</div></>}
+      {user&&destination&&mode==="walk"&&<><div className="route-stats"><div><b>{distanceLabel}</b><span>distancia restante</span></div><div><b>~{minutes} min</b><span>caminando</span></div></div><div className={near?"route-near active":"route-near"}>{near?<><b>¡Estás cerca!</b><span>{name} está a {distanceLabel}.</span></>:<><b>Seguí acercándote</b><span>La ruta se actualiza con tu ubicación. Te avisamos al entrar en 300 m.</span></>}</div></>}
+      {user&&destination&&mode==="bus"&&<div className="route-transit-card"><div className="route-transit-head"><Bus size={22}/><div><b>Ir en colectivo</b><span>Desde tu ubicación hasta {name}</span></div></div><p>Usamos tu ubicación y la ubicación exacta del negocio. Tocá el botón para ver líneas, combinaciones, paradas y horarios disponibles para este viaje.</p><a href={comoLlegoUrl} target="_blank" rel="noopener noreferrer" className="route-transit-btn"><Bus size={17}/> Ver opciones de colectivo <ExternalLink size={15}/></a><small>Vista de prueba. Rosario Market no inventa líneas: las opciones de transporte se consultan al momento de abrir el viaje.</small></div>}
       <button className="route-store-btn" onClick={()=>router.push(`/negocio/${params.id}`)}>Ver tienda</button>
     </section>
   </main>
