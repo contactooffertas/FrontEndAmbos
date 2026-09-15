@@ -23,6 +23,16 @@ function getToken(): string | null {
   return localStorage.getItem("marketplace_token");
 }
 
+function syncNativePushToken(token?: string | null) {
+  if (typeof window === "undefined") return;
+  const authToken = token ?? getToken();
+  const nativePush = (window as Window & {
+    RosarioMarketPush?: { registerAuthToken?: (value: string) => void };
+  }).RosarioMarketPush;
+  if (!authToken || typeof nativePush?.registerAuthToken !== "function") return;
+  nativePush.registerAuthToken(authToken);
+}
+
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 export interface AuthUser {
   id:                   string;
@@ -63,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem("marketplace_user");
       if (stored) setUser(JSON.parse(stored));
+      syncNativePushToken();
     } catch {}
     setLoading(false);
   }, []);
@@ -111,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) return { success: false, message: data.message || "Error al iniciar sesión" };
 
       localStorage.setItem("marketplace_token", data.token);
+      syncNativePushToken(data.token);
 
       const u = data.user;
       const formattedUser: AuthUser = {
