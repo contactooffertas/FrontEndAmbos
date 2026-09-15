@@ -39,6 +39,7 @@ export default function RecorridoPage(){
   const [status,setStatus]=useState("Buscando tu ubicación…");
   const watchRef=useRef<number|null>(null),mapEl=useRef<HTMLDivElement|null>(null),mapRef=useRef<any>(null);
   const userMarker=useRef<any>(null),destMarker=useRef<any>(null),routeLayer=useRef<any>(null),firstFit=useRef(true);
+  const lastRoutedPoint=useRef<Point|null>(null);
 
   useEffect(()=>{
     if(!destination){setStatus("Este negocio todavía no tiene ubicación cargada.");return;}
@@ -53,6 +54,13 @@ export default function RecorridoPage(){
 
   useEffect(()=>{
     if(!user||!destination)return;
+    // Keep the blue GPS marker live, but only ask the routing service again
+    // after a meaningful displacement. This avoids route requests caused by
+    // normal GPS jitter while the person is standing still.
+    const previous=lastRoutedPoint.current;
+    if(previous && haversine(previous,user)<25)return;
+    lastRoutedPoint.current=user;
+
     const controller=new AbortController();
     const url=`https://routing.openstreetmap.de/routed-foot/route/v1/driving/${user.lng},${user.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson&steps=true`;
     fetch(url,{signal:controller.signal}).then(x=>x.ok?x.json():Promise.reject(new Error("route")))
