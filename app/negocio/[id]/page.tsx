@@ -729,15 +729,14 @@ export default function NegocioPublicoPage() {
                 {businessAddress}
               </span>
               {hasVerifiedLocation && (
-                <a
-                  href={`https://www.google.com/maps?q=${business?.location?.coordinates[1]},${business?.location?.coordinates[0]}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => router.push(`/recorrido/${business!._id}?lat=${business!.location!.coordinates[1]}&lng=${business!.location!.coordinates[0]}&name=${encodeURIComponent(business!.name)}`)}
                   className="nid-meta-item"
-                  style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem", textDecoration: "none", cursor: "pointer" }}
+                  style={{ color: "#4ade80", fontWeight: 600, fontSize: "0.75rem", textDecoration: "none", cursor: "pointer", background: "transparent", border: 0, padding: 0 }}
                 >
-                  <Navigation size={11} /> Ver en Maps
-                </a>
+                  <Navigation size={11} /> Cómo llegar
+                </button>
               )}
               <span className="nid-meta-item nid-meta-item--bold">
                 <Users size={13} />
