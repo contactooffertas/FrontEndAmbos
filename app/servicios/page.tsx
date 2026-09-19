@@ -38,6 +38,36 @@ const CARE = [
   "Cuidador/a de adulto mayor",
   "Cuidado de pacientes",
 ];
+type RelatedBusiness = {
+  _id: string;
+  name: string;
+  logo?: string;
+  description?: string;
+  address?: string;
+  categories?: string[];
+  rating?: number;
+  distanceMeters?: number;
+  distanceLabel?: string;
+};
+
+const RELATED_BUSINESS_SEARCH: Record<string, string> = {
+  Electricista: "casa de electricidad ferreteria materiales electricos",
+  Gasista: "ferreteria sanitarios gas",
+  Plomero: "sanitarios ferreteria plomeria",
+  Cerrajero: "cerrajeria ferreteria",
+  "Refrigeración": "repuestos refrigeracion aire acondicionado",
+  "Técnico": "tecnologia electronica repuestos",
+  "Albañil": "corralon materiales construccion ferreteria",
+  Pintor: "pintureria pinturas ferreteria",
+  Jardinero: "vivero jardineria herramientas",
+  Limpieza: "productos de limpieza",
+  "Gerontólogo/a": "farmacia ortopedia insumos medicos",
+  "Acompañante terapéutico": "farmacia ortopedia insumos medicos",
+  "Enfermero/a": "farmacia ortopedia insumos medicos",
+  "Cuidador/a de adulto mayor": "farmacia ortopedia insumos medicos",
+  "Cuidado de pacientes": "farmacia ortopedia insumos medicos",
+};
+
 type Provider = {
   _id: string;
   displayName: string;
@@ -70,7 +100,9 @@ export default function ServiciosPage() {
     [loading, setLoading] = useState(true),
     [formOpen, setFormOpen] = useState(false),
     [mine, setMine] = useState<any>(null),
-    [saving, setSaving] = useState(false);
+    [saving, setSaving] = useState(false),
+    [relatedBusinesses, setRelatedBusinesses] = useState<RelatedBusiness[]>([]),
+    [relatedLoading, setRelatedLoading] = useState(false);
   const panelOpened = useRef(false);
   const [profileArea, setProfileArea] = useState("technical");
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -78,6 +110,49 @@ export default function ServiciosPage() {
     typeof window !== "undefined"
       ? localStorage.getItem("marketplace_token")
       : null;
+  const getSelectedSpecialty = () => {
+    if (trade) return trade;
+    const normalized = q.trim().toLowerCase();
+    return [...CARE, ...TRADES].find((item) => {
+      const base = item.toLowerCase().replace("/a", "");
+      return normalized.includes(base) || base.includes(normalized);
+    }) || "";
+  };
+
+  const loadRelatedBusinesses = async () => {
+    const specialty = getSelectedSpecialty();
+    const relatedSearch = RELATED_BUSINESS_SEARCH[specialty];
+    if (!relatedSearch || typeof navigator === "undefined" || !navigator.geolocation) {
+      setRelatedBusinesses([]);
+      return;
+    }
+    setRelatedLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const params = new URLSearchParams({
+            lat: String(coords.latitude),
+            lng: String(coords.longitude),
+            radius: "5000",
+            search: relatedSearch,
+          });
+          const response = await fetch(`${API}/business/nearby?${params}`, { cache: "no-store" });
+          const data = response.ok ? await response.json() : [];
+          setRelatedBusinesses(Array.isArray(data) ? data.slice(0, 6) : []);
+        } catch {
+          setRelatedBusinesses([]);
+        } finally {
+          setRelatedLoading(false);
+        }
+      },
+      () => {
+        setRelatedBusinesses([]);
+        setRelatedLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 10 * 60 * 1000 },
+    );
+  };
+
   const load = async () => {
     setLoading(true);
     try {
@@ -87,6 +162,7 @@ export default function ServiciosPage() {
       );
       const d = await r.json();
       setProfiles(d.profiles || []);
+      void loadRelatedBusinesses();
     } finally {
       setLoading(false);
     }
@@ -417,6 +493,38 @@ export default function ServiciosPage() {
               </Link>
             ))}
           </div>
+        )}
+        {(relatedLoading || relatedBusinesses.length > 0) && (
+          <section style={{ marginTop: 28 }}>
+            <div className="services-heading">
+              <div>
+                <h2>Negocios relacionados cerca</h2>
+                <p>Opciones complementarias al servicio que buscaste. No se mezclan con los prestadores.</p>
+              </div>
+            </div>
+            {relatedLoading ? (
+              <div className="services-empty">Buscando negocios relacionados cerca…</div>
+            ) : (
+              <div className="provider-grid">
+                {relatedBusinesses.map((business) => (
+                  <Link href={`/negocio/${business._id}`} className="provider-card" key={business._id}>
+                    <div className="provider-cover">
+                      <img src={business.logo || "/assets/offerton.jpg"} alt={business.name} />
+                    </div>
+                    <div className="provider-body">
+                      <div className="provider-name"><h3>{business.name}</h3></div>
+                      <p className="provider-headline">{business.description || "Negocio relacionado"}</p>
+                      <div className="provider-meta">
+                        <span><Star /> {business.rating ? Number(business.rating).toFixed(1) : "Nuevo"}</span>
+                        {business.distanceLabel && <span>{business.distanceLabel}</span>}
+                      </div>
+                      <div className="provider-location"><MapPin />{business.address || "Rosario"}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         )}
         {formOpen && (
           <div
