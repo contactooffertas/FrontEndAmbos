@@ -88,7 +88,7 @@ export default function RegisterPage() {
           name:              form.name,
           email:             form.email,
           password:          form.password,
-          role:              form.role,
+          role:              form.role === "service" ? "user" : form.role,
           terminosAceptados: true,
         }),
       });
@@ -103,7 +103,7 @@ export default function RegisterPage() {
           confirmButtonText:  "Verificar ahora",
           confirmButtonColor: "#2563eb",
         });
-        router.replace(`/verify?email=${encodeURIComponent(form.email)}`);
+        router.replace(`/verify?email=${encodeURIComponent(form.email)}${form.role === "service" ? "&intent=service" : ""}`);
       } else {
         Swal.fire({
           icon:  "error",
