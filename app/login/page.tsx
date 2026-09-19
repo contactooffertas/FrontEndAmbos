@@ -70,7 +70,9 @@ export default function LoginPage() {
           timer: 1500,
           showConfirmButton: false,
         });
-        router.push("/");
+        const postLoginRedirect = localStorage.getItem("post_login_redirect");
+        if (postLoginRedirect) localStorage.removeItem("post_login_redirect");
+        router.push(postLoginRedirect || "/");
       }
     } else {
       Swal.fire({
