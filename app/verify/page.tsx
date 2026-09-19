@@ -13,11 +13,12 @@ function VerifyContent() {
   const [message, setMessage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(60);
+  const [resending, setResending] = useState<boolean>(false);
 
   useEffect(() => {
     const emailFromUrl = searchParams?.get("email");
     if (emailFromUrl) {
-      setEmail(emailFromUrl);
+      setEmail(emailFromUrl.trim().toLowerCase());
     }
   }, [searchParams]);
 
@@ -62,16 +63,29 @@ function VerifyContent() {
   };
 
   const handleResend = async () => {
+    if (!email || resending) return;
+    setResending(true);
+    setMessage("");
+
     try {
-      await fetch("https://new-backend-lovat.vercel.app/api/auth/resend", {
+      const res = await fetch("https://new-backend-lovat.vercel.app/api/auth/resend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
+      const data: { message?: string } = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setMessage(data.message ?? `No se pudo reenviar el código (HTTP ${res.status})`);
+        return;
+      }
+
       setTimer(60);
-      setMessage("Nuevo código enviado 📩");
+      setMessage(data.message ?? "Nuevo código enviado 📩");
     } catch {
-      setMessage("Error al reenviar código");
+      setMessage("No se pudo conectar con el servidor para reenviar el código");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -105,8 +119,8 @@ function VerifyContent() {
           {timer > 0 ? (
             <span>Reenviar código en {timer}s</span>
           ) : (
-            <button className="resend-button" onClick={handleResend}>
-              Reenviar código
+            <button className="resend-button" onClick={handleResend} disabled={resending}>
+              {resending ? "Enviando..." : "Reenviar código"}
             </button>
           )}
         </div>
