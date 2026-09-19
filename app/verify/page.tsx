@@ -47,6 +47,9 @@ function VerifyContent() {
         setMessage(data.message ?? "Error al verificar");
       } else {
         setMessage("Cuenta verificada correctamente ✅");
+        if (searchParams?.get("intent") === "service") {
+          localStorage.setItem("post_login_redirect", "/servicios?panel=1");
+        }
         setTimeout(() => {
           router.push("/login");
         }, 2000);
