@@ -16,6 +16,7 @@ import {
   Rocket,
   Eye,
   EyeOff,
+  Wrench,
 } from "lucide-react";
 
 export default function RegisterPage() {
@@ -169,7 +170,14 @@ export default function RegisterPage() {
                 onClick={() => set("role", "seller")}
               >
                 <div className="role-option-icon"><Store size={18} /></div>
-                Vendedor
+                Negocio
+              </div>
+              <div
+                className={`role-option ${form.role === "service" ? "selected" : ""}`}
+                onClick={() => set("role", "service")}
+              >
+                <div className="role-option-icon"><Wrench size={18} /></div>
+                Prestador de servicio
               </div>
             </div>
           </div>
