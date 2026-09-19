@@ -6,7 +6,8 @@ import MainLayout from "../../componentes/MainLayout";
 import Swal from "sweetalert2";
 import {
   BadgeCheck,
-  Building2,
+  ArrowRight,
+  Navigation,
   Clock3,
   MapPin,
   MessageCircle,
@@ -58,11 +59,14 @@ export default function ServiceDetail() {
     <MainLayout>
       <div className="service-detail">
         <section className="profile-panel">
-          <img
-            className="profile-avatar"
-            src={p.avatar || p.owner?.avatar || "/assets/offerton.jpg"}
-            alt={p.displayName}
-          />
+          <div className="profile-photo-wrap">
+            <img
+              className="profile-avatar"
+              src={p.avatar || p.owner?.avatar || "/assets/offerton.jpg"}
+              alt={p.displayName}
+            />
+            <span className="profile-type">Profesional</span>
+          </div>
           <div className="profile-main">
             <div className="provider-name">
               <h1>{p.displayName}</h1>
@@ -93,11 +97,15 @@ export default function ServiceDetail() {
             </div>
           </div>
           <aside className="contact-box">
+            <div className="contact-box-title">
+              <b>Contactar a {p.displayName}</b>
+              <span>Consultá disponibilidad y condiciones directamente.</span>
+            </div>
             {p.availableNow && (
               <b className="available-inline">Disponible ahora</b>
             )}
             <button onClick={() => void chat()}>
-              <MessageCircle /> Escribir por chat
+              <MessageCircle /> Enviar mensaje
             </button>
             {wa && p.contactPreference !== "chat" && (
               <a
@@ -140,15 +148,16 @@ export default function ServiceDetail() {
               Solo mostramos ferreterías y negocios compatibles con el trabajo
               de este profesional.
             </p>
-            <div className="recommended-grid">
+            <div className="nearby-business-list">
               {data.recommendedBusinesses.map((b: any) => (
-                <Link href={`/negocio/${b._id}`} key={b._id}>
+                <Link href={`/negocio/${b._id}`} key={b._id} className="nearby-business-row">
                   <img src={b.logo || "/assets/navbarbolsa.png"} alt="" />
-                  <div>
+                  <div className="nearby-business-copy">
                     <b>{b.name}</b>
-                    <span>{b.categories?.join(" · ")}</span>
+                    <span>{b.categories?.join(" · ") || "Negocio relacionado"}</span>
+                    {b.distanceLabel && <small><Navigation /> {b.distanceLabel}</small>}
                   </div>
-                  <Building2 />
+                  <span className="nearby-business-go" aria-label="Ver negocio"><ArrowRight /></span>
                 </Link>
               ))}
             </div>
