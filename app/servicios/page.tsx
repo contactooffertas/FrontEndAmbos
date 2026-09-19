@@ -10,6 +10,8 @@ import {
   Clock3,
   HeartPulse,
   MapPin,
+  ArrowRight,
+  Navigation,
   Search,
   ShieldCheck,
   Star,
@@ -505,21 +507,19 @@ export default function ServiciosPage() {
             {relatedLoading ? (
               <div className="services-empty">Buscando negocios relacionados cerca…</div>
             ) : (
-              <div className="provider-grid">
+              <div className="nearby-business-list">
                 {relatedBusinesses.map((business) => (
-                  <Link href={`/negocio/${business._id}`} className="provider-card" key={business._id}>
-                    <div className="provider-cover">
-                      <img src={business.logo || "/assets/offerton.jpg"} alt={business.name} />
+                  <Link href={`/negocio/${business._id}`} className="nearby-business-row" key={business._id}>
+                    <img src={business.logo || "/assets/offerton.jpg"} alt={business.name} />
+                    <div className="nearby-business-copy">
+                      <b>{business.name}</b>
+                      <span>{business.categories?.slice(0, 2).join(" · ") || "Negocio relacionado"}</span>
+                      <small>
+                        <Navigation />
+                        {business.distanceLabel || business.address || "Rosario"}
+                      </small>
                     </div>
-                    <div className="provider-body">
-                      <div className="provider-name"><h3>{business.name}</h3></div>
-                      <p className="provider-headline">{business.description || "Negocio relacionado"}</p>
-                      <div className="provider-meta">
-                        <span><Star /> {business.rating ? Number(business.rating).toFixed(1) : "Nuevo"}</span>
-                        {business.distanceLabel && <span>{business.distanceLabel}</span>}
-                      </div>
-                      <div className="provider-location"><MapPin />{business.address || "Rosario"}</div>
-                    </div>
+                    <span className="nearby-business-go" aria-label="Ver negocio"><ArrowRight /></span>
                   </Link>
                 ))}
               </div>
