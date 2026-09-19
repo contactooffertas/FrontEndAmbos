@@ -32,6 +32,7 @@ const TRADES = [
   "Limpieza",
 ];
 const CARE = [
+  "Gerontólogo/a",
   "Acompañante terapéutico",
   "Enfermero/a",
   "Cuidador/a de adulto mayor",
