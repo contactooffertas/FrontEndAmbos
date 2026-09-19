@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, WifiOff, ShoppingBag } from "lucide-react";
 
 const API = "https://new-backend-lovat.vercel.app/api";
-const CHECK_EVERY_MS = 20000;
-const FIRST_CHECK_DELAY_MS = 8000;
+const CHECK_EVERY_MS = 5 * 60 * 1000;
+const FIRST_CHECK_DELAY_MS = 150;
 const FAILURES_BEFORE_OUTAGE = 3;
 
 export default function ApiHealthGuard({ children }: { children: React.ReactNode }) {
@@ -59,9 +59,7 @@ export default function ApiHealthGuard({ children }: { children: React.ReactNode
     failures.current = 0;
     setOutage(false);
 
-    // No evaluamos el backend apenas entra el usuario. En móviles y en cold starts
-    // Vercel puede tardar unos segundos en despertar y eso daba una falsa sensación
-    // de caída antes de que la app tuviera tiempo de cargar normalmente.
+    // Precalentamos la API apenas abre la app y luego comprobamos con baja frecuencia.\n    // El chequeo corre en paralelo: no bloquea el render ni obliga al usuario a esperar.
     const firstCheck = window.setTimeout(() => void checkApi(), FIRST_CHECK_DELAY_MS);
     const interval = window.setInterval(() => void checkApi(), CHECK_EVERY_MS);
     const onOnline = () => {
