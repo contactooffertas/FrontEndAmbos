@@ -59,7 +59,7 @@ const CUSTOM_ICONS = {
   ShoppingBag: ShoppingBagWebp,
   PawPrint: PawPrintWebp,
   Servicios: ServiciosWebp,
-  Lavaderia: LavanderiaWebp,
+  Lavanderia: LavanderiaWebp,
 } as const;
 
 const WebpIcon = ({ src, size = 24, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
