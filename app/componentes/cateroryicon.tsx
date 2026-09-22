@@ -23,6 +23,7 @@ import BookOpenWebp from "./icons/BookOpen.png";
 import PawPrintWebp from "./icons/PawPrint.png";
 import ShoppingBagWebp from "./icons/Plate.png";
 import ServiciosWebp from "./icons/Servicios.svg";
+import LavanderiaWebp from "./icons/lavanderia.png";
 
 type LucideIcon = React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
@@ -58,6 +59,7 @@ const CUSTOM_ICONS = {
   ShoppingBag: ShoppingBagWebp,
   PawPrint: PawPrintWebp,
   Servicios: ServiciosWebp,
+  Lavaderia: LavanderiaWebp,
 } as const;
 
 const WebpIcon = ({ src, size = 24, style }: { src: { src: string }; size?: number | string; style?: React.CSSProperties }) => (
