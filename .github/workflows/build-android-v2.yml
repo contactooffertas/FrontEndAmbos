@@ -92,3 +92,5 @@ jobs:
 # Build 4.0.0: fix notification deep links and clear accumulated badge
 
 # Rebuild 4.0.0: native geofence refresh independent from WebView startup
+
+# Build 4.0.0 final: geofence background improvements + corrected app version
