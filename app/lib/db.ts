@@ -69,7 +69,7 @@ export const categories: Category[] = [
   { id: '9',  name: 'Juguetes',        iconName: 'Gift',         slug: 'juguetes'       },
   { id: '10', name: 'Libros',          iconName: 'BookOpen',     slug: 'libros'         },
   { id: '11', name: 'Mascotas',        iconName: 'PawPrint',     slug: 'mascotas'       },
-  { id: '13', name: 'Lavandería',       iconName: 'WashingMachine', slug: 'lavanderia'     },
+  { id: '13', name: 'Lavandería',       iconName: 'Lavanderia', slug: 'lavanderia'     },
 ];
 
 // ── BUSINESSES ────────────────────────────────────────────────────────────────
