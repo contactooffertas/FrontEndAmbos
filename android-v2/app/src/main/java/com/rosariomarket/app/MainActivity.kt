@@ -258,6 +258,9 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl(NotificationHelper.normalizeTargetUrl(intent.getStringExtra("url")))
 
         GeofenceManager.scheduleRefresh(this)
+        // Re-register native geofences on app start as a fallback; ENTER alerts
+        // themselves are delivered by Android even when the WebView is closed.
+        GeofenceManager.refresh(this)
     }
 
     override fun onNewIntent(intent: Intent) {
