@@ -1906,3 +1906,148 @@
   position: relative;
   z-index: 0 !important;
 }
+
+
+/* HOME 2026 — cercanía primero, manteniendo identidad Rosario Market */
+.nearby-home-card {
+  position: relative;
+  align-items: stretch;
+  padding: .85rem;
+  border-color: rgba(249,115,22,.16);
+  box-shadow: 0 6px 20px rgba(15,23,42,.06);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.nearby-home-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(249,115,22,.42);
+  box-shadow: 0 10px 28px rgba(15,23,42,.1);
+}
+.nearby-home-card-main {
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  min-width:0;
+  flex:1;
+  color:inherit;
+  text-decoration:none;
+}
+.nearby-home-card-logo {
+  width:64px;
+  height:64px;
+  border-radius:16px;
+  border:1px solid rgba(15,23,42,.08);
+}
+.nearby-home-card-name { font-size:.94rem; }
+.nearby-home-card-distance {
+  width:max-content;
+  margin-top:4px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:rgba(34,197,94,.09);
+  color:#15803d;
+}
+.nearby-home-card-category {
+  margin-top:4px;
+  color:#475569;
+  font-size:.72rem;
+  font-weight:700;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.nearby-home-card-address {
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin-top:3px;
+  color:#64748b;
+  font-size:.7rem;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.nearby-route-btn {
+  align-self:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:40px;
+  padding:0 12px;
+  border-radius:11px;
+  background:linear-gradient(135deg,#f97316,#ea580c);
+  color:#fff;
+  font-size:.74rem;
+  font-weight:800;
+  text-decoration:none;
+  white-space:nowrap;
+  box-shadow:0 5px 14px rgba(249,115,22,.22);
+}
+.nearby-route-btn--secondary {
+  background:#fff7ed;
+  color:#c2410c;
+  box-shadow:none;
+  border:1px solid rgba(249,115,22,.22);
+}
+#negocios-cerca {
+  margin-top:1rem;
+  border-radius:22px;
+  background:linear-gradient(180deg,rgba(255,247,237,.72),rgba(255,255,255,0));
+}
+#negocios-cerca .section-title-icon {
+  background:rgba(249,115,22,.12);
+  color:#f97316;
+  border-radius:10px;
+  padding:6px;
+}
+.hero-tag {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.hero-actions .btn-primary {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+.categories-grid {
+  gap:.7rem;
+}
+.category-card {
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.category-card:hover {
+  transform:translateY(-2px);
+  border-color:rgba(249,115,22,.35);
+  box-shadow:0 6px 18px rgba(15,23,42,.06);
+}
+@media (max-width:700px) {
+  #negocios-cerca { border-radius:18px; }
+  .nearby-home-card {
+    display:grid;
+    grid-template-columns:1fr;
+    gap:.7rem;
+  }
+  .nearby-home-card-logo {
+    width:58px;
+    height:58px;
+  }
+  .nearby-route-btn {
+    width:100%;
+    min-height:42px;
+  }
+  .nearby-home-card-address { max-width:72vw; }
+  .categories-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:.55rem;
+  }
+  .category-card {
+    min-width:0;
+    padding:.75rem .35rem;
+  }
+  .category-name {
+    font-size:.72rem;
+    text-align:center;
+  }
+}
