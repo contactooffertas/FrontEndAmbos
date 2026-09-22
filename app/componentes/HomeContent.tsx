@@ -443,17 +443,19 @@ function NearbyBusinessCard({ biz }: { biz: NearbyHomeBusiness }) {
   const routeHref = coords
     ? `/recorrido/${biz._id}?lat=${coords[1]}&lng=${coords[0]}&name=${encodeURIComponent(biz.name)}`
     : null;
-  return <div className="nearby-home-card">
-    <Link href={`/negocio/${biz._id}`} style={{ display: "contents", color: "inherit", textDecoration: "none" }}>
+  return <article className="nearby-home-card">
+    <Link href={`/negocio/${biz._id}`} className="nearby-home-card-main">
       <img decoding="async" src={logoUrl(biz.name, biz.logo)} alt={biz.name} className="nearby-home-card-logo" />
       <div className="nearby-home-card-info">
         <div className="nearby-home-card-name-row"><span className="nearby-home-card-name">{biz.name}</span>{biz.verified && <CheckCircle size={12} className="nearby-home-card-verified" />}</div>
-        <div className="nearby-home-card-distance"><Navigation size={11} /> {biz.distanceLabel}</div>
-        <div className="nearby-home-card-rating"><StarRow rating={biz.rating ?? 0} size={11} /><span className="nearby-home-card-rating-text">{(biz.rating ?? 0) > 0 ? biz.rating!.toFixed(1) : "Sin votos"}</span></div>
+        <div className="nearby-home-card-distance"><Navigation size={12} /> A {biz.distanceLabel}</div>
+        {biz.categories?.length ? <div className="nearby-home-card-category">{biz.categories.slice(0, 2).join(" · ")}</div> : null}
+        {biz.address && <div className="nearby-home-card-address"><MapPin size={11} />{biz.address}</div>}
+        <div className="nearby-home-card-rating"><StarRow rating={biz.rating ?? 0} size={11} /><span className="nearby-home-card-rating-text">{(biz.rating ?? 0) > 0 ? `${biz.rating!.toFixed(1)} · Ver negocio` : "Ver negocio"}</span></div>
       </div>
     </Link>
-    {routeHref ? <Link href={routeHref} title="Cómo llegar" aria-label={`Cómo llegar a ${biz.name}`} style={{ display:"grid",placeItems:"center",width:38,height:38,borderRadius:12,background:"rgba(249,115,22,.14)",color:"#f97316",flexShrink:0 }}><Navigation size={17}/></Link> : <ArrowRight size={16} className="nearby-home-card-arrow" />}
-  </div>;
+    {routeHref ? <Link href={routeHref} className="nearby-route-btn" title="Cómo llegar" aria-label={`Cómo llegar a ${biz.name}`}><Navigation size={16}/><span>Cómo llegar</span></Link> : <Link href={`/negocio/${biz._id}`} className="nearby-route-btn nearby-route-btn--secondary"><span>Ver negocio</span><ArrowRight size={15}/></Link>}
+  </article>;
 }
 
 function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius, onRadiusChange, onRequestLocation, live, radiusNotice }: { geoStatus: NearbyGeoStatus; businesses: NearbyHomeBusiness[]; loading: boolean; error: string; radius: number; onRadiusChange: (v: number) => void; onRequestLocation: () => void; live?: boolean; radiusNotice?: string }) {
@@ -523,7 +525,7 @@ function NearbyBusinessesSection({ geoStatus, businesses, loading, error, radius
       <div className="nearby-section-header">
         <div className="nearby-section-header-text">
           <h2 className="section-title"><span className="section-title-icon"><Navigation size={20} strokeWidth={2} /></span>Negocios cerca tuyo</h2>
-          <p className="section-subtitle">{geoStatus === "ok" ? <>{businesses.length} negocio{businesses.length !== 1 ? "s" : ""} - {radiusLabel} a la redonda{live && <span style={{ marginLeft: 8, color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>● en vivo</span>}</> : "Descubrí negocios cerca de tu ubicación, sin entrar a tu perfil"}</p>
+          <p className="section-subtitle">{geoStatus === "ok" ? <>{businesses.length} negocio{businesses.length !== 1 ? "s" : ""} - {radiusLabel} a la redonda{live && <span style={{ marginLeft: 8, color: "#4ade80", fontSize: "0.7rem", fontWeight: 700 }}>● en vivo</span>}</> : "Encontrá un comercio cercano y llegá desde Rosario Market"}</p>
         </div>
         {geoStatus === "ok" && (
           <div className="nearby-radius-group">
@@ -870,7 +872,7 @@ function HeroSmartSearch({ initialValue = "" }: { initialValue?: string }) {
 }
 
 function HomeHero({ showRegister = true, children, searchValue = "" }: { showRegister?: boolean; children?: React.ReactNode; searchValue?: string }) {
-  return (<section className="hero"><div className="hero-inner"><div className="hero-copy"><div className="hero-tag">Ofertas exclusivas hoy</div><h1>Las mejores<br /><em>ofertas</em> cerca tuyo</h1><p className="hero-desc">Descubrí productos increíbles de negocios verificados. Filtrá por categoría y ubicación.</p><div className="hero-actions"><button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("offers")?.scrollIntoView({ behavior: "smooth" })}>Ver ofertas</button>{showRegister && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}</div><HeroSmartSearch initialValue={searchValue} />{/* Estadísticas futuras: productos, negocios y 98% satisfacción. Mantener comentado hasta tener volumen real. */}</div>{children}</div></section>);
+  return (<section className="hero"><div className="hero-inner"><div className="hero-copy"><div className="hero-tag"><MapPin size={14} /> Rosario cerca tuyo</div><h1>Encontrá lo que buscás<br /><em>cerca de vos</em></h1><p className="hero-desc">Productos, negocios y servicios de Rosario. Encontrá una opción cercana y llegá desde la misma app.</p><div className="hero-actions"><button className="btn btn-primary" style={{ fontSize: "0.95rem", padding: "0.75rem 1.75rem" }} onClick={() => document.getElementById("negocios-cerca")?.scrollIntoView({ behavior: "smooth" })}><Navigation size={16} /> Ver cerca mío</button>{showRegister && <a href="/register" className="btn btn-outline" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>Registrarse gratis</a>}</div><HeroSmartSearch initialValue={searchValue} />{/* Estadísticas futuras: productos, negocios y 98% satisfacción. Mantener comentado hasta tener volumen real. */}</div>{children}</div></section>);
 }
 
 function HomePageBody() {
