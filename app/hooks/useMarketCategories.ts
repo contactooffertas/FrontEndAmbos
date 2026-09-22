@@ -6,9 +6,13 @@ import { categories as FALLBACK_CATEGORIES, type Category } from "../lib/db";
 const API = "https://new-backend-lovat.vercel.app/api";
 
 function iconForSlug(slug: string, backendIcon?: string) {
-  if (slug === "electronica") return "Electronica";
-  if (slug === "tecnologia") return "Monitor";
-  return backendIcon || "Tag";
+  const normalized = String(slug || "").trim().toLowerCase();
+  const forcedIcons: Record<string, string> = {
+    electronica: "Electronica",
+    tecnologia: "Monitor",
+    lavanderia: "Lavanderia",
+  };
+  return forcedIcons[normalized] || backendIcon || "Tag";
 }
 
 export function useMarketCategories() {
