@@ -7,7 +7,7 @@ import { useAuth } from '../context/authContext';
 import {
   LayoutDashboard, Users, Store, Shield, Ban,
   CheckCircle, XCircle, Search, Trash2, Package,
-  Clock, AlertTriangle, Crown, RefreshCw, LogOut,
+  Clock, AlertTriangle, Crown, RefreshCw, LogOut, Truck,
   X, ChevronRight, CreditCard, Tag, ChevronDown,
   Flag, AlertOctagon, ShieldAlert, Eye, EyeOff,
   TrendingUp, Star, Lock, Send, MessageSquare,
@@ -45,7 +45,9 @@ async function apiDirectFetch(path: string, opts: RequestInit = {}) {
   return data;
 }
 
-type Tab = 'dashboard' | 'funnel' | 'search-dictionary' | 'users' | 'businesses' | 'featured-biz' | 'featured-products' | 'reports' | 'product-reviews' | 'subscribers' | 'announcements' | 'business-appeals';
+type Tab = 'dashboard' | 'funnel' | 'search-dictionary' | 'users' | 'businesses' | 'featured-biz' | 'featured-products' | 'reports' | 'product-reviews' | 'subscribers' | 'announcements' | 'business-appeals' | 'delivery-review';
+
+interface DeliveryReviewRow { _id: string; businessName?: string; shippedAt?: string; deliveryReviewRequestedAt?: string; deliveryReviewReason?: string; user?: { name?: string; email?: string }; businessId?: { name?: string; phone?: string }; }
 
 interface Stats { totalUsers: number; totalBusinesses: number; totalProducts: number; activeFeaturedBiz: number; activeFeaturedProducts: number; blockedUsers: number; blockedBusinesses: number; recentUsers: any[]; }
 interface UserRow { _id: string; name: string; email: string; role: string; blocked?: boolean; createdAt: string; }
@@ -129,6 +131,7 @@ export default function AdminPage() {
     return saved || 'dashboard';
   });
   const [stats, setStats]           = useState<Stats | null>(null);
+  const [deliveryReviews, setDeliveryReviews] = useState<DeliveryReviewRow[]>([]);
   const [users, setUsers]           = useState<UserRow[]>([]);
   const [businesses, setBusinesses] = useState<BusinessRow[]>([]);
   const [featuredBiz, setFeaturedBiz]     = useState<FeaturedBizRow[]>([]);
@@ -242,6 +245,23 @@ export default function AdminPage() {
   }, []);
 
   const loadStats       = useCallback(async () => { try { setStats(await apiFetch('/stats')); } catch (e: any) { toast('error', e.message); } }, []);
+  const loadDeliveryReviews = useCallback(async () => { try { setDeliveryReviews(await apiFetch('/orders/delivery-review')); } catch (e: any) { toast('error', e.message); } }, []);
+  const completeDelivery = async (orderId: string) => {
+    const Swal = (await import('sweetalert2')).default;
+    const result = await Swal.fire({
+      title: 'Verificar y terminar la venta',
+      text: 'Confirmá con el comprador que recibió el producto. Registrá cómo lo verificaste.',
+      input: 'textarea', inputPlaceholder: 'Ej.: el comprador confirmó por teléfono que recibió el pedido',
+      showCancelButton: true, confirmButtonText: 'Cerrar venta', cancelButtonText: 'Cancelar',
+      inputValidator: value => value.trim().length >= 10 ? undefined : 'Escribí cómo verificaste la entrega (mínimo 10 caracteres).',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await apiFetch(`/orders/${orderId}/complete-delivery`, { method: 'PATCH', body: JSON.stringify({ verificationNote: result.value }) });
+      await loadDeliveryReviews();
+      toast('success', 'Venta terminada con verificación');
+    } catch (e: any) { toast('error', e.message); }
+  };
   const loadUsers       = useCallback(async () => { setFetching(true); try { const d = await apiFetch(`/users?search=${search}&limit=50`); setUsers(d.users); } catch (e: any) { toast('error', e.message); } finally { setFetching(false); } }, [search]);
   const loadBusinesses  = useCallback(async () => { setFetching(true); try { const d = await apiFetch(`/businesses?search=${search}&limit=50`); setBusinesses(d.businesses); } catch (e: any) { toast('error', e.message); } finally { setFetching(false); } }, [search]);
   const loadFeaturedBiz = useCallback(async () => { setFetching(true); try { setFeaturedBiz(await apiFetch('/featured-businesses')); } catch (e: any) { toast('error', e.message); } finally { setFetching(false); } }, []);
@@ -307,6 +327,7 @@ export default function AdminPage() {
     else if (tab === 'subscribers')       loadSubscribers();
     else if (tab === 'announcements')     loadAnnouncements();
     else if (tab === 'business-appeals')  loadBusinessAppeals();
+    else if (tab === 'delivery-review') loadDeliveryReviews();
   }, [tab, user]);
 
   useEffect(() => {
@@ -654,6 +675,7 @@ export default function AdminPage() {
     { id: 'reports',          icon: Flag,              label: 'Reportes',           badge: pendingReports },
     { id: 'product-reviews',  icon: Package,           label: 'Prod. Revisados',   badge: reviewProds.length },
     { id: 'business-appeals', icon: ShieldAlert,       label: 'Apel. Negocios',    badge: businessAppeals.length },
+    { id: 'delivery-review', icon: Truck, label: 'Entregas por revisar', badge: deliveryReviews.length },
     { id: 'announcements',    icon: Bell,              label: 'Anuncios' },
   ];
 
@@ -713,6 +735,7 @@ export default function AdminPage() {
               {tab === 'reports' && 'Reportes y Moderacion'}
               {tab === 'product-reviews' && 'Productos Enviados a Revision'}
               {tab === 'business-appeals' && 'Apelaciones de Negocios'}
+              {tab === 'delivery-review' && 'Entregas por revisar'}
               {tab === 'announcements' && 'Anuncios y Notificaciones'}
             </h1>
             <p className="adm-page-sub">{new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -728,6 +751,7 @@ export default function AdminPage() {
             else if (tab === 'subscribers') loadSubscribers();
             else if (tab === 'announcements') loadAnnouncements();
             else if (tab === 'business-appeals') loadBusinessAppeals();
+            else if (tab === 'delivery-review') loadDeliveryReviews();
           }}><RefreshCw size={15} /></button>
         </div>
 
@@ -1075,6 +1099,19 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
+        {tab === 'delivery-review' && <div className="adm-content">
+          <p className="adm-muted">Pedidos despachados hace más de 72 horas sin confirmación, o señalados por una de las partes. Verificá la entrega antes de considerar terminada la venta.</p>
+          {deliveryReviews.length === 0 && <p>No hay entregas para revisar.</p>}
+          {deliveryReviews.map(order => <div key={order._id} style={{ padding: 16, marginBottom: 12, border: '1px solid #e5e7eb', borderRadius: 12 }}>
+            <strong>Pedido #{order._id.slice(-8)} · {order.businessId?.name || order.businessName || 'Negocio'}</strong>
+            <p>Comprador: {order.user?.name || 'Sin nombre'} {order.user?.email && `· ${order.user.email}`}</p>
+            {order.businessId?.phone && <p>Contacto del negocio: {order.businessId.phone}</p>}
+            <p>Despachado: {order.shippedAt ? new Date(order.shippedAt).toLocaleDateString('es-AR') : 'Fecha no registrada'}</p>
+            <p>{order.deliveryReviewReason || 'Aún no hay confirmación del comprador.'}</p>
+            <button type="button" onClick={() => completeDelivery(order._id)}>Ya verifiqué la entrega: terminar venta</button>
+          </div>)}
+        </div>}
 
         {/* ════ APELACIONES DE NEGOCIOS ════ */}
         {tab === 'business-appeals' && (

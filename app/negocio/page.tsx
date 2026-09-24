@@ -876,7 +876,7 @@ export default function NegocioPage() {
                   {hasLocation && <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#4ade80", fontSize: "0.78rem", fontWeight: 600 }}><Navigation size={12} /> Abrir Maps</span>}
                   <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Phone size={13} /><a href={`https://wa.me/${(business.phone || "").replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "#4ade80", fontWeight: 600, textDecoration: "none" }}>{business.phone || "Sin telefono"}</a></span>
                   <span style={{ display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}><Users size={13} />{followersCount} {followersCount === 1 ? "seguidor" : "seguidores"}</span>
-                  {isOwner ? <OwnerStars rating={displayRating} total={displayTotal} /> : <StarRating current={social.rating} total={social.totalRatings} myRating={social.myRating} onRate={handleRate} />}
+                  {isOwner && <span>Las valoraciones de pedidos se consultan en Órdenes.</span>}
                   <span><Package size={13} /> {products.length} productos</span>
                 </div>
               </>
