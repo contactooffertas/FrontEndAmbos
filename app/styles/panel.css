@@ -102,6 +102,18 @@
   font-size: 0.9rem;
 }
 
+.panel-favorites-error { color: #b91c1c; }
+.panel-favorites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin-top: 18px; }
+.panel-favorite-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--border, #e5e7eb); border-radius: 14px; background: var(--bg-card, #fff); }
+.panel-favorite-card > img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; background: #f1f5f9; }
+.panel-favorite-info { display: flex; flex-direction: column; gap: 4px; }
+.panel-favorite-info strong { color: var(--text, #111); }
+.panel-favorite-info span, .panel-favorite-info small { color: #64748b; font-size: .85rem; }
+.panel-favorite-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
+.panel-favorite-actions a, .panel-favorite-actions button { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: .85rem; }
+.panel-favorite-actions a { color: #ea580c; text-decoration: none; }
+.panel-favorite-actions button { border: 0; background: transparent; color: #dc2626; cursor: pointer; padding: 8px; }
+
 /* ══ CART GRID ══ */
 .cart-grid {
   display: grid;

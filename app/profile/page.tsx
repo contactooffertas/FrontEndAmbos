@@ -889,12 +889,12 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="profile-stats">
-            {statItems.map(({icon,value,label})=>(
-              <div key={label} className="profile-stat">
-                <div className="profile-stat-num">{statsLoading?<span className="profile-stat-skeleton"/>:value}</div>
-                <div className="profile-stat-label">{icon} {label}</div>
-              </div>
-            ))}
+            {statItems.map(({icon,value,label})=>{
+              const content = <><div className="profile-stat-num">{statsLoading?<span className="profile-stat-skeleton"/>:value}</div><div className="profile-stat-label">{icon} {label}</div></>;
+              return label === "Favoritos"
+                ? <Link key={label} href="/panel?tab=favorites" className="profile-stat" aria-label="Ver negocios favoritos">{content}</Link>
+                : <div key={label} className="profile-stat">{content}</div>;
+            })}
             <div className="profile-stat profile-stat--chat" onClick={()=>router.push("/chatpage")}>
               <div className="profile-stat-num">{totalUnread>0?<span className="profile-stat-unread">{totalUnread>99?"99+":totalUnread}</span>:<MessageCircle size={20} strokeWidth={1.75} style={{ color:"#f97316" }}/>}</div>
               <div className="profile-stat-label"><MessageCircle size={14}/> Mensajes</div>
