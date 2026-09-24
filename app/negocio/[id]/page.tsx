@@ -718,9 +718,6 @@ export default function NegocioPublicoPage() {
               ) : (
                 <span className="nid-badge nid-badge--unverified">No verificado</span>
               )}
-              <span className="nid-badge nid-badge--rank" style={{ background: rankInfo.bg, color: rankInfo.color }}>
-                <TrendingUp size={11} /> {rankInfo.label}
-              </span>
             </div>
             {business.description && <p className="nid-desc">{business.description}</p>}
             <div className="nid-meta">
@@ -791,20 +788,6 @@ export default function NegocioPublicoPage() {
                 >
                   <Phone size={15} /> WhatsApp
                 </button>
-              )}
-            </div>
-            <div className="nid-star-wrap">
-              <StarRating
-                current={social.rating}
-                total={social.totalRatings}
-                myRating={social.myRating}
-                onRate={handleRate}
-                interactive={!!user}
-              />
-              {!user && (
-                <span style={{ fontSize: "0.7rem", color: "#9ca3af", display: "block", textAlign: "right", marginTop: 2 }}>
-                  Iniciá sesión para votar
-                </span>
               )}
             </div>
           </div>

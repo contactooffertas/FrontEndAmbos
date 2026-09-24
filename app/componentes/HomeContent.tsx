@@ -302,10 +302,6 @@ function HeroSlider({ products }: { products: Product[] }) {
             />
             <div className="hero-card-body">
               <p className="hero-card-name">{p.name}</p>
-              <div className="hero-card-stars">
-                <StarRow rating={rating} size={11} />
-                <span className="hero-card-rating-text">{rating > 0 ? rating.toFixed(1) : "Sin votos"}</span>
-              </div>
               <div className="hero-card-footer">
                 <div className="hero-card-footer-row">
                   <span className="hero-card-price">${p.price.toLocaleString()}</span>
@@ -344,12 +340,6 @@ function BusinessCard({ featured }: { featured: FeaturedBusiness }) {
       <div className="biz-card-body">
         {b.description && <p className="biz-card-desc">{b.description}</p>}
         <div className="biz-card-stats">
-          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <StarRow rating={b.rating ?? 0} size={13} />
-            <span className="biz-card-stat-text">
-              {b.rating && b.rating > 0 ? `${b.rating.toFixed(1)} (${b.totalRatings ?? 0})` : "Sin calificación"}
-            </span>
-          </div>
           <div className="biz-card-meta-row">
             {followers > 0 && <span className="biz-card-meta-item"><Users size={12} />{followers} seguidores</span>}
             {(b.totalProducts ?? 0) > 0 && <span className="biz-card-meta-item"><Package size={12} />{b.totalProducts} productos</span>}
@@ -451,7 +441,7 @@ function NearbyBusinessCard({ biz }: { biz: NearbyHomeBusiness }) {
         <div className="nearby-home-card-distance"><Navigation size={12} /> A {biz.distanceLabel}</div>
         {biz.categories?.length ? <div className="nearby-home-card-category">{biz.categories.slice(0, 2).join(" · ")}</div> : null}
         {biz.address && <div className="nearby-home-card-address"><MapPin size={11} />{biz.address}</div>}
-        <div className="nearby-home-card-rating"><StarRow rating={biz.rating ?? 0} size={11} /><span className="nearby-home-card-rating-text">{(biz.rating ?? 0) > 0 ? `${biz.rating!.toFixed(1)} · Ver negocio` : "Ver negocio"}</span></div>
+        <div className="nearby-home-card-rating">Ver negocio</div>
       </div>
     </Link>
     {routeHref ? <Link href={routeHref} className="nearby-route-btn" title="Cómo llegar" aria-label={`Cómo llegar a ${biz.name}`}><Navigation size={16}/><span>Cómo llegar</span></Link> : <Link href={`/negocio/${biz._id}`} className="nearby-route-btn nearby-route-btn--secondary"><span>Ver negocio</span><ArrowRight size={15}/></Link>}
@@ -1245,8 +1235,6 @@ function ProductCard({ product, currentUserId }: { product: Product; currentUser
         </div>
 
         <div className="product-rating-row">
-          <StarRow rating={rating} size={12} />
-          <span>{rating > 0 ? `${rating.toFixed(1)} (${totalRatings})` : "Sin calificación"}</span>
           {followers > 0 && <span className="product-followers"><Users size={11} /> {followers}</span>}
         </div>
 

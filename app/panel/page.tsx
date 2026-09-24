@@ -63,6 +63,8 @@ interface Purchase {
   businessId?: string;
   buyerRating?: RatingData | null;
   sellerRating?: RatingData | null;
+  needsDeliveryReview?: boolean;
+  deliveryReviewRequestedAt?: string | null;
   payment?: {
     method?: "direct" | "bna" | "santafe" | "mercadopago";
     status?: "unpaid" | "pending" | "verifying" | "paid" | "rejected" | "refunded";
@@ -700,10 +702,24 @@ function PanelContent() {
           o._id === orderId? {...o, status: "delivered" as const } : o,
         ),
       );
-      await Swal.fire({ icon: "success", title: "Compra terminada", text: "Confirmaste que te quedás con el producto. Ya podés calificar al vendedor.", confirmButtonColor: "#f97316" });
+      await Swal.fire({ icon: "success", title: "Compra terminada", text: "Confirmaste la recepción. Si querés, podés calificar al negocio; la venta ya está cerrada.", confirmButtonColor: "#f97316" });
     } else {
       await Swal.fire({ icon: "error", title: "No se pudo confirmar", text: data.message || "Intentá nuevamente." });
     }
+  };
+
+  const requestDeliveryReview = async (orderId: string) => {
+    const token = localStorage.getItem("marketplace_token");
+    const res = await fetch(`${API}/orders/${orderId}/request-delivery-review`, {
+      method: "PATCH", headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    const Swal = (await import("sweetalert2")).default;
+    if (!res.ok) return void Swal.fire({ icon: "error", text: data.message || "No se pudo avisar" });
+    setPurchases(prev => prev.map(o => o._id === orderId ? {
+      ...o, needsDeliveryReview: true, deliveryReviewRequestedAt: data.deliveryReviewRequestedAt,
+    } : o));
+    await Swal.fire({ icon: "info", text: "Quedó registrado que todavía no recibiste el pedido. Contactá al negocio para resolver la entrega." });
   };
 
   const handleReturn = async (orderId: string) => {
@@ -1049,6 +1065,11 @@ function PanelContent() {
                           <div style={{ width: "100%", padding: "10px 12px", borderRadius: 10, background: "#e0f2fe", color: "#075985", fontSize: ".82rem", fontWeight: 800 }}>
                             🚚 El vendedor despachó tu pedido. Cuando lo recibas, confirmá qué querés hacer.
                           </div>
+                          {p.needsDeliveryReview && <p role="status" style={{ width: "100%", color: "#b45309", fontWeight: 700 }}>
+                            ⚠️ Entrega pendiente de revisión. Si ya lo recibiste, confirmalo; si no llegó, avisá al negocio.
+                          </p>}
+                          {!p.deliveryReviewRequestedAt && <button onClick={() => requestDeliveryReview(p._id)} type="button">Todavía no lo recibí</button>}
+                          {p.deliveryReviewRequestedAt && <span role="status">Aviso de entrega pendiente registrado</span>}
                           <button
                             onClick={() => handleKeep(p._id)}
                             style={{
@@ -1066,7 +1087,7 @@ function PanelContent() {
                               gap: 6,
                             }}
                           >
-                            <CheckCircle size={14} /> Quedarme con el producto
+                            <CheckCircle size={14} /> Ya recibí el producto
                           </button>
                           <button
                             onClick={() => handleReturn(p._id)}
@@ -1091,10 +1112,12 @@ function PanelContent() {
 
                       {p.status === "delivered" && (
                         <div style={{ marginTop: "0.75rem" }}>
+                          <p>La venta está terminada. Calificar al negocio es opcional y queda entre ustedes.</p>
                           <RateSellerBlock
                             order={p}
                             onRated={handleSellerRated}
                           />
+                          {p.buyerRating?.rating && <p>Valoración privada del negocio: {p.buyerRating.rating}/5{p.buyerRating.comment ? ` · ${p.buyerRating.comment}` : ""}</p>}
                           <div
                             style={{
                               display: "flex",

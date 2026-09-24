@@ -171,14 +171,6 @@ function DestacadoCard({ featured }: { featured: FeaturedBusiness }) {
 
         {/* Stats */}
         <div className="dest-card__stats">
-          <div className="dest-card__rating">
-            <StarRow rating={b.rating ?? 0} size={14} />
-            <span className="dest-card__rating-text">
-              {b.rating && b.rating > 0
-                ? `${b.rating.toFixed(1)} (${b.totalRatings ?? 0} reseñas)`
-                : "Sin calificaciones aún"}
-            </span>
-          </div>
           <div className="dest-card__meta">
             <span className="dest-card__meta-item">
               <Users size={13} />

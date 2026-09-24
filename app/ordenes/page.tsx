@@ -40,6 +40,8 @@ interface SellerOrder {
   items?: OrderItem[] | null;
   buyerRating?:  RatingData | null;
   sellerRating?: RatingData | null;
+  needsDeliveryReview?: boolean;
+  deliveryReviewRequestedAt?: string | null;
   payment?: {
     method?: "direct" | "bna" | "santafe" | "mercadopago";
     status?: "unpaid" | "pending" | "verifying" | "paid" | "rejected" | "refunded";
@@ -382,6 +384,19 @@ export default function OrdenesPage() {
     }
   };
 
+  const requestDeliveryReview = async (orderId: string) => {
+    const res = await fetch(`${API}/orders/${orderId}/request-delivery-review`, {
+      method: "PATCH", headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    const Swal = (await import("sweetalert2")).default;
+    if (!res.ok) return void Swal.fire({ icon: "error", text: data.message || "No se pudo solicitar la revisión" });
+    setOrders(prev => prev.map(o => o._id === orderId ? {
+      ...o, needsDeliveryReview: true, deliveryReviewRequestedAt: data.deliveryReviewRequestedAt,
+    } : o));
+    await Swal.fire({ icon: "info", text: "Registramos que falta confirmar la entrega. Contactá al comprador para saber si recibió el producto." });
+  };
+
   const handleDelete = async (orderId: string) => {
     const Swal = (await import("sweetalert2")).default;
     const { isConfirmed } = await Swal.fire({
@@ -598,13 +613,17 @@ export default function OrdenesPage() {
                     )}
                     {status === "delivered" && (
                       <p className="orden-delivered-msg">
-                        ✅ Venta terminada — el comprador se quedó con el producto
+                        ✅ Venta terminada — calificar al comprador es opcional y privado
                       </p>
                     )}
                     {status === "shipped" && (
-                      <p className="orden-delivered-msg" style={{ color: "#0369a1", background: "#e0f2fe" }}>
-                        🚚 Pedido despachado — esperando que el comprador confirme si se lo queda
-                      </p>
+                      <div className="orden-delivered-msg" style={{ color: "#0369a1", background: "#e0f2fe" }}>
+                        🚚 Pedido despachado — esperando la confirmación del comprador.
+                        {order.needsDeliveryReview && <p role="status" style={{ color: "#b45309" }}>⚠️ Entrega pendiente de revisión. Puede que el comprador aún no lo haya recibido o no haya vuelto a entrar.</p>}
+                        {order.needsDeliveryReview && !order.deliveryReviewRequestedAt &&
+                          <button type="button" onClick={() => requestDeliveryReview(order._id)}>Solicitar revisión de entrega</button>}
+                        {order.deliveryReviewRequestedAt && <p>Revisión solicitada. Contactá al comprador para confirmar la entrega.</p>}
+                      </div>
                     )}
                     {status === "returned" && (
                       <p className="orden-returned-msg">
@@ -621,6 +640,9 @@ export default function OrdenesPage() {
                       onRated={handleBuyerRated}
                     />
                   )}
+                  {status === "delivered" && order.sellerRating?.rating && (
+                    <p className="orden-delivered-msg">Valoración privada del comprador: {order.sellerRating.rating}/5{order.sellerRating.comment ? ` · ${order.sellerRating.comment}` : ""}</p>
+                  )}
 
                 </div>
               );
@@ -632,6 +654,4 @@ export default function OrdenesPage() {
     </MainLayout>
   );
 }
-
-
 

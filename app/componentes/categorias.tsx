@@ -174,10 +174,6 @@ function ProductCard({
         )}
 
         <div className="cat-stars-row">
-          <StarRow rating={bizRating} size={12} />
-          <span className="cat-rating-text">
-            {bizRating > 0 ? bizRating.toFixed(1) : "Sin votos"}
-          </span>
           {followers > 0 && (
             <span className="cat-followers">
               <Users size={10} />
