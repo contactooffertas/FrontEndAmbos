@@ -72,6 +72,17 @@ interface Purchase {
   } | null;
 }
 
+interface FavoriteBusiness {
+  _id: string;
+  name: string;
+  city?: string;
+  address?: string;
+  description?: string;
+  logo?: string;
+  verified?: boolean;
+  blocked?: boolean;
+}
+
 const STATUS_MAP = {
   pending: { label: "Pendiente", color: "#f59e0b", icon: <Clock size={13} /> },
   confirmed: {
@@ -561,6 +572,10 @@ function PanelContent() {
 
   const [tab, setTab] = useState<Tab>(defaultTab);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [favoriteBusinesses, setFavoriteBusinesses] = useState<FavoriteBusiness[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [favoritesError, setFavoritesError] = useState("");
+  const [favoritesRefresh, setFavoritesRefresh] = useState(0);
   const [checkoutGroups, setCheckoutGroups] = useState<BusinessGroup[]>([]);
   const [checkoutDone, setCheckoutDone] = useState(false);
 
@@ -597,6 +612,44 @@ function PanelContent() {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [user, tab]);
+
+  useEffect(() => {
+    if (!user || tab !== "favorites") return;
+    let active = true;
+    const loadFavorites = async () => {
+      setFavoritesLoading(true);
+      try {
+        const token = localStorage.getItem("marketplace_token");
+        const res = await fetch(`${API}/user/favorite-businesses`, {
+          headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+        });
+        if (!res.ok) throw new Error("No pudimos cargar tus negocios favoritos.");
+        const data = await res.json();
+        if (active) { setFavoriteBusinesses(Array.isArray(data) ? data : []); setFavoritesError(""); }
+      } catch (error) {
+        if (active) setFavoritesError(error instanceof Error ? error.message : "No pudimos cargar tus favoritos.");
+      } finally {
+        if (active) setFavoritesLoading(false);
+      }
+    };
+    void loadFavorites();
+    window.addEventListener("focus", loadFavorites);
+    return () => { active = false; window.removeEventListener("focus", loadFavorites); };
+  }, [user, tab, favoritesRefresh]);
+
+  const removeFavoriteBusiness = async (businessId: string) => {
+    try {
+      const token = localStorage.getItem("marketplace_token");
+      const res = await fetch(`${API}/business/${businessId}/unfavorite`, {
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("No pudimos quitar este negocio de favoritos.");
+      setFavoriteBusinesses(current => current.filter(business => business._id !== businessId));
+      setFavoritesError("");
+    } catch (error) {
+      setFavoritesError(error instanceof Error ? error.message : "No pudimos actualizar tus favoritos.");
+    }
+  };
 
   if (loading ||!user) return null;
 
@@ -1208,13 +1261,39 @@ function PanelContent() {
         )}
 
         {tab === "favorites" && (
-          <div className="panel-anim panel-empty">
-            <Heart size={52} strokeWidth={1} />
-            <h3>Tus favoritos</h3>
-            <p>Los negocios y productos que guardaste apareceran aca.</p>
-            <Link href="/" className="panel-empty-link">
-              Explorar negocios <ArrowRight size={15} />
-            </Link>
+          <div className="panel-anim">
+            <h3>Tus negocios favoritos</h3>
+            {favoritesError && <p role="alert" className="panel-favorites-error">{favoritesError}</p>}
+            {favoritesError && <button type="button" onClick={() => setFavoritesRefresh(value => value + 1)}>Volver a intentar</button>}
+            {favoritesLoading && favoriteBusinesses.length === 0 ? (
+              <p role="status">Cargando tus negocios favoritos...</p>
+            ) : favoriteBusinesses.length === 0 && !favoritesError ? (
+              <div className="panel-empty">
+                <Heart size={52} strokeWidth={1} />
+                <p>Los negocios que guardes como favoritos aparecerán acá.</p>
+                <Link href="/" className="panel-empty-link">Explorar negocios <ArrowRight size={15} /></Link>
+              </div>
+            ) : (
+              <div className="panel-favorites-grid">
+                {favoriteBusinesses.map(business => (
+                  <article key={business._id} className="panel-favorite-card">
+                    <img src={business.logo || "/assets/navbarbolsa.png"} alt="" loading="lazy"
+                      onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = "/assets/navbarbolsa.png"; }} />
+                    <div className="panel-favorite-info">
+                      <strong>{business.name}</strong>
+                      <span>{business.address || business.city || "Negocio de Rosario"}</span>
+                      {business.blocked && <small>Negocio no disponible por ahora</small>}
+                    </div>
+                    <div className="panel-favorite-actions">
+                      {!business.blocked && <Link href={`/negocio/${business._id}`}>Ver negocio <ArrowRight size={14} /></Link>}
+                      <button type="button" onClick={() => removeFavoriteBusiness(business._id)} aria-label={`Quitar ${business.name} de favoritos`}>
+                        <Heart size={15} fill="currentColor" /> Quitar
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
