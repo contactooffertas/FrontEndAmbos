@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, MapPin, Navigation, Store } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation, Store, Bus, Footprints } from "lucide-react";
 import "../../styles/recorrido.css";
 
 type Point={lat:number;lng:number};
@@ -37,6 +37,7 @@ export default function RecorridoPage(){
   const name=search.get("name")||"Negocio";
   const [user,setUser]=useState<Point|null>(null),[route,setRoute]=useState<RouteData|null>(null);
   const [status,setStatus]=useState("Buscando tu ubicación…");
+  const [mode,setMode]=useState<"walk"|"bus">("walk");
   const watchRef=useRef<number|null>(null),mapEl=useRef<HTMLDivElement|null>(null),mapRef=useRef<any>(null);
   const userMarker=useRef<any>(null),destMarker=useRef<any>(null),routeLayer=useRef<any>(null),firstFit=useRef(true);
   const lastRoutedPoint=useRef<Point|null>(null);
@@ -102,12 +103,16 @@ export default function RecorridoPage(){
   const distanceLabel=meters<1000?`${Math.round(meters)} m`:`${(meters/1000).toFixed(1)} km`;
   const minutes=Math.max(1,Math.round((route?.duration||meters/1.3)/60));
 
+  
+
   return <main className="route-page">
     <header className="route-header"><button onClick={()=>router.back()} aria-label="Volver"><ArrowLeft/></button><div><strong>Cómo llegar</strong><span>{name}</span></div></header>
-    <section className="route-map"><div ref={mapEl} className="route-leaflet"/><div className="route-live"><Navigation size={14}/>{status}</div><div className="route-map-note">Ruta peatonal · ubicación en vivo</div></section>
+    <div className="route-mode-tabs"><button className={mode==="walk"?"active":""} onClick={()=>setMode("walk")}><Footprints size={17}/> Caminando</button><button className={mode==="bus"?"active":""} onClick={()=>setMode("bus")}><Bus size={17}/> Colectivo</button></div>
+    <section className="route-map"><div ref={mapEl} className="route-leaflet"/><div className="route-live"><Navigation size={14}/>{status}</div><div className="route-map-note">{mode==="walk"?"Ruta peatonal · ubicación en vivo":"Destino y ubicación listos"}</div></section>
     <section className="route-sheet">
       <div className="route-title"><div className="route-store-icon"><Store/></div><div><h1>{name}</h1><p><MapPin size={14}/> destino seleccionado</p></div></div>
-      {user&&destination&&<><div className="route-stats"><div><b>{distanceLabel}</b><span>distancia restante</span></div><div><b>~{minutes} min</b><span>caminando</span></div></div><div className={near?"route-near active":"route-near"}>{near?<><b>¡Estás cerca!</b><span>{name} está a {distanceLabel}.</span></>:<><b>Seguí acercándote</b><span>La ruta se actualiza con tu ubicación. Te avisamos al entrar en 300 m.</span></>}</div></>}
+      {user&&destination&&mode==="walk"&&<><div className="route-stats"><div><b>{distanceLabel}</b><span>distancia restante</span></div><div><b>~{minutes} min</b><span>caminando</span></div></div><div className={near?"route-near active":"route-near"}>{near?<><b>¡Estás cerca!</b><span>{name} está a {distanceLabel}.</span></>:<><b>Seguí acercándote</b><span>La ruta se actualiza con tu ubicación. Te avisamos al entrar en 300 m.</span></>}</div></>}
+      {user&&destination&&mode==="bus"&&<div className="route-transit-card"><div className="route-transit-head"><Bus size={22}/><div><b>Colectivos hasta {name}</b><span>Planificador dentro de Rosario Market</span></div></div><div className="transit-preview-badge">PREVIEW · integración de datos TUP en preparación</div><div className="transit-step"><span className="transit-step-icon">1</span><div><b>Tu ubicación</b><small>Rosario Market ya tiene tu GPS en vivo.</small></div></div><div className="transit-line"/><div className="transit-step"><span className="transit-step-icon bus"><Bus size={14}/></span><div><b>Paradas y líneas compatibles</b><small>Acá aparecerán las líneas oficiales que pasan cerca de vos y también cerca del negocio.</small></div></div><div className="transit-line"/><div className="transit-step"><span className="transit-step-icon">3</span><div><b>Bajada + caminata final</b><small>Rosario Market indicará dónde bajar y los metros restantes hasta {name}.</small></div></div><div className="transit-demo-result"><b>Sin líneas inventadas</b><span>Este Preview muestra la interfaz interna. Las líneas se habilitarán únicamente cuando estén calculadas desde datos de transporte de Rosario.</span></div><small>El modo Colectivo ya no te saca de Rosario Market ni abre Google Maps.</small></div>}
       <button className="route-store-btn" onClick={()=>router.push(`/negocio/${params.id}`)}>Ver tienda</button>
     </section>
   </main>
